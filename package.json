@@ -1,0 +1,17 @@
+{ "name": "cadence"
+, "description": "A Swiss Army asynchronous control flow function for JavaScript."
+, "author": "Alan Gutierrez <alan@prettyrobots.com>"
+, "version": "0.0.0"
+, "keywords": [ "async", "asynchronous", "control", "flow" ]
+, "licenses": [
+  { "type": "MIT"
+  , "url": "http://github.com/bigeasy/cadence/raw/master/LICENSE"
+  }]
+, "homepage": "http://bigeasy.github.com/cadence"
+, "repository": "git://github.com/bigeasy/cadence.git"
+, "scripts" : { "test": "proof t/*/*.t" }
+, "devDependencies":
+  { "proof": "0.0.10"
+  }
+, "dependencies": {}
+}
