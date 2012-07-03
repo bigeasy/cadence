@@ -19,7 +19,9 @@ function factory (options) {
       , callback = vargs.pop()
       , steps = []
       , timer
-      , callbacks = { results: {} }
+      , callbacks = [ { names: [], vargs: [] } ]
+      , called
+      , count
       , exitCode = 0
       , cadences = []
       , methods = { cadence: cadence }
@@ -63,19 +65,17 @@ function factory (options) {
       var varg = __slice.call(arguments, 0);
       if (varg.length == 1 && Array.isArray(varg[0]) && !varg[0].length) return;
       varg = flatten(varg);
-      if (!varg.length || (varg.length == 1 && typeof varg[0] == "string")) {
-        var name = varg.shift();
-        callbacks.count++;
-        return function (error, result) {
+      if (!varg.length || varg.every(function (arg) { return typeof varg[0] == "string" })) {
+        var names = varg, key;
+        count++;
+        return function (error) {
+          var vargs = __slice.call(arguments, 1);
           if (error) {
             thrown(error);
-          } else if (name) {
-            callbacks.results[name] || (callbacks.results[name] = []);
-            callbacks.results[name].push(result);
-          } else if (callbacks.count == 2 && result && typeof result == "object") {
-            for (var key in result) context[key] = result[key];
+          } else {
+            callbacks.push({ names: names, vargs: vargs });
           }
-          if (++callbacks.called == callbacks.count) {
+          if (++called == count) {
             invoke();
           }
         }
@@ -109,6 +109,38 @@ function factory (options) {
       }
     }
 
+    // Parallel arrays make the most sense, really. If the paralleled function
+    // is better off returning a map, it can be shimmed.
+    function contextualize (step) {
+      var inferred = !callbacks[0].names.length
+        , names = (inferred ? step.parameters : callbacks[0].names).slice(0)
+        , arrayed;
+      if (callbacks.length == 1) {
+        names.length = callbacks[0].vargs.length;
+        callbacks[0].vargs.forEach(function (arg, i) { context[names[i]] = arg });
+      } else {
+        arrayed = callbacks.every(function (result) {
+          return (
+            result.vargs.length == names.length
+            && ((inferred && !result.names.length)
+                || names.every(function (name, i) { return name == result.names[i] }))
+          );
+        });
+        if (arrayed) {
+          names.length = callbacks[0].vargs.length;
+          names.forEach(function (name, i) { context[name] = [] });
+          callbacks.forEach(function (result) {
+            result.vargs.forEach(function (arg, i) {
+              context[names[i]].push(arg);
+            });
+          });
+        } else {
+          throw new Error("Can't infer array assignment.");
+        }
+      }
+      return names;
+    }
+
     function invoke () {
       var arg
         , args = []
@@ -121,6 +153,7 @@ function factory (options) {
         , leaked
         , result
         , value
+        , names
         ;
 
       timeout();
@@ -134,12 +167,11 @@ function factory (options) {
         return;
       }
 
-      for (key in (callbacks.results || {})) {
-        value = callbacks.results[key];
-        context[key] = value && value.length == 1 ? value[0] : value;
-      }
+      callbacks = callbacks.filter(function (result) { return result.vargs[0] !== cadence });
 
       step = steps.shift();
+
+      names = callbacks.length ? contextualize(step) : [];
 
       Object.keys(options.wrappers || {})
         .filter(function (name) { return named(step, name) && name })
@@ -150,9 +182,7 @@ function factory (options) {
           step.parameters = parameters;
         });
 
-      callbacks = { count: 0, called: 0, results: {} };
-      for (i = 0, I = step.parameters.length; i < I; i++) {
-        parameter = step.parameters[i];
+      step.parameters.forEach(function (parameter) {
         // Did not know that `/^_|done$/` means `^_` or `done$`.
         done = /^(_|done)$/.test(parameter);
         if (done) {
@@ -164,17 +194,20 @@ function factory (options) {
           }
         }
         args.push(arg);
-      }
+      });
       delete context.error;
+      names.forEach(function (name) { if (name[0] == "$") delete context[name] });
+      callbacks = [];
+      count = called = 0;
       next = cadence();
       try {
         result = step.apply(this, args);
-        if (callbacks.count == 1) {
+        if (count == 1) {
           if (typeof result == "object") {
             for (var key in result) if (result.hasOwnProperty(key)) context[key] = result[key];
           }
         }
-        next(null);
+        next(null, cadence);
       } catch (error) {
         thrown(error);
         invoke();
