@@ -32,5 +32,5 @@ require('proof')(12, function (callback, equal) {
     equal(numbers[1], 2, "number two still");
     equal(numbers[2], 3, "number three still");
 
-  }, callback());
+  })(callback());
 });

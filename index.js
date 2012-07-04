@@ -16,31 +16,42 @@ function factory (options) {
 
   function cadence () {
     var vargs = __slice.call(arguments, 0)
-      , callback = vargs.pop()
       , steps = []
+      , firstSteps = []
       , timer
+      , callback
       , callbacks = [ { names: [], vargs: [] } ]
       , called
       , count
       , exitCode = 0
       , cadences = []
       , methods = { cadence: cadence }
-      , untidy
-      , vargs
+      , abended
       , key
       , arg
       , context = extend({}, context)
       ;
 
-    steps = flatten(vargs);
+    firstSteps = flatten(vargs);
     
     if (steps.length == 0 && typeof callback == "object") {
       return factory(extend({}, options, callback));
     }
 
-    steps = steps.map(function (step) { return parameterize(step) });
+    firstSteps = firstSteps.map(function (step) { return parameterize(step) });
 
-    invoke();
+    return execute;
+
+    function execute () {
+      callback = arguments[0] || exceptional;
+      steps = firstSteps.slice(0);
+      callbacks = [ { names: [], vargs: [] } ];
+      cadences.length = 0;
+      abended = false;
+      invoke();
+    }
+
+    function exceptional (error) { throw error }
 
     function flatten (array) {
       var flattened = [];
@@ -103,10 +114,10 @@ function factory (options) {
     function thrown (error) {
       if (steps.length && steps.length && ~steps[0].parameters.indexOf("error")) {
         context.error = error;
-      } else {
-        if (timer) clearTimeout(timer);
-        callback(error);
       }
+      abended = true;
+      if (timer) clearTimeout(timer);
+      callback(error);
     }
 
     // Parallel arrays make the most sense, really. If the paralleled function
@@ -155,6 +166,8 @@ function factory (options) {
         , value
         , names
         ;
+
+      if (abended) return;
 
       timeout();
 
@@ -209,7 +222,7 @@ function factory (options) {
         }
         next(null, cadence);
       } catch (error) {
-        thrown(error);
+        thrown(error)
         invoke();
       }
     }
