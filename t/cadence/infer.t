@@ -20,5 +20,5 @@ require('proof')(4, function (callback, ok) {
     ok(body, "still exists");
     ok(/cadence/.test(body), "still read");
 
-  }, callback());
+  })(callback());
 });

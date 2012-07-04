@@ -14,5 +14,5 @@ require('proof')(1, function (callback, ok) {
 
     ok(/#!/.test(body), "read");
 
-  }, callback());
+  })(callback());
 });
