@@ -186,9 +186,9 @@ function factory (options) {
 
       names = callbacks.length ? contextualize(step) : [];
 
-      Object.keys(options.wrappers || {})
+      Object.keys(options.wrap || {})
         .filter(function (name) { return named(step, name) && name })
-        .map(function (name) { return options.wrappers[name] })
+        .map(function (name) { return options.wrap[name] })
         .forEach(function (wrapper) {
           var parameters = step.parameters;
           step = wrapper(step)
