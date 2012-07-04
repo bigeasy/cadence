@@ -51,7 +51,7 @@ function factory (options) {
       invoke();
     }
 
-    function exceptional (error) { throw error }
+    function exceptional (error) { if (error) throw error }
 
     function flatten (array) {
       var flattened = [];
