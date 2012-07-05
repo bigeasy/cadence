@@ -33,7 +33,7 @@ function factory (options) {
       ;
 
     firstSteps = flatten(vargs);
-    
+
     if (steps.length == 0 && typeof callback == "object") {
       return factory(extend({}, options, callback));
     }
@@ -45,10 +45,9 @@ function factory (options) {
     function execute () {
       callback = arguments[0] || exceptional;
       steps = firstSteps.slice(0);
-      callbacks = [ { names: [], vargs: [] } ];
       cadences.length = 0;
       abended = false;
-      invoke();
+      invoke(steps, 0, {}, [], callback);
     }
 
     function exceptional (error) { if (error) throw error }
@@ -72,26 +71,35 @@ function factory (options) {
       if (options.timeout) timer = setTimeout(function () { callback(new Error("Timeout")) }, options.timeout);
     }
 
+    var invocation;
+
     function cadence () {
       var varg = __slice.call(arguments, 0);
       if (varg.length == 1 && Array.isArray(varg[0]) && !varg[0].length) return;
       varg = flatten(varg);
       if (!varg.length || varg.every(function (arg) { return typeof varg[0] == "string" })) {
-        var names = varg, key;
-        count++;
-        return function (error) {
-          var vargs = __slice.call(arguments, 1);
-          if (error) {
-            thrown(error);
-          } else {
-            callbacks.push({ names: names, vargs: vargs });
+        var names = varg;
+        invocation.count++;
+        return (function (invocation) {
+          return function (error) {
+            var vargs = __slice.call(arguments, 1);
+            if (error) {
+              thrown.apply(this, [ error ].concat(invocation.arguments));
+            } else {
+              invocation.callbacks.push({ names: names, vargs: vargs });
+              if (vargs[0] == invoke) {
+                cadences.slice(0).forEach(function (steps) {
+                  invoke(steps.map(parameterize), 0, Object.create(invocation.context), [], cadence());
+                });
+              }
+            }
+            if (++invocation.called == invocation.count) {
+              invoke.apply(this, invocation.arguments);
+            }
           }
-          if (++called == count) {
-            invoke();
-          }
-        }
-      } else while (varg.length) {
-        cadences.push(parameterize(varg.shift()));
+        })(invocation);
+      } else {
+        cadences.push(varg);
       }
     }
 
@@ -111,7 +119,10 @@ function factory (options) {
       return proc.name == name || (proc.name && !proc.name.indexOf(name + '__'));
     }
 
-    function thrown (error) {
+    // TODO And what if there are many, many errors?
+
+    //
+    function thrown (error, steps, index, context, callbacks, callback) {
       if (steps.length && steps.length && ~steps[0].parameters.indexOf("error")) {
         context.error = error;
       }
@@ -122,7 +133,7 @@ function factory (options) {
 
     // Parallel arrays make the most sense, really. If the paralleled function
     // is better off returning a map, it can be shimmed.
-    function contextualize (step) {
+    function contextualize (step, callbacks, context) {
       var inferred = !callbacks[0].names.length
         , names = (inferred ? step.parameters : callbacks[0].names).slice(0)
         , arrayed;
@@ -152,10 +163,9 @@ function factory (options) {
       return names;
     }
 
-    function invoke () {
+    function invoke (steps, index, context, callbacks, callback) {
       var arg
         , args = []
-        , done = false
         , match
         , parameter, parameters
         , i, I
@@ -171,21 +181,28 @@ function factory (options) {
 
       timeout();
 
-      while (cadences.length) {
-        steps.unshift(cadences.pop());
-      }
-
-      if (!steps.length) {
+      if (steps.length == index) {
         callback(null);
         return;
       }
 
-      callbacks = callbacks.filter(function (result) { return result.vargs[0] !== cadence });
+      // Get the next step.
+      step = steps[index];
 
-      step = steps.shift();
+      // No callbacks means that we use the function return value as the value
+      // for the context, TODO but only if the value is not `undefined`. Here
+      // we're doing the thing where we use an object, so maybe we need to
+      // rethink this...
+      if (callbacks.length == 1 && typeof callbacks[0].vargs[1] == "object") {
+        extend(stack[0].context, callbacks[0].vargs[1]);
+      }
 
-      names = callbacks.length ? contextualize(step) : [];
+      // Filter out the return value, if there are callbacks left, then
+      // `contextualize` will process them.
+      callbacks = callbacks.filter(function (result) { return result.vargs[0] !== invoke });
+      names = callbacks.length ? contextualize(step, callbacks, context) : [];
 
+      // Give our creator a chance to inspect the step, possibly wrap it.
       Object.keys(options.wrap || {})
         .filter(function (name) { return named(step, name) && name })
         .map(function (name) { return options.wrap[name] })
@@ -197,32 +214,24 @@ function factory (options) {
 
       step.parameters.forEach(function (parameter) {
         // Did not know that `/^_|done$/` means `^_` or `done$`.
-        done = /^(_|done)$/.test(parameter);
-        if (done) {
+        if (/^(_|done)$/.test(parameter)) {
           arg = callback();
-        } else {
-          arg = context[parameter];
-          if (arg == null) {
-            arg = methods[parameter];
-          }
+        } else if ((arg  = context[parameter]) == void(0)) {
+          arg = methods[parameter];
         }
         args.push(arg);
       });
-      delete context.error;
+
+      cadences.length = 0;
       names.forEach(function (name) { if (name[0] == "$") delete context[name] });
-      callbacks = [];
-      count = called = 0;
-      next = cadence();
+      delete context.error;
+
+      invocation = { callbacks: [], count: 0 , called: 0, context: context };
+      invocation.arguments = [ steps, index + 1, context, invocation.callbacks, callback ]
       try {
-        result = step.apply(this, args);
-        if (count == 1) {
-          if (typeof result == "object") {
-            for (var key in result) if (result.hasOwnProperty(key)) context[key] = result[key];
-          }
-        }
-        next(null, cadence);
+        cadence()(null, invoke, step.apply(this, args));
       } catch (error) {
-        thrown(error)
+        thrown.apply(this, [ error ].concat(invocation.arguments));
         invoke();
       }
     }
