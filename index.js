@@ -1,3 +1,4 @@
+"use strict";
 var __slice = [].slice;
 
 function extend (object) {
@@ -74,11 +75,18 @@ function factory (options) {
     var invocation;
 
     function cadence () {
-      var varg = __slice.call(arguments, 0);
-      if (varg.length == 1 && Array.isArray(varg[0]) && !varg[0].length) return;
-      varg = flatten(varg);
-      if (!varg.length || varg.every(function (arg) { return typeof varg[0] == "string" })) {
-        var names = varg;
+      var vargs = __slice.call(arguments, 0), i = -1, step;
+      if (vargs.length == 1 && Array.isArray(vargs[0]) && !vargs[0].length) return;
+      vargs = flatten(vargs);
+      if (vargs.length == 1 && typeof vargs[0] == "function") {
+        for (i = invocation.arguments[0].length - 1; step = invocation.arguments[0][i]; i--) {
+          if (vargs[0] === step.original || vargs[0] === step) break; 
+        }
+      }
+      if (~i) {
+        invocation.arguments[1] = i;
+      } else if (!vargs.length || vargs.every(function (arg) { return typeof vargs[0] == "string" })) {
+        var names = vargs;
         invocation.count++;
         return (function (invocation) {
           return function (error) {
@@ -99,7 +107,7 @@ function factory (options) {
           }
         })(invocation);
       } else {
-        cadences.push(varg);
+        cadences.push(vargs);
       }
     }
 
@@ -207,9 +215,10 @@ function factory (options) {
         .filter(function (name) { return named(step, name) && name })
         .map(function (name) { return options.wrap[name] })
         .forEach(function (wrapper) {
-          var parameters = step.parameters;
+          var parameters = step.parameters, original = step.original || step;
           step = wrapper(step)
           step.parameters = parameters;
+          step.original = original;
         });
 
       step.parameters.forEach(function (parameter) {

@@ -3,7 +3,6 @@
 require('proof')(2, function (equal) {
   var fs = require('fs')
     , cadence = require("../../index")()
-    , skip = cadence.skip
     ;
 
   cadence(function (cadence) {
