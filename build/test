@@ -13,6 +13,9 @@ echo ""
 (proof run t/*/*.t | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
 
 if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
+  echo ""
+  echo "minified"
+  echo ""
   default=$(cat index.js | uglifyjs | gzip -c | wc -c)
   lift=$(cat index.js | uglifyjs --lift-vars | gzip -c | wc -c)
 
