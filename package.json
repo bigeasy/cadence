@@ -12,6 +12,7 @@
 , "scripts" : { "test": "build/test" }
 , "devDependencies":
   { "proof": "0.0.10"
+  , "uglify-js": ">=0"
   }
 , "dependencies": {}
 }
