@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+
+if [ "$TRAVIS" = "true" ]; then
+  sudo apt-get install -q -q bc 2> /dev/null > /dev/null && echo 'Installed `bc`.' && echo ''
+fi
+
+build/sizes index.js
+
+echo ""
+
+(proof run t/*/*.t | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
+
+if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
+  default=$(cat index.js | uglifyjs | gzip -c | wc -c)
+  lift=$(cat index.js | uglifyjs --lift-vars | gzip -c | wc -c)
+
+  bak=index-$(date +'%FT%T').js
+  mv index.js $bak
+  if [ $default -lt $lift ]; then
+    cat $bak | uglifyjs > index.js
+  else
+    cat $bak | uglifyjs --lift-vars > index.js
+  fi 
+ 
+  (proof run t/*/*.t | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
+fi
