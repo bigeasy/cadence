@@ -30,7 +30,7 @@ function factory (options) {
       , abended
       , key
       , arg
-      , context = extend({}, context)
+      , context = {}
       ;
 
     firstSteps = flatten(vargs);
@@ -39,7 +39,7 @@ function factory (options) {
       return factory(extend({}, options, callback));
     }
 
-    firstSteps = firstSteps.map(function (step) { return parameterize(step) });
+    firstSteps = firstSteps.map(function (step) { return parameterize(step, context) });
 
     return execute;
 
@@ -75,17 +75,20 @@ function factory (options) {
     var invocation;
 
     function cadence () {
-      var vargs = __slice.call(arguments, 0), i = -1, step;
+      var vargs = __slice.call(arguments, 0), i = -1, step, original;
       if (vargs.length == 1 && Array.isArray(vargs[0]) && !vargs[0].length) return;
       vargs = flatten(vargs);
       if (vargs.length == 1 && typeof vargs[0] == "function") {
+        original = vargs[0].original || vargs[0];
         for (i = invocation.arguments[0].length - 1; step = invocation.arguments[0][i]; i--) {
-          if (vargs[0] === step.original || vargs[0] === step) break; 
+          if (original === step || original === step.original) break; 
         }
       }
       if (~i) {
         invocation.arguments[1] = i;
-      } else if (!vargs.length || vargs.every(function (arg) { return typeof vargs[0] == "string" })) {
+        vargs.shift();
+      } 
+      if (!vargs.length || vargs.every(function (arg) { return typeof vargs[0] == "string" })) {
         var names = vargs;
         invocation.count++;
         return (function (invocation) {
@@ -95,9 +98,14 @@ function factory (options) {
               thrown.apply(this, [ error ].concat(invocation.arguments));
             } else {
               invocation.callbacks.push({ names: names, vargs: vargs });
+              // Indicates that the function has completed, so we need create
+              // the callbacks for parallel cadences now, the next increment of
+              // the called counter, which may be the last.
               if (vargs[0] == invoke) {
                 cadences.slice(0).forEach(function (steps) {
-                  invoke(steps.map(parameterize), 0, Object.create(invocation.context), [], cadence());
+                  var subtext = Object.create(invocation.context);
+                  steps = steps.map(function (step) { return parameterize(step, subtext) });
+                  invoke(steps, 0, subtext, [], cadence());
                 });
               }
             }
@@ -111,11 +119,15 @@ function factory (options) {
       }
     }
 
-    function parameterize (f) {
-      var $ = /^function\s*[^(]*\(([^)]*)\)/.exec(f.toString());
+    function parameterize (step, context) {
+      var $ = /^function\s*[^(]*\(([^)]*)\)/.exec(step.toString()), original;
       if (!$) throw new Error("bad function");
-      f.parameters = $[1].split(/\s*,\s/);
-      return f;
+      if (step.name) {
+        context[step.name] = function () { cadence(step).apply(this, [ null ].concat(__slice.call(arguments, 0))) }
+        context[step.name].original = step;
+      }
+      step.parameters = $[1].split(/\s*,\s/);
+      return step;
     }
 
     // Test if a program name matches one of our special names. We support
