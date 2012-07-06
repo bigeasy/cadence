@@ -12,7 +12,7 @@ require('proof')(3, function (callback, equal, equal) {
 
     cadence()(null, 1);
 
-  }, function cleanup (one) {
+  }, function cleanup (one, cadence) {
 
     equal(one, 1, "invoked");
     cadence()(null, 2);

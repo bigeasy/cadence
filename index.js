@@ -2,7 +2,7 @@
 var __slice = [].slice;
 
 function extend (object) {
-  __slice.call(1, arguments).forEach(function (append) {
+  __slice.call(arguments, 1).forEach(function (append) {
     for (var key in append) if (append.hasOwnProperty(key)) {
       object[key] = append[key];
     }
@@ -10,8 +10,12 @@ function extend (object) {
   return object;
 }
 
-function factory (options) {
-  options = options || {};
+function factory () {
+  var options = { context: {} };
+  __slice.call(arguments, 0).forEach(function (opts) {
+    var context = extend({}, options.context, opts.context || {});
+    extend(options, opts).context = context;
+  });
 
   return cadence;
 
@@ -35,8 +39,8 @@ function factory (options) {
 
     firstSteps = flatten(vargs);
 
-    if (steps.length == 0 && typeof callback == "object") {
-      return factory(extend({}, options, callback));
+    if (firstSteps.every(function (object) { return typeof object == "object" })) {
+      return factory.apply(this, [ options ].concat(firstSteps));
     }
 
     firstSteps = firstSteps.map(function (step) { return parameterize(step, context) });
@@ -48,7 +52,7 @@ function factory (options) {
       steps = firstSteps.slice(0);
       cadences.length = 0;
       abended = false;
-      invoke(steps, 0, {}, [], callback);
+      invoke(steps, 0, Object.create(options.context), [], callback);
     }
 
     function exceptional (error) { if (error) throw error }
