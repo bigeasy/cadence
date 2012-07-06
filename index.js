@@ -242,6 +242,9 @@ function factory (options) {
       } else { 
         step.parameters.forEach(function (parameter) {
           // Did not know that `/^_|done$/` means `^_` or `done$`.
+          if (parameter == options.alias) {
+            parameter = 'cadence';
+          }
           if (parameter == "error") {
             arg = context.errors[0];
           } else if (/^(_|done)$/.test(parameter)) {
