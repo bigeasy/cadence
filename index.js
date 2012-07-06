@@ -82,6 +82,11 @@ function factory () {
       var vargs = __slice.call(arguments, 0), i = -1, step, original;
       if (vargs.length == 1 && Array.isArray(vargs[0]) && !vargs[0].length) return;
       vargs = flatten(vargs);
+      if (vargs.length && (vargs[0] == null || vargs[0] instanceof Error)) {
+        invocation.count = Number.MAX_VALUE;
+        invocation.callback.apply(this, vargs);
+        return;
+      }
       if (vargs.length == 1 && typeof vargs[0] == "object" && vargs[0]) {
         extend(invocation.context, vargs[0]);
         return;
@@ -248,7 +253,7 @@ function factory () {
       if (/^errors?$/.test(step.parameters[0]) && !context.errors.length) {
         invoke(steps, index + 1, context, [], callback);
       } else { 
-        invocation = { callbacks: [], count: 0 , called: 0, context: context, index: index };
+        invocation = { callbacks: [], count: 0 , called: 0, context: context, index: index, callback: callback };
         invocation.arguments = [ steps, index + 1, context, invocation.callbacks, callback ]
 
         step.parameters.forEach(function (parameter) {
