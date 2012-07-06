@@ -18,22 +18,32 @@ var deltree = cadence(function (cadence, directory) {
 });
 
 var deltree = cadence(function (cadence, directory) {
+  var errors = [];
   cadence(function () {
     fs.readdir(directory, cadence());
   }, function (error) {
     if (error.code != "ENOENT") cadence(error);
     else cadence(null, []); 
   }, function (files) {
-    files.forEach(function () {
+    files.forEach(function (file) {
+      file = path.resolve(directory, file);
       cadence(function () {
         fs.stat(file, cadence());
       }, function (stat) {
         if (stat.isDirectory()) deltree(file, cadence());
         else fs.unlink(file, cadence());
+      }, function (error) {
+        if (error.code != "ENOENT") {
+          error.file = file;
+          errors.push(error);
+        }
       });
     }, 
-  }, function exit () {
+  }, function () {
     fs.rmdir(directory, cadence());
+  }, function (error) {
+    error.causes = errors;
+    throw error;
   });
 });
 
