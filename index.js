@@ -82,6 +82,10 @@ function factory () {
       var vargs = __slice.call(arguments, 0), i = -1, step, original;
       if (vargs.length == 1 && Array.isArray(vargs[0]) && !vargs[0].length) return;
       vargs = flatten(vargs);
+      if (vargs.length == 1 && typeof vargs[0] == "object" && vargs[0]) {
+        extend(invocation.context, vargs[0]);
+        return;
+      }
       if (vargs.length == 1 && typeof vargs[0] == "function") {
         original = vargs[0].original || vargs[0];
         for (i = invocation.arguments[0].length - 1; step = invocation.arguments[0][i]; i--) {
