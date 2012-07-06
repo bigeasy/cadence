@@ -248,15 +248,18 @@ function factory () {
       if (/^errors?$/.test(step.parameters[0]) && !context.errors.length) {
         invoke(steps, index + 1, context, [], callback);
       } else { 
+        invocation = { callbacks: [], count: 0 , called: 0, context: context, index: index };
+        invocation.arguments = [ steps, index + 1, context, invocation.callbacks, callback ]
+
         step.parameters.forEach(function (parameter) {
-          // Did not know that `/^_|done$/` means `^_` or `done$`.
           if (parameter == options.alias) {
             parameter = 'cadence';
           }
           if (parameter == "error") {
             arg = context.errors[0];
-          } else if (/^(_|done)$/.test(parameter)) {
-            arg = callback();
+          // Did not know that `/^_|callback$/` means `^_` or `done$`.
+          } else if (/^(_|callback)$/.test(parameter)) {
+            arg = cadence();
           } else if ((arg  = context[parameter]) == void(0)) {
             arg = methods[parameter];
           }
@@ -267,8 +270,6 @@ function factory () {
         names.forEach(function (name) { if (name[0] == "$") delete context[name] });
         context.errors = [];
 
-        invocation = { callbacks: [], count: 0 , called: 0, context: context, index: index };
-        invocation.arguments = [ steps, index + 1, context, invocation.callbacks, callback ]
         try {
           cadence()(null, invoke, step.apply(this, args));
         } catch (error) {
