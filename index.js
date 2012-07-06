@@ -120,7 +120,7 @@ function factory (options) {
     }
 
     function parameterize (step, context) {
-      var $ = /^function\s*[^(]*\(([^)]*)\)/.exec(step.toString()), original;
+      var $ = /^function\s*[^(]*\(([^)]*)\)/.exec(step.toString());
       if (!$) throw new Error("bad function");
       if (step.name) {
         context[step.name] = function () { cadence(step).apply(this, [ null ].concat(__slice.call(arguments, 0))) }
@@ -146,8 +146,8 @@ function factory (options) {
       var steps = invocation.arguments[0]
         , next = steps[invocation.index + 1]
         ;
-      if (next && ~next.parameters.indexOf("error")) {
-        invocation.context.error = error;
+      if (next && /^errors?$/.test(next.parameters[0])) {
+        invocation.context.errors.push(error);
       } else {
         if (timer) clearTimeout(timer);
         abended = true;
@@ -237,12 +237,14 @@ function factory (options) {
           step.original = original;
         });
 
-      if (step.parameters[0] == "error" && context.error == null) {
+      if (/^errors?$/.test(step.parameters[0]) && !context.errors.length) {
         invoke(steps, index + 1, context, [], callback);
       } else { 
         step.parameters.forEach(function (parameter) {
           // Did not know that `/^_|done$/` means `^_` or `done$`.
-          if (/^(_|done)$/.test(parameter)) {
+          if (parameter == "error") {
+            arg = context.errors[0];
+          } else if (/^(_|done)$/.test(parameter)) {
             arg = callback();
           } else if ((arg  = context[parameter]) == void(0)) {
             arg = methods[parameter];
@@ -252,7 +254,7 @@ function factory (options) {
 
         cadences.length = 0;
         names.forEach(function (name) { if (name[0] == "$") delete context[name] });
-        delete context.error;
+        context.errors = [];
 
         invocation = { callbacks: [], count: 0 , called: 0, context: context, index: index };
         invocation.arguments = [ steps, index + 1, context, invocation.callbacks, callback ]

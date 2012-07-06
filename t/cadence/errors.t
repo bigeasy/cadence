@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(3, function (equal, ok) {
+require('proof')(4, function (equal, ok) {
   var fs = require('fs')
     , cadence = require("../../index")()
     , errors = []
@@ -25,14 +25,12 @@ require('proof')(3, function (equal, ok) {
   }, function () {
     ok(true, "no error");
   })();
-/*
+
   cadence(function (cadence) {
     cadence()(new Error(1));
     cadence()(new Error(2));
     cadence()();
-  }, function (error) {
-    errors.push(error);
-  }, function () {
+  }, function (errors) {
     equal(errors.length, 2, "two errors");
-  })();*/
+  })();
 });
