@@ -95,7 +95,7 @@ function factory (options) {
           return function (error) {
             var vargs = __slice.call(arguments, 1);
             if (error) {
-              thrown.apply(this, [ error ].concat(invocation.arguments));
+              thrown(invocation, error);
             } else {
               invocation.callbacks.push({ names: names, vargs: vargs });
               // Indicates that the function has completed, so we need create
@@ -142,13 +142,17 @@ function factory (options) {
     // TODO And what if there are many, many errors?
 
     //
-    function thrown (error, steps, index, context, callbacks, callback) {
-      if (steps.length && steps.length && ~steps[0].parameters.indexOf("error")) {
-        context.error = error;
+    function thrown (invocation, error) {
+      var steps = invocation.arguments[0]
+        , next = steps[invocation.index + 1]
+        ;
+      if (next && ~next.parameters.indexOf("error")) {
+        invocation.context.error = error;
+      } else {
+        if (timer) clearTimeout(timer);
+        abended = true;
+        callback(error);
       }
-      abended = true;
-      if (timer) clearTimeout(timer);
-      callback(error);
     }
 
     // Parallel arrays make the most sense, really. If the paralleled function
@@ -233,27 +237,31 @@ function factory (options) {
           step.original = original;
         });
 
-      step.parameters.forEach(function (parameter) {
-        // Did not know that `/^_|done$/` means `^_` or `done$`.
-        if (/^(_|done)$/.test(parameter)) {
-          arg = callback();
-        } else if ((arg  = context[parameter]) == void(0)) {
-          arg = methods[parameter];
+      if (step.parameters[0] == "error" && context.error == null) {
+        invoke(steps, index + 1, context, [], callback);
+      } else { 
+        step.parameters.forEach(function (parameter) {
+          // Did not know that `/^_|done$/` means `^_` or `done$`.
+          if (/^(_|done)$/.test(parameter)) {
+            arg = callback();
+          } else if ((arg  = context[parameter]) == void(0)) {
+            arg = methods[parameter];
+          }
+          args.push(arg);
+        });
+
+        cadences.length = 0;
+        names.forEach(function (name) { if (name[0] == "$") delete context[name] });
+        delete context.error;
+
+        invocation = { callbacks: [], count: 0 , called: 0, context: context, index: index };
+        invocation.arguments = [ steps, index + 1, context, invocation.callbacks, callback ]
+        try {
+          cadence()(null, invoke, step.apply(this, args));
+        } catch (error) {
+          thrown(invocation, error);
+          invoke.apply(this, invocation.arguments);
         }
-        args.push(arg);
-      });
-
-      cadences.length = 0;
-      names.forEach(function (name) { if (name[0] == "$") delete context[name] });
-      delete context.error;
-
-      invocation = { callbacks: [], count: 0 , called: 0, context: context };
-      invocation.arguments = [ steps, index + 1, context, invocation.callbacks, callback ]
-      try {
-        cadence()(null, invoke, step.apply(this, args));
-      } catch (error) {
-        thrown.apply(this, [ error ].concat(invocation.arguments));
-        invoke();
       }
     }
   }
