@@ -174,6 +174,7 @@ function factory () {
       var inferred = !callbacks[0].names.length
         , names = (inferred ? step.parameters : callbacks[0].names).slice(0)
         , arrayed;
+      if (inferred && names[0] == 'cadence') names.shift();
       if (callbacks.length == 1) {
         names.length = callbacks[0].vargs.length;
         callbacks[0].vargs.forEach(function (arg, i) { context[names[i]] = arg });
