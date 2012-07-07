@@ -25,7 +25,6 @@ function factory () {
       , firstSteps = []
       , timer
       , callback
-      , callbacks = [ { names: [], vargs: [] } ]
       , called
       , count
       , exitCode = 0
@@ -48,11 +47,15 @@ function factory () {
     return execute;
 
     function execute () {
-      callback = arguments[0] || exceptional;
+      var vargs = __slice.call(arguments, 0), callbacks = [], callback = exceptional;
+      if (vargs.length) {
+        callback = vargs.pop();
+        callbacks = [{ names: [], vargs: vargs }];
+      }
       steps = firstSteps.slice(0);
       cadences.length = 0;
       abended = false;
-      invoke(steps, 0, Object.create(options.context), [], callback);
+      invoke(steps, 0, Object.create(options.context), callbacks, callback);
     }
 
     function exceptional (error) { if (error) throw error }
@@ -164,20 +167,34 @@ function factory () {
       } else {
         if (timer) clearTimeout(timer);
         abended = true;
-        callback(error);
+        invocation.callback(error);
       }
     }
 
     // Parallel arrays make the most sense, really. If the paralleled function
     // is better off returning a map, it can be shimmed.
-    function contextualize (step, callbacks, context) {
+    function contextualize (step, callbacks, context, ephemeral) {
       var inferred = !callbacks[0].names.length
         , names = (inferred ? step.parameters : callbacks[0].names).slice(0)
-        , arrayed;
-      if (inferred && names[0] == 'cadence') names.shift();
+        , arrayed
+        , i, $
+        , vargs
+        ;
+
+      if (~(i = names.indexOf('cadence')) || ~(i = names.indexOf(options.alias))) {
+        names.length = i;
+      }
       if (callbacks.length == 1) {
+        vargs = callbacks[0].vargs;
+        for (i = names.length; i--;) {
+          if (!names[i].indexOf('$vargs') && ($ = /^\$vargs(?:\$(\d+))?$/.exec(names[i]))) {
+            ephemeral[names[i]] = vargs.splice(i, vargs.length - (i + +($[1] || 0)));
+            names.splice(i, 1);
+            break;
+          }
+        }
         names.length = callbacks[0].vargs.length;
-        callbacks[0].vargs.forEach(function (arg, i) { context[names[i]] = arg });
+        names.forEach(function (name, i) { (name[0] == '$' ? ephemeral : context)[name] = vargs[i] });
       } else {
         arrayed = callbacks.every(function (result) {
           return (
@@ -188,10 +205,10 @@ function factory () {
         });
         if (arrayed) {
           names.length = callbacks[0].vargs.length;
-          names.forEach(function (name, i) { context[name] = [] });
+          names.forEach(function (name, i) { (name[0] == '$' ? ephemeral : context)[name] = [] });
           callbacks.forEach(function (result) {
             result.vargs.forEach(function (arg, i) {
-              context[names[i]].push(arg);
+              (names[i][0] == '$' ? ephemeral : context)[names[i]].push(arg);
             });
           });
         } else {
@@ -215,6 +232,7 @@ function factory () {
         , names
         , result
         , hold
+        , ephemeral = {}
         ;
         
 
@@ -230,7 +248,7 @@ function factory () {
         if (typeof callbacks[0].vargs[1] == "object") {
           extend(stack[0].context, callbacks[0].vargs[1]);
         //  callbacks.shift();
-        } else {
+        } else if (callbacks[0].vargs[0] == invoke) {
           callbacks[0].vargs.shift();
         }
       } else {
@@ -247,7 +265,7 @@ function factory () {
 
       // Filter out the return value, if there are callbacks left, then
       // `contextualize` will process them.
-      names = callbacks.length ? contextualize(step, callbacks, context) : [];
+      names = callbacks.length ? contextualize(step, callbacks, context, ephemeral) : [];
 
       // Give our creator a chance to inspect the step, possibly wrap it.
       Object.keys(options.wrap || {})
@@ -276,7 +294,7 @@ function factory () {
           } else if (/^(_|callback)$/.test(parameter)) {
             arg = cadence();
           } else if ((arg  = context[parameter]) == void(0)) {
-            arg = methods[parameter];
+            if ((arg = ephemeral[parameter]) == void(0)) arg = methods[parameter];
           }
           args.push(arg);
         });
