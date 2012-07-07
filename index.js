@@ -212,31 +212,40 @@ function factory () {
         , result
         , value
         , names
+        , result
+        , hold
         ;
+        
 
       if (abended) return;
 
       timeout();
 
+      // No callbacks means that we use the function return value as the value
+      // for the context, TODO but only if the value is not `undefined`. Here
+      // we're doing the thing where we use an object, so maybe we need to
+      // rethink this...
+      if (callbacks.length == 1) {
+        if (typeof callbacks[0].vargs[1] == "object") {
+          extend(stack[0].context, callbacks[0].vargs[1]);
+        //  callbacks.shift();
+        } else {
+          callbacks[0].vargs.shift();
+        }
+      } else {
+        callbacks = callbacks.filter(function (result) { return result.vargs[0] !== invoke });
+      }
+
       if (steps.length == index) {
-        callback(null);
+        callback.apply(this, [ null ].concat(callbacks.length == 1 ? callbacks[0].vargs : []));
         return;
       }
 
       // Get the next step.
       step = steps[index];
 
-      // No callbacks means that we use the function return value as the value
-      // for the context, TODO but only if the value is not `undefined`. Here
-      // we're doing the thing where we use an object, so maybe we need to
-      // rethink this...
-      if (callbacks.length == 1 && typeof callbacks[0].vargs[1] == "object") {
-        extend(stack[0].context, callbacks[0].vargs[1]);
-      }
-
       // Filter out the return value, if there are callbacks left, then
       // `contextualize` will process them.
-      callbacks = callbacks.filter(function (result) { return result.vargs[0] !== invoke });
       names = callbacks.length ? contextualize(step, callbacks, context) : [];
 
       // Give our creator a chance to inspect the step, possibly wrap it.
@@ -276,7 +285,9 @@ function factory () {
         context.errors = [];
 
         try {
-          cadence()(null, invoke, step.apply(this, args));
+          hold = cadence();
+          result = step.apply(this, args);
+          hold.apply(this, [ null, invoke ].concat(result == void(0) ? [] : [ result ]));
         } catch (error) {
           thrown(invocation, error);
           invoke.apply(this, invocation.arguments);
