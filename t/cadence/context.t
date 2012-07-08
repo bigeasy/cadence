@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 
-require('proof')(2, function (equal, ok, equal) {
+require('proof')(3, function (equal, equal) {
   var fs = require('fs')
     , cadence = require("../../index")()
     ;
 
-  cadence({ number: 1 })(function (number) {
-    ok(number, 1, "enclosed");
+  cadence({ context: { number: 1 } })(function (number) {
+    equal(number, 1, "enclosed");
   })();
 
   cadence(function (cadence) {
     cadence({ number: 1 });
 
     cadence(function (number) {
-      ok(number, 1, "set");
+      equal(number, 1, "set");
     });
   })();
 
