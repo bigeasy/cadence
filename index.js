@@ -240,17 +240,9 @@ function factory () {
 
       timeout();
 
-      // No callbacks means that we use the function return value as the value
-      // for the context, TODO but only if the value is not `undefined`. Here
-      // we're doing the thing where we use an object, so maybe we need to
-      // rethink this...
+      // No callbacks means that we use the function return value, if any. 
       if (callbacks.length == 1) {
-        if (typeof callbacks[0].vargs[1] == "object") {
-          extend(stack[0].context, callbacks[0].vargs[1]);
-        //  callbacks.shift();
-        } else if (callbacks[0].vargs[0] == invoke) {
-          callbacks[0].vargs.shift();
-        }
+        if (callbacks[0].vargs[0] == invoke) { callbacks[0].vargs.shift() }
       } else {
         callbacks = callbacks.filter(function (result) { return result.vargs[0] !== invoke });
       }
