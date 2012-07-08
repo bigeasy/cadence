@@ -26,8 +26,13 @@ of functions a ***cadence***. We call an individual function in a cadence a
 
 Changes for each release.
 
-### Version 0.0.1 -
+### Version 0.0.1 - Sun Jul  8 04:28:52 UTC 2012
 
+ * Test case for Proof set context. #35.
+ * Variadic and external arguments. #34. #31.
+ * Store ephemeral variables outside of cadence context. #33.
+ * Pass parameters in from external function. #23.
+ * Create change log. #32.
  * Return values to application. #14.
  * Early exit. #30.
  * Plain old callbacks. #29.
