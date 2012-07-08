@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(3, function (callback, equal, equal) {
+require('proof')(3, function (callback, equal) {
   var fs = require('fs')
     , cadence = require("../../index")({ wrap: { cleanup: wrap } })
     , skip = cadence.skip
@@ -19,8 +19,8 @@ require('proof')(3, function (callback, equal, equal) {
 
   }, function (two) {
 
-    equal(1, wrapped, "function wrapped");
-    equal(1, invoked, "wrapper called");
+    equal(wrapped, 1, "function wrapped");
+    equal(invoked, 1, "wrapper called");
 
   })(callback());
 

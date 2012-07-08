@@ -12,7 +12,7 @@ require('proof')(5, function (equal) {
     }, function (count) {
       if (count != 10) cadence(inc)();
     }, function (count) {
-      equal(10, count, "var");
+      equal(count, 10, "var");
     });
   })();
 
@@ -24,7 +24,7 @@ require('proof')(5, function (equal) {
     }, function (count, inc) {
       if (count != 10) cadence(inc)();
     }, function (count) {
-      equal(10, count, "deferred");
+      equal(count, 10, "deferred");
     });
   })();
 
@@ -36,7 +36,7 @@ require('proof')(5, function (equal) {
     }, function (count, inc) {
       if (count != 10) inc();
     }, function (count) {
-      equal(10, count, "invoked");
+      equal(count, 10, "invoked");
     });
   })();
 
@@ -48,8 +48,8 @@ require('proof')(5, function (equal) {
     }, function (count, inc) {
       if (count != 10) inc(count, "b");
     }, function (count, letter) {
-      equal(10, count, "invoked");
-      equal("b", letter, "parameterized");
+      equal(count, 10, "invoked");
+      equal(letter, "b", "parameterized");
     });
   })();
 });

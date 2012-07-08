@@ -8,6 +8,6 @@ require('proof')(1, function (equal, ok) {
   cadence(function (async) {
     async()(null, 1);
   }, function (number) {
-    ok(1, number, "aliased");
+    ok(number, 1, "aliased");
   })();
 });
