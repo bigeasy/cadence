@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(12, function (callback, equal) {
+require('proof')(13, function (callback, equal, ok) {
   var fs = require('fs')
     , cadence = require("../../index")()
     , skip = cadence.skip
@@ -33,4 +33,11 @@ require('proof')(12, function (callback, equal) {
     equal(numbers[2], 3, "number three still");
 
   })(callback());
+
+  cadence(function (cadence) {
+    cadence()(null);
+    cadence()(null);
+  }, function () {
+    ok(true, 'no arguments');
+  })();
 });
