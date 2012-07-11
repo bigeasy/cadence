@@ -26,15 +26,19 @@ of functions a ***cadence***. We call an individual function in a cadence a
 
 Changes for each release.
 
+### Version 0.0.4 &mdash; Wed Jul 11 21:56:29 UTC 2012
+
+ * No inference when there are no arguments. #40.
+
 ### Version 0.0.3 &mdash; Wed Jul 11 00:54:38 UTC 2012
 
  * Set context after uncaught error. #39.
 
-### Version 0.0.2 - Sun Jul  8 05:48:38 UTC 2012
+### Version 0.0.2 &mdash; Sun Jul  8 05:48:38 UTC 2012
 
  * Remove object merge with cadence context. #38.
 
-### Version 0.0.1 - Sun Jul  8 04:28:52 UTC 2012
+### Version 0.0.1 &mdash; Sun Jul  8 04:28:52 UTC 2012
 
  * Test case for Proof set context. #35.
  * Variadic and external arguments. #34. #31.
@@ -62,7 +66,7 @@ Changes for each release.
  * Gather results from parallel executions. #10.
  * Infer context names from step function argument names. #7.
 
-### Version 0.0.0 - Tue Jul  3 19:17:38 UTC 2012
+### Version 0.0.0 &mdash; Tue Jul  3 19:17:38 UTC 2012
 
  * Build on Travis CI. #5.
  * Extract Cadence from Proof. #6.
