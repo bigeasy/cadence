@@ -240,39 +240,39 @@ function factory () {
 
       timeout();
 
-      // No callbacks means that we use the function return value, if any. 
-      if (callbacks.length == 1) {
-        if (callbacks[0].vargs[0] == invoke) { callbacks[0].vargs.shift() }
-      } else {
-        callbacks = callbacks.filter(function (result) { return result.vargs[0] !== invoke });
-      }
-
-      if (steps.length == index) {
-        callback.apply(this, [ null ].concat(callbacks.length == 1 ? callbacks[0].vargs : []));
-        return;
-      }
-
-      // Get the next step.
-      step = steps[index];
-
-      // Filter out the return value, if there are callbacks left, then
-      // `contextualize` will process them.
-      names = callbacks.length ? contextualize(step, callbacks, context, ephemeral) : [];
-
-      // Give our creator a chance to inspect the step, possibly wrap it.
-      Object.keys(options.wrap || {})
-        .filter(function (name) { return named(step, name) && name })
-        .map(function (name) { return options.wrap[name] })
-        .forEach(function (wrapper) {
-          var parameters = step.parameters, original = step.original || step;
-          step = wrapper(step)
-          step.parameters = parameters;
-          step.original = original;
-        });
-
-      if (/^errors?$/.test(step.parameters[0]) && !context.errors.length) {
-        invoke(steps, index + 1, context, [], callback);
+      if (steps[index] && /^errors?$/.test(steps[index].parameters[0]) && !context.errors.length) {
+        invoke(steps, index + 1, context, callbacks, callback);
       } else { 
+        // No callbacks means that we use the function return value, if any. 
+        if (callbacks.length == 1) {
+          if (callbacks[0].vargs[0] == invoke) { callbacks[0].vargs.shift() }
+        } else {
+          callbacks = callbacks.filter(function (result) { return result.vargs[0] !== invoke });
+        }
+
+        if (steps.length == index) {
+          callback.apply(this, [ null ].concat(callbacks.length == 1 ? callbacks[0].vargs : []));
+          return;
+        }
+
+        // Get the next step.
+        step = steps[index];
+
+        // Filter out the return value, if there are callbacks left, then
+        // `contextualize` will process them.
+        names = callbacks.length ? contextualize(step, callbacks, context, ephemeral) : [];
+
+        // Give our creator a chance to inspect the step, possibly wrap it.
+        Object.keys(options.wrap || {})
+          .filter(function (name) { return named(step, name) && name })
+          .map(function (name) { return options.wrap[name] })
+          .forEach(function (wrapper) {
+            var parameters = step.parameters, original = step.original || step;
+            step = wrapper(step)
+            step.parameters = parameters;
+            step.original = original;
+          });
+
         invocation = { callbacks: [], count: 0 , called: 0, context: context, index: index, callback: callback };
         invocation.arguments = [ steps, index + 1, context, invocation.callbacks, callback ]
 
