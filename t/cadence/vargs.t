@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(13, function (callback, equal) {
+require('proof')(13, function (async, equal) {
   var cadence = require("../../index")()
     ;
 
@@ -48,5 +48,5 @@ require('proof')(13, function (callback, equal) {
 
     });
 
-  })(callback());
+  })(async());
 });
