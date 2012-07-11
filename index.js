@@ -143,6 +143,7 @@ function factory () {
         context[step.name].original = step;
       }
       step.parameters = $[1].split(/\s*,\s/);
+      if (!step.parameters[0].trim()) step.parameters.shift();
       return step;
     }
 
@@ -195,7 +196,7 @@ function factory () {
         }
         names.length = callbacks[0].vargs.length;
         names.forEach(function (name, i) { (name[0] == '$' ? ephemeral : context)[name] = vargs[i] });
-      } else {
+      } else if (names.length) {
         arrayed = callbacks.every(function (result) {
           return (
             result.vargs.length == names.length
