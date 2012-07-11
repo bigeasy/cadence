@@ -26,6 +26,10 @@ of functions a ***cadence***. We call an individual function in a cadence a
 
 Changes for each release.
 
+### Version 0.0.3 &mdash; Wed Jul 11 00:54:38 UTC 2012
+
+ * Set context after uncaught error. #39.
+
 ### Version 0.0.2 - Sun Jul  8 05:48:38 UTC 2012
 
  * Remove object merge with cadence context. #38.
