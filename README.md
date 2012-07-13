@@ -26,6 +26,10 @@ of functions a ***cadence***. We call an individual function in a cadence a
 
 Changes for each release.
 
+### Version 0.0.6 &mdash; Fri Jul 13 16:27:39 UTC 2012
+
+ * Flatten aguments to inner `cadence` unless first arg is null. #44.
+
 ### Version 0.0.5 &mdash; Fri Jul 13 15:25:00 UTC 2012
 
  * Do not flatten arguments to `async`. #43.
