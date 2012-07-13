@@ -84,7 +84,7 @@ function factory () {
     function cadence () {
       var vargs = __slice.call(arguments, 0), i = -1, step, original;
       if (vargs.length == 1 && Array.isArray(vargs[0]) && !vargs[0].length) return;
-      //vargs = flatten(vargs);
+      if (vargs[0] != null) vargs = flatten(vargs);
       if (vargs.length && (vargs[0] == null || vargs[0] instanceof Error)) {
         invocation.count = Number.MAX_VALUE;
         invocation.callback.apply(this, vargs);
