@@ -26,6 +26,12 @@ of functions a ***cadence***. We call an individual function in a cadence a
 
 Changes for each release.
 
+### Version 0.0.5 &mdash; Fri Jul 13 15:25:00 UTC 2012
+
+ * Do not flatten arguments to `async`. #43.
+ * Upgrade to Proof 0.0.14. #42.
+ * Build on Windows. #41.
+
 ### Version 0.0.4 &mdash; Wed Jul 11 21:56:29 UTC 2012
 
  * No inference when there are no arguments. #40.
