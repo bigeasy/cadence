@@ -2,8 +2,7 @@
 
 require('proof')(13, function (async, equal, ok) {
   var fs = require('fs')
-    , cadence = require("../../index")()
-    , skip = cadence.skip
+    , cadence = require('../..')()
     ;
 
   cadence(function (cadence) {
