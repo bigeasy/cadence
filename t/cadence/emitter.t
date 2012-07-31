@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 require('proof')(1, function (equal, ok, async, deepEqual) {
-  var emitter, EventEmitter = require('events').EventEmitter, cadence = require('../..')();
+  var emitter, EventEmitter = require('events').EventEmitter, cadence = require('../..');
 
   emitter = new EventEmitter();
 

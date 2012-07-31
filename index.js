@@ -417,4 +417,4 @@ function factory () {
   }
 }
 
-module.exports = factory;
+module.exports = factory();
