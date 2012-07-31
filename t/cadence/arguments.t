@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 require('proof')(2, function (async, equal) {
-  var cadence = require("../../index")();
+  var cadence = require('../..');
   cadence(function (number, letter) {
     equal(number, 1, 'first argument');
     equal('a', letter, 'second argument');

@@ -2,7 +2,7 @@
 
 require('proof')(3, function (async, equal) {
   var fs = require('fs')
-    , cadence = require("../../index")({ wrap: { cleanup: wrap } })
+    , cadence = require('../..')({ wrap: { cleanup: wrap } })
     , wrapped = 0
     , invoked = 0
     ;

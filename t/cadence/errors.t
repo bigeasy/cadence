@@ -2,7 +2,7 @@
 
 require('proof')(5, function (equal, ok) {
   var fs = require('fs')
-    , cadence = require("../../index")()
+    , cadence = require('../..')
     , errors = []
     ;
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 require('proof')(5, function (equal) {
-  var fs = require('fs'), cadence = require("../../index")();
+  var fs = require('fs'), cadence = require('../..');
 
   cadence(function (async) {
     var inc;
