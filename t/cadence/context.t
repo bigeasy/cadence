@@ -9,20 +9,20 @@ require('proof')(3, function (equal, equal) {
     equal(number, 1, "enclosed");
   })();
 
-  cadence(function (cadence) {
-    cadence({ number: 1 });
+  cadence(function (async) {
+    async({ number: 1 });
 
-    cadence(function (number) {
+    async(function (number) {
       equal(number, 1, "set");
     });
   })();
 
-  cadence(function (cadence) {
-    cadence(function (callback) {
+  cadence(function (async) {
+    async(function (callback) {
       callback(null, { number: 1 });
     });
-  }, function (object, cadence) {
-    if (typeof object == 'object') cadence(object);
+  }, function (object, async) {
+    if (typeof object == 'object') async(object);
   }, function (number) {
     equal(number, 1, "callback set");
   })();

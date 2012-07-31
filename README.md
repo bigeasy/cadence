@@ -3,13 +3,11 @@
 A Swiss Army asynchronous control flow function for JavaScript.
 
 ```javascript
-var cadence = require('cadence')()
-  , fs = require('fs')
-  ;
+var cadence = require('cadence')(), fs = require('fs');
 
-cadence(function (cadence) {
+cadence(function (async) {
 
-  fs.readFile(__filename, 'utf8', cadence());
+  fs.readFile(__filename, 'utf8', async());
 
 }, function (body) {
 
@@ -109,6 +107,7 @@ Changes for each release.
 
 Released: Pending
 
+ * Rename inner `cadence` function to `async`. #52.
  * Consume events from event emitters. #48.
  * An `_` underbar as a step function name means to disable argument inference.
    #46. #25

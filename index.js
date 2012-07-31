@@ -31,7 +31,7 @@ function factory () {
       , count
       , exitCode = 0
       , cadences = []
-      , methods = { cadence: cadence }
+      , methods = { async: async }
       , abended
       , key
       , arg
@@ -80,7 +80,7 @@ function factory () {
     function EventInterceptor (emitter) {
       var bindings = {}, gatherers = [], count = 0, completed = 0;
       this.on = function (type) {
-        var callback = cadence(type);
+        var callback = async(type);
         bindings[type] = { type: 'on', values: [] }
         emitter.on(type, function () {
           bindings[type].values.push(__slice.call(arguments, 0));
@@ -95,7 +95,7 @@ function factory () {
         return this;
       }
       this.once = function (type) {
-        var callback = cadence(type);
+        var callback = async(type);
         bindings[type] = { type: 'once' }
         emitter.once(type, function () {
           callback.apply(this, [ null ].concat(arguments));
@@ -120,7 +120,7 @@ function factory () {
     // We give this function to the caller to build control flow.
 
     //
-    function cadence () {
+    function async () {
       var vargs = __slice.call(arguments, 0), i = -1, step, original;
 
       // If we're called with an empty array, we're going to assume that the
@@ -205,7 +205,7 @@ function factory () {
             cadences.slice(0).forEach(function (steps) {
               var subtext = Object.create(invocation.context);
               steps = steps.map(function (step) { return parameterize(step, subtext) });
-              invoke(steps, 0, subtext, [], cadence());
+              invoke(steps, 0, subtext, [], async());
             });
           }
         }
@@ -219,7 +219,7 @@ function factory () {
       var $ = /^function\s*[^(]*\(([^)]*)\)/.exec(step.toString());
       if (!$) throw new Error("bad function");
       if (step.name) {
-        context[step.name] = function () { cadence(step).apply(this, [ null ].concat(__slice.call(arguments, 0))) }
+        context[step.name] = function () { async(step).apply(this, [ null ].concat(__slice.call(arguments, 0))) }
         context[step.name].original = step;
       }
       step.parameters = $[1].split(/\s*,\s/);
@@ -263,7 +263,7 @@ function factory () {
       });
 
       names = step.parameters.slice(0);
-      if (~(i = names.indexOf('cadence')) || ~(i = names.indexOf(options.alias))) {
+      if (~(i = names.indexOf('async')) || ~(i = names.indexOf(options.alias))) {
         names.length = i;
       }
       if (step.name == '_') {
@@ -388,13 +388,13 @@ function factory () {
 
         step.parameters.forEach(function (parameter) {
           if (parameter == options.alias) {
-            parameter = 'cadence';
+            parameter = 'async';
           }
           if (parameter == "error") {
             arg = context.errors[0];
           // Did not know that `/^_|callback$/` means `^_` or `done$`.
           } else if (/^(_|callback)$/.test(parameter)) {
-            arg = cadence();
+            arg = async();
           } else if ((arg  = context[parameter]) == void(0)) {
             if ((arg = ephemeral[parameter]) == void(0)) arg = methods[parameter];
           }
@@ -405,7 +405,7 @@ function factory () {
         context.errors = [];
 
         try {
-          hold = cadence();
+          hold = async();
           result = step.apply(this, args);
           hold.apply(this, [ null, invoke ].concat(result == void(0) ? [] : [ result ]));
         } catch (error) {

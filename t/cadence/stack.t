@@ -6,17 +6,17 @@ require('proof')(4, function (async, equal) {
     , skip = cadence.skip
     ;
 
-  cadence(function (cadence) {
+  cadence(function (async) {
 
-    cadence()(null, 1); 
+    async()(null, 1); 
 
-  }, function (number, cadence) {
+  }, function (number, async) {
 
     equal(number, 1, "set");
-    cadence (function (number) {
+    async(function (number) {
 
       equal(number, 1, "inherited");
-      cadence()(null, 2); 
+      async()(null, 2); 
       
     }, function (number) {
     
