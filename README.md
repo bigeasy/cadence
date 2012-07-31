@@ -107,6 +107,7 @@ Changes for each release.
 
 Released: Pending
 
+ * Moved `build` directory contents to `t`. #51.
  * Rename inner `cadence` function to `async`. #52.
  * Consume events from event emitters. #48.
  * An `_` underbar as a step function name means to disable argument inference.
