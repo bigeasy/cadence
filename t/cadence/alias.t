@@ -2,13 +2,12 @@
 
 require('proof')(1, function (equal, ok) {
   var fs = require('fs')
-    , cadence = require("../../index")({ alias: 'async' })
-    , errors = []
+    , cadence = require("../../index")({ alias: 'aliased' })
     ;
 
-  cadence(function (async) {
-    async()(null, 1);
+  cadence(function (aliased) {
+    aliased()(null, 1);
   }, function (number) {
-    ok(1, number, "aliased");
+    ok(number, 1, "aliased");
   })();
 });

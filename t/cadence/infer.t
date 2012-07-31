@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
-require('proof')(4, function (callback, ok) {
+require('proof')(4, function (async, equal, ok) {
   var fs = require('fs')
-    , cadence = require("../../index")()
+    , cadence = require('../..')
     , skip = cadence.skip
     ;
 
-  cadence(function (cadence) {
+  cadence(function (async) {
 
-    fs.readFile(__filename, 'utf8', cadence());
+    fs.readFile(__filename, 'utf8', async());
 
   }, function (body) {
 
@@ -20,5 +20,5 @@ require('proof')(4, function (callback, ok) {
     ok(body, "still exists");
     ok(/cadence/.test(body), "still read");
 
-  })(callback());
+  })(async());
 });

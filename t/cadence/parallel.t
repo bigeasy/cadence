@@ -1,16 +1,15 @@
 #!/usr/bin/env node
 
-require('proof')(12, function (callback, equal) {
+require('proof')(13, function (async, equal, ok) {
   var fs = require('fs')
-    , cadence = require("../../index")()
-    , skip = cadence.skip
+    , cadence = require('../..')
     ;
 
-  cadence(function (cadence) {
+  cadence(function (async) {
 
-    cadence()(null, "a", 1);
-    cadence()(null, "b", 2);
-    cadence()(null, "c", 3);
+    async()(null, "a", 1);
+    async()(null, "b", 2);
+    async()(null, "c", 3);
 
   }, function (letters, numbers) {
 
@@ -32,5 +31,12 @@ require('proof')(12, function (callback, equal) {
     equal(numbers[1], 2, "number two still");
     equal(numbers[2], 3, "number three still");
 
-  })(callback());
+  })(async());
+
+  cadence(function (async) {
+    async()(null);
+    async()(null);
+  }, function () {
+    ok(true, 'no arguments');
+  })();
 });

@@ -1,28 +1,27 @@
 #!/usr/bin/env node
 
-require('proof')(3, function (callback, equal, equal) {
+require('proof')(3, function (async, equal) {
   var fs = require('fs')
-    , cadence = require("../../index")({ wrap: { cleanup: wrap } })
-    , skip = cadence.skip
+    , cadence = require('../..')({ wrap: { cleanup: wrap } })
     , wrapped = 0
     , invoked = 0
     ;
 
-  cadence(function (cadence) {
+  cadence(function (async) {
 
-    cadence()(null, 1);
+    async()(null, 1);
 
-  }, function cleanup (one) {
+  }, function cleanup (one, async) {
 
     equal(one, 1, "invoked");
-    cadence()(null, 2);
+    async()(null, 2);
 
   }, function (two) {
 
-    equal(1, wrapped, "function wrapped");
-    equal(1, invoked, "wrapper called");
+    equal(wrapped, 1, "function wrapped");
+    equal(invoked, 1, "wrapper called");
 
-  })(callback());
+  })(async());
 
   function wrap (proc) {
     wrapped++;

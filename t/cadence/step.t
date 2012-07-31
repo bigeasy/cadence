@@ -1,18 +1,17 @@
 #!/usr/bin/env node
 
-require('proof')(1, function (callback, ok) {
+require('proof')(1, function (async, ok) {
   var fs = require('fs')
-    , cadence = require("../../index")()
-    , skip = cadence.skip
+    , cadence = require('../..')
     ;
 
-  cadence(function (cadence) {
+  cadence(function (async) {
 
-    fs.readFile(__filename, 'utf8', cadence('body'));
+    fs.readFile(__filename, 'utf8', async('body'));
 
   }, function (body) {
 
     ok(/#!/.test(body), "read");
 
-  })(callback());
+  })(async());
 });
