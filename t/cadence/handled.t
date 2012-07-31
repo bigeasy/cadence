@@ -5,7 +5,7 @@ require('proof')(2, function (equal) {
     , cadence = require("../../index")()
     ;
 
-  cadence(function (cadence) {
+  cadence(function () {
 
     throw new Error("thrown");
 
@@ -13,9 +13,9 @@ require('proof')(2, function (equal) {
     equal(error.message, "thrown", "handled throw");
   });
 
-  cadence(function (cadence) {
+  cadence(function (async) {
 
-    cadence()(new Error("handed"));
+    async()(new Error("handed"));
 
   })(function (error) {
     equal(error.message, "handed", "unhandled error");

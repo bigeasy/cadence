@@ -5,8 +5,8 @@ require('proof')(1, function (equal, ok, async, deepEqual) {
 
   emitter = new EventEmitter();
 
-  cadence(function (emitter, cadence) {
-    cadence(emitter).on('data').once('end');
+  cadence(function (emitter, async) {
+    async(emitter).on('data').once('end');
   }, function (data) {
     deepEqual(data, [ 1, 2, 3 ], 'on');
   })(emitter, async());
