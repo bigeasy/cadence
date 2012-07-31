@@ -29,10 +29,10 @@ var cadance = require('cadence')
   , fs = require('fs')
   ;
 
-var deleteIf = cadence(function (cadence, file, condition) {
-  fs.stat(file, cadence());
-}, function (cadence, stat) {
-  if (condition(stat)) fs.unlink(cadence());
+var deleteIf = cadence(function (async, file, condition) {
+  fs.stat(file, async());
+}, function (async, stat) {
+  if (condition(stat)) fs.unlink(async());
 });
 
 function empty (stat) { return stat.size == 0 }
@@ -57,12 +57,12 @@ var cadance = require('cadence')
   , fs = require('fs')
   ;
 
-var deleteIf = cadence(function (cadence, file, condition) {
-  fs.stat(file, cadence());
+var deleteIf = cadence(function (async, file, condition) {
+  fs.stat(file, async());
 }, function (error) {
   if (error.code != "ENOENT") throw error;
-}, function (cadence, stat) {
-  if (stat && condition(stat)) fs.unlink(cadence());
+}, function (async, stat) {
+  if (stat && condition(stat)) fs.unlink(async());
 });
 
 function empty (stat) { return stat.size == 0 }
