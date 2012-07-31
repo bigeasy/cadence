@@ -3,11 +3,10 @@
 require('proof')(3, function (ok, equal) {
   var fs = require('fs')
     , cadence = require("../../index")()
-    , skip = cadence.skip
     ;
 
   try {
-    cadence(function (cadence) {
+    cadence(function () {
 
       throw new Error("thrown");
 
@@ -17,9 +16,9 @@ require('proof')(3, function (ok, equal) {
   }
 
   try {
-    cadence(function (cadence) {
+    cadence(function (async) {
 
-      cadence()(new Error("handed"));
+      async()(new Error("handed"));
 
     })();
   } catch (error) {

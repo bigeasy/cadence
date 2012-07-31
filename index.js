@@ -1,5 +1,7 @@
 "use strict";
-var __slice = [].slice;
+
+var __slice = [].slice, EventEmitter = require('events').EventEmitter;
+
 
 function extend (object) {
   __slice.call(arguments, 1).forEach(function (append) {
@@ -29,7 +31,7 @@ function factory () {
       , count
       , exitCode = 0
       , cadences = []
-      , methods = { cadence: cadence }
+      , methods = { async: async }
       , abended
       , key
       , arg
@@ -73,6 +75,40 @@ function factory () {
       return flattened;
     }
 
+    // Creating a problem for myself here. I'm using the named arguments, which
+    // I was going to get rid of. Maybe I need to create a sub-cadence?
+    function EventInterceptor (emitter) {
+      var bindings = {}, gatherers = [], count = 0, completed = 0;
+      this.on = function (type) {
+        var callback = async(type);
+        bindings[type] = { type: 'on', values: [] }
+        emitter.on(type, function () {
+          bindings[type].values.push(__slice.call(arguments, 0));
+        });
+        gatherers.push(function () {
+          var values = bindings[type].values;
+          if (values.every(function (value) { return value.length == 1 })) {
+            values = values.map(function (value) { return value[0]  });
+          }
+          callback(null, values);
+        });
+        return this;
+      }
+      this.once = function (type) {
+        var callback = async(type);
+        bindings[type] = { type: 'once' }
+        emitter.once(type, function () {
+          callback.apply(this, [ null ].concat(arguments));
+          if (++completed == count) {
+            gatherers.forEach(function (gatherer) { gatherer() });
+          }
+        });
+        count++;
+        return this;
+      }
+      this.emitter = emitter;
+    }
+
     // Set and reset a thirty second timeout between assertions.
     function timeout () {
       if (timer) clearTimeout(timer);
@@ -81,57 +117,101 @@ function factory () {
 
     var invocation;
 
-    function cadence () {
+    // We give this function to the caller to build control flow.
+
+    //
+    function async () {
       var vargs = __slice.call(arguments, 0), i = -1, step, original;
-      if (vargs.length == 1 && Array.isArray(vargs[0]) && !vargs[0].length) return;
-      if (vargs[0] != null) vargs = flatten(vargs);
+
+      // If we're called with an empty array, we're going to assume that the
+      // caller created a cadence programatically, but the conditions were such
+      // that no steps were added to the cadence. If we don't skip the empty
+      // array, then the next step will flatten the array and we'll end up
+      // treating it as a call with no arguments, which generates a callback.
+
+      //
+      if (vargs.length == 1 && Array.isArray(vargs[0]) && !vargs[0].length)
+        return;
+
+      // If the first argument is null, we're going to assume this is an
+      // explicit early return, otherwise we flatten the arguments.
+
+      //
+      if (vargs[0] != null)
+        vargs = flatten(vargs);
+
+      // Wrap event emitters with out interceptor.
+      if (vargs[0] instanceof EventEmitter)
+        return new EventInterceptor(vargs[0]);    
+
+      // The caller as invoked the async function directly as an explicit early
+      // return to exit the entire cadence.
       if (vargs.length && (vargs[0] == null || vargs[0] instanceof Error)) {
         invocation.count = Number.MAX_VALUE;
         invocation.callback.apply(this, vargs);
         return;
       }
+
+      // If we're called with a single object argument, we merge the given
+      // object into the cadence context.
       if (vargs.length == 1 && typeof vargs[0] == "object" && vargs[0]) {
         extend(invocation.context, vargs[0]);
         return;
       }
+
+      // If our first argument is a function, we check to see if it is a jump
+      // instruction. If the function is a member of the current cadence, we
+      // will inovke that function with the results of this step.
+
+      // Search for the function in the current cadence.
       if (vargs.length == 1 && typeof vargs[0] == "function") {
         original = vargs[0].original || vargs[0];
         for (i = invocation.arguments[0].length - 1; step = invocation.arguments[0][i]; i--) {
           if (original === step || original === step.original) break; 
         }
       }
+
+      // If we find the function in the current cadence, we set the index of
+      // next step function to execute; then remove the function argument and
+      // procede.
       if (~i) {
         invocation.arguments[1] = i;
         vargs.shift();
       } 
+
+      // If we have no arguments, or else if every argument is a string, then
+      // we've been asked to build a callback, otherwise, this is a sub-cadence.
+
+      //
       if (!vargs.length || vargs.every(function (arg) { return typeof vargs[0] == "string" })) {
-        var names = vargs;
         invocation.count++;
-        return (function (invocation) {
-          return function (error) {
-            var vargs = __slice.call(arguments, 1);
-            if (error) {
-              thrown(invocation, error);
-            } else {
-              invocation.callbacks.push({ names: names, vargs: vargs });
-              // Indicates that the function has completed, so we need create
-              // the callbacks for parallel cadences now, the next increment of
-              // the called counter, which may be the last.
-              if (vargs[0] == invoke) {
-                cadences.slice(0).forEach(function (steps) {
-                  var subtext = Object.create(invocation.context);
-                  steps = steps.map(function (step) { return parameterize(step, subtext) });
-                  invoke(steps, 0, subtext, [], cadence());
-                });
-              }
-            }
-            if (++invocation.called == invocation.count) {
-              invoke.apply(this, invocation.arguments);
-            }
-          }
-        })(invocation);
+        return createCallback(invocation, vargs);
       } else {
         cadences.push(vargs);
+      }
+    }
+
+    function createCallback (invocation, names) {
+      return function (error) {
+        var vargs = __slice.call(arguments, 1);
+        if (error) {
+          thrown(invocation, error);
+        } else {
+          invocation.callbacks.push({ names: names, vargs: vargs });
+          // Indicates that the function has completed, so we need create
+          // the callbacks for parallel cadences now, the next increment of
+          // the called counter, which may be the last.
+          if (vargs[0] == invoke) {
+            cadences.slice(0).forEach(function (steps) {
+              var subtext = Object.create(invocation.context);
+              steps = steps.map(function (step) { return parameterize(step, subtext) });
+              invoke(steps, 0, subtext, [], async());
+            });
+          }
+        }
+        if (++invocation.called == invocation.count) {
+          invoke.apply(this, invocation.arguments);
+        }
       }
     }
 
@@ -139,7 +219,7 @@ function factory () {
       var $ = /^function\s*[^(]*\(([^)]*)\)/.exec(step.toString());
       if (!$) throw new Error("bad function");
       if (step.name) {
-        context[step.name] = function () { cadence(step).apply(this, [ null ].concat(__slice.call(arguments, 0))) }
+        context[step.name] = function () { async(step).apply(this, [ null ].concat(__slice.call(arguments, 0))) }
         context[step.name].original = step;
       }
       step.parameters = $[1].split(/\s*,\s/);
@@ -175,18 +255,23 @@ function factory () {
     // Parallel arrays make the most sense, really. If the paralleled function
     // is better off returning a map, it can be shimmed.
     function contextualize (step, callbacks, context, ephemeral) {
-      var inferred = !callbacks[0].names.length
-        , names = (inferred ? step.parameters : callbacks[0].names).slice(0)
-        , arrayed
-        , i, $
-        , vargs
-        ;
+      var inferred = [], explicit = []
+        , i, $ , vargs, names;
+      callbacks.forEach(function (callback) {
+        if (callback.names.length) explicit.push(callback);
+        else inferred.push(callback);
+      });
 
-      if (~(i = names.indexOf('cadence')) || ~(i = names.indexOf(options.alias))) {
+      names = step.parameters.slice(0);
+      if (~(i = names.indexOf('async')) || ~(i = names.indexOf(options.alias))) {
         names.length = i;
       }
-      if (callbacks.length == 1) {
-        vargs = callbacks[0].vargs;
+      if (step.name == '_') {
+        names.length = 0;
+      }
+
+      if (inferred.length == 1) {
+        vargs = inferred[0].vargs;
         for (i = names.length; i--;) {
           if (!names[i].indexOf('$vargs') && ($ = /^\$vargs(?:\$(\d+))?$/.exec(names[i]))) {
             ephemeral[names[i]] = vargs.splice(i, vargs.length - (i + +($[1] || 0)));
@@ -196,13 +281,36 @@ function factory () {
         }
         names.length = callbacks[0].vargs.length;
         names.forEach(function (name, i) { (name[0] == '$' ? ephemeral : context)[name] = vargs[i] });
-      } else if (names.length) {
-        arrayed = callbacks.every(function (result) {
+      } else if (inferred.length && names.length) {
+        parallelize(names, inferred, context, ephemeral);
+      }
+
+      var map = {};
+      explicit.forEach(function (callback) {
+        var key = callback.names.join('!');
+        (map[key] || (map[key] = [])).push(callback);
+      });
+
+      Object.keys(map).forEach(function (key) {
+        parallelize(map[key][0].names, map[key], context, ephemeral);
+      });
+    }
+
+    // Attempt to organize many callbacks into parallel arrays of values.
+
+    //
+    function parallelize (names, callbacks, context, ephemeral) {
+      if (callbacks.length == 1) {
+        callbacks[0].names.forEach(function (name, i) {
+          (names[i][0] == '$' ? ephemeral : context)[name] = callbacks[0].vargs[i];
+        });
+      } else {
+        // Is the result well organized? We have a specific size for names. 
+        var arrayed = callbacks.every(function (result) {
           return (
             result.vargs.length == names.length
-            && ((inferred && !result.names.length)
-                || names.every(function (name, i) { return name == result.names[i] }))
-          );
+            && (!result.names.length || names.every(function (name, i) { return name == result.names[i] }))
+          )
         });
         if (arrayed) {
           names.length = callbacks[0].vargs.length;
@@ -216,7 +324,6 @@ function factory () {
           throw new Error("Can't infer array assignment.");
         }
       }
-      return names;
     }
 
     function invoke (steps, index, context, callbacks, callback) {
@@ -261,7 +368,9 @@ function factory () {
 
         // Filter out the return value, if there are callbacks left, then
         // `contextualize` will process them.
-        names = callbacks.length ? contextualize(step, callbacks, context, ephemeral) : [];
+        if (callbacks.length) {
+          contextualize(step, callbacks, context, ephemeral);
+        } 
 
         // Give our creator a chance to inspect the step, possibly wrap it.
         Object.keys(options.wrap || {})
@@ -279,13 +388,13 @@ function factory () {
 
         step.parameters.forEach(function (parameter) {
           if (parameter == options.alias) {
-            parameter = 'cadence';
+            parameter = 'async';
           }
           if (parameter == "error") {
             arg = context.errors[0];
           // Did not know that `/^_|callback$/` means `^_` or `done$`.
           } else if (/^(_|callback)$/.test(parameter)) {
-            arg = cadence();
+            arg = async();
           } else if ((arg  = context[parameter]) == void(0)) {
             if ((arg = ephemeral[parameter]) == void(0)) arg = methods[parameter];
           }
@@ -293,11 +402,10 @@ function factory () {
         });
 
         cadences.length = 0;
-        names.forEach(function (name) { if (name[0] == "$") delete context[name] });
         context.errors = [];
 
         try {
-          hold = cadence();
+          hold = async();
           result = step.apply(this, args);
           hold.apply(this, [ null, invoke ].concat(result == void(0) ? [] : [ result ]));
         } catch (error) {

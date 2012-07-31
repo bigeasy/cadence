@@ -4,25 +4,25 @@ require('proof')(13, function (async, equal) {
   var cadence = require("../../index")()
     ;
 
-  cadence(function (cadence) {
+  cadence(function (async) {
 
-    cadence(function () {
+    async(function () {
 
-      cadence()(null, 1, 2);
+      async()(null, 1, 2);
 
     }, function ($vargs) {
 
       equal($vargs[0], 1, 'vargs first argument');
       equal($vargs[1], 2, 'vargs second argument');
 
-      cadence()(null, 1, 2);
+      async()(null, 1, 2);
 
     }, function (first, $vargs) {
 
       equal(first, 1, 'first argument');
       equal($vargs[0], 2, 'vargs rest of arguments');
 
-      cadence()(null, 1, 2);
+      async()(null, 1, 2);
 
     }, function ($vargs, first) {
 
@@ -30,7 +30,7 @@ require('proof')(13, function (async, equal) {
       equal($vargs[1], 2, 'preserve vargs second argument');
       equal(first, 1, 'preserved first context value');
 
-      cadence()(null, 1, 2, 3);
+      async()(null, 1, 2, 3);
 
     }, function ($vargs$1, last, first) {
 
@@ -39,12 +39,12 @@ require('proof')(13, function (async, equal) {
       equal(last, 3, 'preserve vargs second argument');
       equal(first, 1, 'not overwritten first context value');
 
-      cadence()(null, 3, 2, 1);
+      async()(null, 3, 2, 1);
 
-    }, function (first, cadence) {
+    }, function (first, async) {
 
       equal(first, 3, 'first truncate');
-      equal('function', typeof cadence, 'cadence ends list');
+      equal('function', typeof async, 'cadence ends list');
 
     });
 
