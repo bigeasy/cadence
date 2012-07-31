@@ -2,7 +2,7 @@
 
 require('proof')(3, function (equal, equal) {
   var fs = require('fs')
-    , cadence = require("../../index")()
+    , cadence = require('../..')
     ;
 
   cadence({ context: { number: 1 } })(function (number) {
