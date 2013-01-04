@@ -10,7 +10,7 @@ t/sizes index.js
 
 echo ""
 
-(proof run t/*/*.t | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
+(proof run t/*/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
 
 if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
   echo ""
@@ -27,7 +27,7 @@ if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
     cat $bak | uglifyjs --lift-vars > index.js
   fi 
  
-  (proof run t/*/*.t | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
+  (proof run t/*/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
 fi
 
 echo ""
