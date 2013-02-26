@@ -1,24 +1,30 @@
-#!/bin/bash
+#!/bin/sh
+
+dir=`cd ${0%/*} && pwd`
+UGLIFY_JS="${dir%/t}/node_modules/.bin/uglifyjs"
 
 printf "    %-24s %11s %11s %11s %11s\n" File Raw Min Zip Min/Zip
 for file in $@; do
-  b_raw=$(cat $file | wc -c)
-  b_min=$(cat $file | uglifyjs | wc -c)
-  alt=$(cat $file | uglifyjs --lift-vars | wc -c)
-  if [ $alt -lt ${b_min} ]; then
-    b_min=$alt
+  b_0=`cat $file | wc -c`
+  b_1=`cat $file | $UGLIFY_JS | wc -c`
+  alt=`cat $file | $UGLIFY_JS --lift-vars | wc -c`
+  if [ $alt -lt ${b_1} ]; then
+    b_1=$alt
   fi
-  b_zip=$(cat $file | gzip -c  | wc -c)
-  b_minzip=$(cat $file | uglifyjs | gzip -c | wc -c)
-  alt=$(cat $file | uglifyjs --lift-vars | gzip -c | wc -c)
-  if [ $alt -lt ${b_minzip} ]; then
-    b_minzip=$alt
+  b_2=`cat $file | gzip -c  | wc -c`
+  b_3=`cat $file | $UGLIFY_JS | gzip -c | wc -c`
+  alt=`cat $file | $UGLIFY_JS --lift-vars | gzip -c | wc -c`
+  if [ $alt -lt ${b_3} ]; then
+    b_3=$alt
   fi
+  for field in 0 1 2 3; do
+    eval val=\$b_$field
+    val=`echo $val / 1024 | bc -l`
+    eval k_$field=$val
+  done
   printf "    %-24s" $file
-  for field in raw min zip minzip; do
-    key="b_${field}"
-    value=$(echo "${!key} / 1024" | bc -l)
-    printf "%6d/%05.2f" ${!key} ${value}
+  for field in 0 1 2 3; do
+    eval printf "%6d/%05.2f" \$b_$field \$k_$field
   done
   printf "\n"
 done
