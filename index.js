@@ -117,10 +117,19 @@ function factory () {
 
     var invocation;
 
-    // We give this function to the caller to build control flow.
+    // We give this function to the caller to build control flow. In the
+    // debugger, I often want to step into a function that takes a step
+    // callback, so I'm often stepping into this function, only to step right
+    // back out again. Step out is a two finger chord in the Chrome debugger,
+    // but step over is a single function key, so I want to have the option to
+    // step over the body of this function, instead of having to find the
+    // control key when I'm in it. That is the only reason for the separate
+    // async function.
 
     //
-    function async () {
+    function async () { _async.apply(null, arguments) }
+
+    function _async() {
       var vargs = __slice.call(arguments, 0), i = -1, step, original;
 
       // If we're called with an empty array, we're going to assume that the
