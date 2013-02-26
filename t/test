@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 
 if [ "$TRAVIS" = "true" ]; then
-  sudo apt-get install -q -q bc 2> /dev/null > /dev/null && echo 'Installed `bc`.' && echo ''
+  echo '$ sudo apt-get install bc' && echo ''
+  sudo apt-get install -q -q bc 2> /dev/null > /dev/null
 fi
 
 t/sizes index.js
