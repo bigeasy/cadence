@@ -127,7 +127,7 @@ function factory () {
     // async function.
 
     //
-    function async () { _async.apply(null, arguments) }
+    function async () { return _async.apply(null, arguments) }
 
     function _async() {
       var vargs = __slice.call(arguments, 0), i = -1, step, original;
