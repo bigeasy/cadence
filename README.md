@@ -165,8 +165,11 @@ Changes for each release.
 
 ### Version 0.0.7
 
-Released: Pending
+Released: Wed Feb 27 00:33:51 UTC 2013
 
+ * Step over to stop out of `async`. #47.
+ * Add `.js` suffix to test file names. #54.
+ * Update `t/sizes` and `t/test` to work with a POSIX shell.
  * Return `cadence` function directly instead of factory function. #49.
  * Moved `build` directory contents to `t`. #51.
  * Rename inner `cadence` function to `async`. #52.
