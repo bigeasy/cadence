@@ -192,11 +192,13 @@ function factory () {
       // we've been asked to build a callback, otherwise, this is a sub-cadence.
 
       //
-      if (!vargs.length || vargs.every(function (arg) { return typeof vargs[0] == "string" })) {
+      if (!vargs.length || vargs.every(function (arg) { return typeof arg == "string" })) {
         invocation.count++;
         return createCallback(invocation, vargs);
-      } else {
+      } else if (vargs.every(function (arg) { return typeof arg == "function" })) {
         cadences.push(vargs);
+      } else {
+        throw new Error("invalid arguments");
       }
     }
 
