@@ -163,6 +163,13 @@ cadence(function (async) {
 
 Changes for each release.
 
+### Version 0.0.8
+
+Released: Mon Mar  4 06:56:26 UTC 2013
+
+ * Rename `async` function to `step`. #55.
+ * Exception when `step` arguments are invalid. #56.
+
 ### Version 0.0.7
 
 Released: Wed Feb 27 00:33:51 UTC 2013
@@ -174,8 +181,8 @@ Released: Wed Feb 27 00:33:51 UTC 2013
  * Moved `build` directory contents to `t`. #51.
  * Rename inner `cadence` function to `async`. #52.
  * Consume events from event emitters. #48.
- * An `_` underbar as a step function name means to disable argument inference.
-   #46. #25
+ * An `` _ `` underbar as a step function name means to disable argument
+   inference. #46. #25
 
 ### Version 0.0.6
 
