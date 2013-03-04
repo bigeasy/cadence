@@ -16,9 +16,9 @@ require('proof')(3, function (ok, equal) {
   }
 
   try {
-    cadence(function (async) {
+    cadence(function (step) {
 
-      async()(new Error("handed"));
+      step()(new Error("handed"));
 
     })();
   } catch (error) {

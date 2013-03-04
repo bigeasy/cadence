@@ -6,9 +6,9 @@ require('proof')(4, function (async, equal, ok) {
     , skip = cadence.skip
     ;
 
-  cadence(function (async) {
+  cadence(function (step) {
 
-    fs.readFile(__filename, 'utf8', async());
+    fs.readFile(__filename, 'utf8', step());
 
   }, function (body) {
 

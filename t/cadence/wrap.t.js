@@ -7,14 +7,14 @@ require('proof')(3, function (async, equal) {
     , invoked = 0
     ;
 
-  cadence(function (async) {
+  cadence(function (step) {
 
-    async()(null, 1);
+    step()(null, 1);
 
-  }, function cleanup (one, async) {
+  }, function cleanup (one, step) {
 
     equal(one, 1, "invoked");
-    async()(null, 2);
+    step()(null, 2);
 
   }, function (two) {
 

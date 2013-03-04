@@ -3,36 +3,36 @@
 require('proof')(5, function (equal) {
   var fs = require('fs'), cadence = require('../..');
 
-  cadence(function (async) {
+  cadence(function (step) {
     var inc;
-    async(function () {
-      async()(null, 0);
+    step(function () {
+      step()(null, 0);
     }, inc = function (count) {
-      async()(null, count + 1);
+      step()(null, count + 1);
     }, function (count) {
-      if (count != 10) async(inc)();
+      if (count != 10) step(inc)();
     }, function (count) {
       equal(count, 10, "var");
     });
   })();
 
-  cadence(function (async) {
-    async(function () {
-      async()(null, 0);
+  cadence(function (step) {
+    step(function () {
+      step()(null, 0);
     }, function inc (count) {
-      async()(null, count + 1);
+      step()(null, count + 1);
     }, function (count, inc) {
-      if (count != 10) async(inc)();
+      if (count != 10) step(inc)();
     }, function (count) {
       equal(count, 10, "deferred");
     });
   })();
 
-  cadence(function (async) {
-    async(function () {
-      async()(null, 0);
+  cadence(function (step) {
+    step(function () {
+      step()(null, 0);
     }, function inc (count) {
-      async()(null, count + 1);
+      step()(null, count + 1);
     }, function (count, inc) {
       if (count != 10) inc();
     }, function (count) {
@@ -40,11 +40,11 @@ require('proof')(5, function (equal) {
     });
   })();
 
-  cadence(function (async) {
-    async(function () {
-      async()(null, 0, "a");
+  cadence(function (step) {
+    step(function () {
+      step()(null, 0, "a");
     }, function inc (count, letter) {
-      async()(null, count + 1);
+      step()(null, count + 1);
     }, function (count, inc) {
       if (count != 10) inc(count, "b");
     }, function (count, letter) {

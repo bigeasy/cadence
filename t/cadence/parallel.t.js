@@ -5,11 +5,11 @@ require('proof')(13, function (async, equal, ok) {
     , cadence = require('../..')
     ;
 
-  cadence(function (async) {
+  cadence(function (step) {
 
-    async()(null, "a", 1);
-    async()(null, "b", 2);
-    async()(null, "c", 3);
+    step()(null, "a", 1);
+    step()(null, "b", 2);
+    step()(null, "c", 3);
 
   }, function (letters, numbers) {
 
@@ -33,9 +33,9 @@ require('proof')(13, function (async, equal, ok) {
 
   })(async());
 
-  cadence(function (async) {
-    async()(null);
-    async()(null);
+  cadence(function (step) {
+    step()(null);
+    step()(null);
   }, function () {
     ok(true, 'no arguments');
   })();

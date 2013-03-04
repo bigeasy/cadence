@@ -12,15 +12,15 @@ require('proof')(3, function (async, equal) {
     equal(number, 1, "return step");
   })();
 
-  cadence(function (async) {
+  cadence(function () {
     return 1;
   })(function (error, number) {
     equal(number, 1, "return cadence");
     one();
   });
 
-  cadence(function (async) {
-    async()(null, 1);
+  cadence(function (step) {
+    step()(null, 1);
   })(function (error, number) {
     equal(number, 1, "callback cadence");
     two();

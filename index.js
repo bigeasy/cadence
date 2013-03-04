@@ -31,7 +31,7 @@ function factory () {
       , count
       , exitCode = 0
       , cadences = []
-      , methods = { async: async }
+      , methods = { step: async }
       , abended
       , key
       , arg
@@ -274,7 +274,7 @@ function factory () {
       });
 
       names = step.parameters.slice(0);
-      if (~(i = names.indexOf('async')) || ~(i = names.indexOf(options.alias))) {
+      if (~(i = names.indexOf('step')) || ~(i = names.indexOf(options.alias))) {
         names.length = i;
       }
       if (step.name == '_') {
@@ -399,7 +399,7 @@ function factory () {
 
         step.parameters.forEach(function (parameter) {
           if (parameter == options.alias) {
-            parameter = 'async';
+            parameter = 'step';
           }
           if (parameter == "error") {
             arg = context.errors[0];

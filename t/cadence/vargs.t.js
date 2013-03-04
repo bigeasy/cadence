@@ -4,25 +4,25 @@ require('proof')(13, function (async, equal) {
   var cadence = require('../..')
     ;
 
-  cadence(function (async) {
+  cadence(function (step) {
 
-    async(function () {
+    step(function () {
 
-      async()(null, 1, 2);
+      step()(null, 1, 2);
 
     }, function ($vargs) {
 
       equal($vargs[0], 1, 'vargs first argument');
       equal($vargs[1], 2, 'vargs second argument');
 
-      async()(null, 1, 2);
+      step()(null, 1, 2);
 
     }, function (first, $vargs) {
 
       equal(first, 1, 'first argument');
       equal($vargs[0], 2, 'vargs rest of arguments');
 
-      async()(null, 1, 2);
+      step()(null, 1, 2);
 
     }, function ($vargs, first) {
 
@@ -30,7 +30,7 @@ require('proof')(13, function (async, equal) {
       equal($vargs[1], 2, 'preserve vargs second argument');
       equal(first, 1, 'preserved first context value');
 
-      async()(null, 1, 2, 3);
+      step()(null, 1, 2, 3);
 
     }, function ($vargs$1, last, first) {
 
@@ -39,12 +39,12 @@ require('proof')(13, function (async, equal) {
       equal(last, 3, 'preserve vargs second argument');
       equal(first, 1, 'not overwritten first context value');
 
-      async()(null, 3, 2, 1);
+      step()(null, 3, 2, 1);
 
-    }, function (first, async) {
+    }, function (first, step) {
 
       equal(first, 3, 'first truncate');
-      equal('function', typeof async, 'cadence ends list');
+      equal('function', typeof step, 'cadence ends list');
 
     });
 

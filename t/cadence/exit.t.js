@@ -6,9 +6,9 @@ require('proof')(2, function (async, ok, equal) {
     , one = async(), two = async()
     ;
 
-  cadence(function (async) {
+  cadence(function (step) {
 
-    async(null, 1);
+    step(null, 1);
 
   }, function () {
 
@@ -22,9 +22,9 @@ require('proof')(2, function (async, ok, equal) {
 
   });
 
-  cadence(function (async) {
+  cadence(function (step) {
 
-    async(new Error('abend'));
+    step(new Error('abend'));
 
   }, function () {
 
