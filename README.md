@@ -5,9 +5,9 @@ A Swiss Army asynchronous control flow function for JavaScript.
 ```javascript
 var cadence = require('cadence'), fs = require('fs');
 
-cadence(function (async) {
+cadence(function (step) {
 
-  fs.readFile(__filename, 'utf8', async());
+  fs.readFile(__filename, 'utf8', step());
 
 }, function (body) {
 
@@ -20,19 +20,19 @@ Cadence takes a series of functions and runs them in serial. We call the series
 of functions a ***cadence***. We call an individual function in a cadence a
 ***step***.
 
-Cadence is a function generator that creates an asynchronous function that
-accepts a conventional Node.js error, results callback function. You can then
-use the generated function anywhere in your code.
+Cadence is a function generator that creates a `step` function that accepts a
+conventional Node.js error, results callback function. You can then use the
+generated function anywhere in your code.
 
 ```javascript
 var cadance = require('cadence')
   , fs = require('fs')
   ;
 
-var deleteIf = cadence(function (async, file, condition) {
-  fs.stat(file, async());
-}, function (async, stat) {
-  if (condition(stat)) fs.unlink(async());
+var deleteIf = cadence(function (step, file, condition) {
+  fs.stat(file, step());
+}, function (step, stat) {
+  if (condition(stat)) fs.unlink(step());
 });
 
 function empty (stat) { return stat.size == 0 }
@@ -57,12 +57,12 @@ var cadance = require('cadence')
   , fs = require('fs')
   ;
 
-var deleteIf = cadence(function (async, file, condition) {
-  fs.stat(file, async());
+var deleteIf = cadence(function (step, file, condition) {
+  fs.stat(file, step());
 }, function (error) {
   if (error.code != "ENOENT") throw error;
-}, function (async, stat) {
-  if (stat && condition(stat)) fs.unlink(async());
+}, function (step, stat) {
+  if (stat && condition(stat)) fs.unlink(step());
 });
 
 function empty (stat) { return stat.size == 0 }
@@ -89,9 +89,9 @@ Here is a unit test for working with `EventEmitter` illustrating the
 var cadence = require('cadence'), event = require('event')
   , emitter = new event.EventEmitter();
 
-cadence(function (emitter, async) {
-  async(function () {
-    async(emitter).once('end');
+cadence(function (emitter, step) {
+  step(function () {
+    step(emitter).once('end');
   }, function (end) {
     assert.equal(end, 'done'); 
   });
@@ -112,9 +112,9 @@ in the cadence.
 var cadence = require('cadence'), event = require('event')
   , emitter = new event.EventEmitter();
 
-cadence(function (emitter, async) {
-  async(function () {
-    async(emitter).once('end');
+cadence(function (emitter, step) {
+  step(function () {
+    step(emitter).once('end');
   }, function (data) {
     assert.deepEqual(data, [ 1, 2, 3 ]); 
   });
@@ -139,11 +139,11 @@ into a log file for each host.
 ```javascript
 var cadence = require('cadence'), fs = require('fs');
 
-cadence(function (async) {
-  async(function () {
+cadence(function (step) {
+  step(function () {
     var readable = fs.readableStream(__dirname + '/logins.txt');
     readable.setEncoding('utf8');
-    async(readable).on('data').once('end');
+    step(readable).on('data').once('end');
   }, function (data) {
     var hosts = {};
     data.join('').split(/\n/).foreach(function (line) {
@@ -153,7 +153,7 @@ cadence(function (async) {
     for (var host in hosts) {
       var writable = fs.writableStream(__dirname + '/' + host + '.log');
       writable.end(hosts[host].join('\n') + '\n');
-      async(writable).once('drain');
+      step(writable).once('drain');
     }
   });
 })();
@@ -162,6 +162,10 @@ cadence(function (async) {
 ## Change Log
 
 Changes for each release.
+
+### Version 0.0.8
+
+ * Rename `step` to `async` in `README.md`. #57.
 
 ### Version 0.0.7
 
