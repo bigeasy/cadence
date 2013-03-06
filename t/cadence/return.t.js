@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-require('proof')(3, function (async, equal) {
+require('proof')(3, function (step, equal) {
   var fs = require('fs')
     , cadence = require('../..')
-    , one = async(), two = async()
+    , one = step(), two = step()
     ;
 
   cadence(function () {

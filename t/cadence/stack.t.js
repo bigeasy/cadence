@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(4, function (async, equal) {
+require('proof')(4, function (step, equal) {
   var fs = require('fs')
     , cadence = require('../..')
     , skip = cadence.skip
@@ -28,5 +28,5 @@ require('proof')(4, function (async, equal) {
 
     equal(number, 1, "popped");
 
-  })(async());
+  })(step());
 });

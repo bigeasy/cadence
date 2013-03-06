@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(4, function (async, equal, ok) {
+require('proof')(4, function (step, equal, ok) {
   var fs = require('fs')
     , cadence = require('../..')
     , skip = cadence.skip
@@ -20,5 +20,5 @@ require('proof')(4, function (async, equal, ok) {
     ok(body, "still exists");
     ok(/cadence/.test(body), "still read");
 
-  })(async());
+  })(step());
 });

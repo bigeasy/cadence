@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(3, function (async, equal) {
+require('proof')(3, function (step, equal) {
   var fs = require('fs')
     , cadence = require('../..')({ wrap: { cleanup: wrap } })
     , wrapped = 0
@@ -21,7 +21,7 @@ require('proof')(3, function (async, equal) {
     equal(wrapped, 1, "function wrapped");
     equal(invoked, 1, "wrapper called");
 
-  })(async());
+  })(step());
 
   function wrap (proc) {
     wrapped++;

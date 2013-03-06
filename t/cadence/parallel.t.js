@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(13, function (async, equal, ok) {
+require('proof')(13, function (step, equal, ok) {
   var fs = require('fs')
     , cadence = require('../..')
     ;
@@ -31,7 +31,7 @@ require('proof')(13, function (async, equal, ok) {
     equal(numbers[1], 2, "number two still");
     equal(numbers[2], 3, "number three still");
 
-  })(async());
+  })(step());
 
   cadence(function (step) {
     step()(null);

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(1, function (equal, ok, async, deepEqual) {
+require('proof')(1, function (equal, ok, step, deepEqual) {
   var emitter, EventEmitter = require('events').EventEmitter, cadence = require('../..');
 
   emitter = new EventEmitter();
@@ -9,7 +9,7 @@ require('proof')(1, function (equal, ok, async, deepEqual) {
     step(emitter).on('data').once('end');
   }, function (data) {
     deepEqual(data, [ 1, 2, 3 ], 'on');
-  })(emitter, async());
+  })(emitter, step());
 
   emitter.emit('data', 1);
   emitter.emit('data', 2);
