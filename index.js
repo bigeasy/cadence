@@ -41,7 +41,7 @@ function factory () {
     firstSteps = flatten(vargs);
 
     if (firstSteps.every(function (object) { return typeof object == "object" })) {
-      return factory.apply(this, [ options ].concat(firstSteps));
+      return factory.apply(null, [ options ].concat(firstSteps));
     }
 
     firstSteps = firstSteps.map(function (step) { return parameterize(step, context) });
@@ -98,7 +98,7 @@ function factory () {
         var callback = async(type);
         bindings[type] = { type: 'once' }
         emitter.once(type, function () {
-          callback.apply(this, [ null ].concat(arguments));
+          callback.apply(null, [ null ].concat(arguments));
           if (++completed == count) {
             gatherers.forEach(function (gatherer) { gatherer() });
           }
@@ -157,7 +157,7 @@ function factory () {
       // return to exit the entire cadence.
       if (vargs.length && (vargs[0] == null || vargs[0] instanceof Error)) {
         invocation.count = Number.MAX_VALUE;
-        invocation.callback.apply(this, vargs);
+        invocation.callback.apply(null, vargs);
         return;
       }
 
@@ -221,7 +221,7 @@ function factory () {
           }
         }
         if (++invocation.called == invocation.count) {
-          invoke.apply(this, invocation.arguments);
+          invoke.apply(null, invocation.arguments);
         }
       }
     }
@@ -230,7 +230,7 @@ function factory () {
       var $ = /^function\s*[^(]*\(([^)]*)\)/.exec(step.toString());
       if (!$) throw new Error("bad function");
       if (step.name) {
-        context[step.name] = function () { async(step).apply(this, [ null ].concat(__slice.call(arguments, 0))) }
+        context[step.name] = function () { async(step).apply(null, [ null ].concat(__slice.call(arguments, 0))) }
         context[step.name].original = step;
       }
       step.parameters = $[1].split(/\s*,\s/);
@@ -370,7 +370,7 @@ function factory () {
         }
 
         if (steps.length == index) {
-          callback.apply(this, [ null ].concat(callbacks.length == 1 ? callbacks[0].vargs : []));
+          callback.apply(null, [ null ].concat(callbacks.length == 1 ? callbacks[0].vargs : []));
           return;
         }
 
@@ -417,11 +417,11 @@ function factory () {
 
         try {
           hold = async();
-          result = step.apply(this, args);
-          hold.apply(this, [ null, invoke ].concat(result == void(0) ? [] : [ result ]));
+          result = step.apply(null, args);
+          hold.apply(null, [ null, invoke ].concat(result == void(0) ? [] : [ result ]));
         } catch (error) {
           thrown(invocation, error);
-          invoke.apply(this, invocation.arguments);
+          invoke.apply(null, invocation.arguments);
         }
       }
     }
