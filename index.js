@@ -192,7 +192,7 @@ function factory () {
       // we've been asked to build a callback, otherwise, this is a sub-cadence.
 
       //
-      if (!vargs.length || vargs.every(function (arg) { return typeof arg == "string" })) {
+      if (!vargs.length) {
         invocation.count++;
         return createCallback(invocation, vargs);
       } else if (vargs.every(function (arg) { return typeof arg == "function" })) {
