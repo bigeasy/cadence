@@ -2,7 +2,6 @@
 
 var __slice = [].slice, EventEmitter = require('events').EventEmitter;
 
-
 function extend (object) {
   __slice.call(arguments, 1).forEach(function (append) {
     for (var key in append) if (append.hasOwnProperty(key)) {
@@ -151,7 +150,7 @@ function factory () {
 
       // Wrap event emitters with out interceptor.
       if (vargs[0] instanceof EventEmitter)
-        return new EventInterceptor(vargs[0]);    
+        return new EventInterceptor(vargs[0]);
 
       // The caller as invoked the async function directly as an explicit early
       // return to exit the entire cadence.
@@ -176,7 +175,7 @@ function factory () {
       if (vargs.length == 1 && typeof vargs[0] == "function") {
         original = vargs[0].original || vargs[0];
         for (i = invocation.arguments[0].length - 1; step = invocation.arguments[0][i]; i--) {
-          if (original === step || original === step.original) break; 
+          if (original === step || original === step.original) break;
         }
       }
 
@@ -186,7 +185,7 @@ function factory () {
       if (~i) {
         invocation.arguments[1] = i;
         vargs.shift();
-      } 
+      }
 
       // If we have no arguments, or else if every argument is a string, then
       // we've been asked to build a callback, otherwise, this is a sub-cadence.
@@ -316,7 +315,7 @@ function factory () {
           (names[i][0] == '$' ? ephemeral : context)[name] = callbacks[0].vargs[i];
         });
       } else {
-        // Is the result well organized? We have a specific size for names. 
+        // Is the result well organized? We have a specific size for names.
         var arrayed = callbacks.every(function (result) {
           return (
             result.vargs.length == names.length
@@ -353,7 +352,6 @@ function factory () {
         , hold
         , ephemeral = {}
         ;
-        
 
       if (abended) return;
 
@@ -361,8 +359,8 @@ function factory () {
 
       if (steps[index] && /^errors?$/.test(steps[index].parameters[0]) && !context.errors.length) {
         invoke(steps, index + 1, context, callbacks, callback);
-      } else { 
-        // No callbacks means that we use the function return value, if any. 
+      } else {
+        // No callbacks means that we use the function return value, if any.
         if (callbacks.length == 1) {
           if (callbacks[0].vargs[0] == invoke) { callbacks[0].vargs.shift() }
         } else {
@@ -381,7 +379,7 @@ function factory () {
         // `contextualize` will process them.
         if (callbacks.length) {
           contextualize(step, callbacks, context, ephemeral);
-        } 
+        }
 
         // Give our creator a chance to inspect the step, possibly wrap it.
         Object.keys(options.wrap || {})
