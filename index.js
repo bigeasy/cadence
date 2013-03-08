@@ -1,6 +1,6 @@
 "use strict";
 
-var __slice = [].slice, EventEmitter = require('events').EventEmitter;
+var __slice = [].slice;
 
 function die () {
   console.log.apply(console, __slice.call(arguments, 0));
@@ -81,40 +81,6 @@ function factory () {
       return flattened;
     }
 
-    // Creating a problem for myself here. I'm using the named arguments, which
-    // I was going to get rid of. Maybe I need to create a sub-cadence?
-    function EventInterceptor (emitter) {
-      var bindings = {}, gatherers = [], count = 0, completed = 0;
-      this.on = function (type) {
-        var callback = async(type);
-        bindings[type] = { type: 'on', values: [] }
-        emitter.on(type, function () {
-          bindings[type].values.push(__slice.call(arguments, 0));
-        });
-        gatherers.push(function () {
-          var values = bindings[type].values;
-          if (values.every(function (value) { return value.length == 1 })) {
-            values = values.map(function (value) { return value[0]  });
-          }
-          callback(null, values);
-        });
-        return this;
-      }
-      this.once = function (type) {
-        var callback = async(type);
-        bindings[type] = { type: 'once' }
-        emitter.once(type, function () {
-          callback.apply(null, [ null ].concat(arguments));
-          if (++completed == count) {
-            gatherers.forEach(function (gatherer) { gatherer() });
-          }
-        });
-        count++;
-        return this;
-      }
-      this.emitter = emitter;
-    }
-
     // Set and reset a thirty second timeout between assertions.
     function timeout () {
       if (timer) clearTimeout(timer);
@@ -154,10 +120,6 @@ function factory () {
       //
       if (false && vargs[0] != null)
         vargs = flatten(vargs);
-
-      // Wrap event emitters with out interceptor.
-      if (vargs[0] instanceof EventEmitter)
-        return new EventInterceptor(vargs[0]);
 
       // The caller as invoked the async function directly as an explicit early
       // return to exit the entire cadence.
