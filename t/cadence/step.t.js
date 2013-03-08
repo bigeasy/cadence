@@ -7,7 +7,7 @@ require('proof')(1, function (step, ok) {
 
   cadence(function (step) {
 
-    fs.readFile(__filename, 'utf8', step('body'));
+    fs.readFile(__filename, 'utf8', step());
 
   }, function (body) {
 

@@ -7,9 +7,10 @@ require('proof')(13, function (step, equal, ok) {
 
   cadence(function (step) {
 
-    step()(null, "a", 1);
-    step()(null, "b", 2);
-    step()(null, "c", 3);
+    var callback = step(2, []);
+    callback(null, "a", 1);
+    callback(null, "b", 2);
+    callback(null, "c", 3);
 
   }, function (letters, numbers) {
 
@@ -33,6 +34,7 @@ require('proof')(13, function (step, equal, ok) {
 
   })(step());
 
+  // **TODO**: Undone.
   cadence(function (step) {
     step()(null);
     step()(null);
