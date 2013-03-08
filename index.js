@@ -58,7 +58,7 @@ function factory () {
       var vargs = __slice.call(arguments, 0), callbacks = [], callback = exceptional;
       if (vargs.length) {
         callback = vargs.pop();
-        callbacks = [{ names: [], vargs: vargs }];
+        callbacks = [{ results: [{ names: [], vargs: vargs }] }];
       }
       steps = firstSteps.slice(0);
       cadences.length = 0;
@@ -152,7 +152,7 @@ function factory () {
       // explicit early return, otherwise we flatten the arguments.
 
       //
-      if (vargs[0] != null)
+      if (false && vargs[0] != null)
         vargs = flatten(vargs);
 
       // Wrap event emitters with out interceptor.
@@ -198,23 +198,32 @@ function factory () {
       // we've been asked to build a callback, otherwise, this is a sub-cadence.
 
       //
-      if (!vargs.length) {
-        invocation.count++;
-        return createCallback(invocation, vargs);
-      } else if (vargs.every(function (arg) { return typeof arg == "function" })) {
+      if (vargs.length && vargs.every(function (arg) { return typeof arg == "function" })) {
         cadences.push(vargs);
       } else {
-        throw new Error("invalid arguments");
+        if (!isNaN(parseFloat(vargs[0])) && isFinite(vargs[0])) {
+          var arity = parseInt(vargs.shift(), 10);
+        }
+        if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
+          var arrayed = !! vargs.shift(); 
+        }
+        if (!arrayed) invocation.count++;
+        if (vargs.length) throw new Error("invalid arguments");
+        return createCallback(invocation, arity, arrayed);
       }
     }
 
-    function createCallback (invocation, names) {
+    function createCallback (invocation, arity, arrayed) {
+      var callback = { results: [] };
+      if (arity) callback.arity = arity;
+      if (arrayed) callback.arrayed = arrayed;
+      invocation.callbacks.push(callback);
       return function (error) {
         var vargs = __slice.call(arguments, 1);
         if (error) {
           thrown(invocation, error);
         } else {
-          invocation.callbacks.push({ names: names, vargs: vargs });
+          callback.results.push({ names: [], vargs: vargs });
           // Indicates that the function has completed, so we need create
           // the callbacks for parallel cadences now, the next increment of
           // the called counter, which may be the last.
@@ -226,7 +235,7 @@ function factory () {
             });
           }
         }
-        if (++invocation.called == invocation.count) {
+        if (!arrayed && ++invocation.called == invocation.count) {
           invoke.apply(null, invocation.arguments);
         }
       }
@@ -272,45 +281,60 @@ function factory () {
     // Parallel arrays make the most sense, really. If the paralleled function
     // is better off returning a map, it can be shimmed.
     function contextualize (step, callbacks, context, ephemeral) {
-      var inferred = [], explicit = []
-        , i, $ , vargs, names;
-      callbacks.forEach(function (callback) {
-        if (callback.names.length) explicit.push(callback);
-        else inferred.push(callback);
-      });
+      var $, names, name, value, index, vargs = [], arg, callback, arity;
 
       names = step.parameters.slice(0);
-      if (~(i = names.indexOf('step')) || ~(i = names.indexOf(options.alias))) {
-        names.length = i;
+      if (~(index = names.indexOf('step')) || ~(index = names.indexOf(options.alias))) {
+        names.length = index;
       }
+      // **TODO**: Why? Do I care anymore? Why not callback?
       if (step.name == '_') {
         names.length = 0;
       }
 
-      if (inferred.length == 1) {
-        vargs = inferred[0].vargs;
-        for (i = names.length; i--;) {
-          if (!names[i].indexOf('$vargs') && ($ = /^\$vargs(?:\$(\d+))?$/.exec(names[i]))) {
-            ephemeral[names[i]] = vargs.splice(i, vargs.length - (i + +($[1] || 0)));
-            names.splice(i, 1);
-            break;
-          }
+      if (!names.length) return;
+
+      arg = 0;
+      while (callbacks.length) {
+        callback = callbacks.shift();
+        if (arity in callback) {
+          arity = callback.arity;
+        } else {
+          arity = 0;
+          callback.results.forEach(function (result) {
+            arity = Math.max(arity, result.vargs.length);
+          });
         }
-        names.length = callbacks[0].vargs.length;
-        names.forEach(function (name, i) { (name[0] == '$' ? ephemeral : context)[name] = vargs[i] });
-      } else if (inferred.length && names.length) {
-        parallelize(names, inferred, context, ephemeral);
+        for (index = 0; index < arity; index++) {
+          vargs.push({ values: [],
+                       arrayed: ('arrayed' in callback) ? callback.arrayed : callback.results.length > 1 });
+        }
+        callback.results.forEach(function (result) {
+          for (var i = 0; i < arity; i++) {
+            vargs[arg + i].values.push(result.vargs[i]);
+          }
+        });
+        arg += arity;
       }
 
-      var map = {};
-      explicit.forEach(function (callback) {
-        var key = callback.names.join('!');
-        (map[key] || (map[key] = [])).push(callback);
-      });
-
-      Object.keys(map).forEach(function (key) {
-        parallelize(map[key][0].names, map[key], context, ephemeral);
-      });
+      
+      while (names.length) {
+        name = names.shift();
+        if ($ = /^\$vargs(?:\$(\d+))?$/.exec(name)) {
+          ephemeral[name] = vargs.splice(0, vargs.length - (+($[1] || 0)))
+                                 .map(function (varg) {
+                                    return varg.arrayed ? varg.values : varg.values.shift()
+                                 });
+        } else {
+          if (vargs.length) {
+            value = vargs.shift();
+            value = value.arrayed ? value.values : value.values.shift();
+          } else {
+            break;
+          }
+          (name[0] == '$' ? ephemeral : context)[name] = value;
+        }
+      }
     }
 
     // Attempt to organize many callbacks into parallel arrays of values.
@@ -364,7 +388,8 @@ function factory () {
 
       timeout();
 
-      invocation = { callbacks: [], count: 0 , called: 0, context: context, index: index, callback: callback };
+      invocation = { callbacks: [], count: 0 , called: 0, context: context,
+                     index: index, callback: callback };
       invocation.arguments = [ steps, index + 1, context, invocation.callbacks, callback ]
 
       if (steps[index] && /^errors?$/.test(steps[index].parameters[0]) && !context.errors.length) {
@@ -372,13 +397,17 @@ function factory () {
       } else {
         // No callbacks means that we use the function return value, if any.
         if (callbacks.length == 1) {
-          if (callbacks[0].vargs[0] == invoke) { callbacks[0].vargs.shift() }
+          if (callbacks[0].results.length && callbacks[0].results[0].vargs[0] == invoke) {
+            callbacks[0].results[0].vargs.shift()
+          }
         } else {
-          callbacks = callbacks.filter(function (result) { return result.vargs[0] !== invoke });
+          callbacks = callbacks.filter(function (callback) {
+            return callback.results[0] && callback.results[0].vargs[0] !== invoke
+          });
         }
 
         if (steps.length == index) {
-          callback.apply(null, [ null ].concat(callbacks.length == 1 ? callbacks[0].vargs : []));
+          callback.apply(null, [ null ].concat(callbacks.length == 1 ? callbacks[0].results[0].vargs : []));
           return;
         }
 
