@@ -279,36 +279,6 @@ function factory () {
       }
     }
 
-    // Attempt to organize many callbacks into parallel arrays of values.
-
-    //
-    function parallelize (names, callbacks, context, ephemeral) {
-      if (callbacks.length == 1) {
-        callbacks[0].names.forEach(function (name, i) {
-          (names[i][0] == '$' ? ephemeral : context)[name] = callbacks[0].vargs[i];
-        });
-      } else {
-        // Is the result well organized? We have a specific size for names.
-        var arrayed = callbacks.every(function (result) {
-          return (
-            result.vargs.length == names.length
-            && (!result.names.length || names.every(function (name, i) { return name == result.names[i] }))
-          )
-        });
-        if (arrayed) {
-          names.length = callbacks[0].vargs.length;
-          names.forEach(function (name, i) { (name[0] == '$' ? ephemeral : context)[name] = [] });
-          callbacks.forEach(function (result) {
-            result.vargs.forEach(function (arg, i) {
-              (names[i][0] == '$' ? ephemeral : context)[names[i]].push(arg);
-            });
-          });
-        } else {
-          throw new Error("Can't infer array assignment.");
-        }
-      }
-    }
-
     function invoke (steps, index, context, callbacks, callback) {
       var arg
         , args = []
