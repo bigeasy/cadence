@@ -2,6 +2,13 @@
 
 var __slice = [].slice, EventEmitter = require('events').EventEmitter;
 
+function die () {
+  console.log.apply(console, __slice.call(arguments, 0));
+  process.exit(1);
+}
+
+function say () { console.log.apply(console, __slice.call(arguments, 0)) }
+
 function extend (object) {
   __slice.call(arguments, 1).forEach(function (append) {
     for (var key in append) if (append.hasOwnProperty(key)) {
