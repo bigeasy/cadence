@@ -44,7 +44,7 @@ function factory () {
       , context = {}
       ;
 
-    firstSteps = flatten(vargs);
+    firstSteps = vargs;
 
     if (firstSteps.every(function (object) { return typeof object == "object" })) {
       return factory.apply(null, [ options ].concat(firstSteps));
@@ -67,19 +67,6 @@ function factory () {
     }
 
     function exceptional (error) { if (error) throw error }
-
-    function flatten (array) {
-      var flattened = [];
-      while (array.length) {
-        arg = array.shift();
-        if (Array.isArray(arg)) {
-          while (arg.length) array.unshift(arg.pop());
-        } else {
-          flattened.push(arg);
-        }
-      }
-      return flattened;
-    }
 
     // Set and reset a thirty second timeout between assertions.
     function timeout () {
@@ -113,13 +100,6 @@ function factory () {
       //
       if (vargs.length == 1 && Array.isArray(vargs[0]) && !vargs[0].length)
         return;
-
-      // If the first argument is null, we're going to assume this is an
-      // explicit early return, otherwise we flatten the arguments.
-
-      //
-      if (false && vargs[0] != null)
-        vargs = flatten(vargs);
 
       // The caller as invoked the async function directly as an explicit early
       // return to exit the entire cadence.
