@@ -91,16 +91,6 @@ function factory () {
     function _async() {
       var vargs = __slice.call(arguments, 0), i = -1, step, original;
 
-      // If we're called with an empty array, we're going to assume that the
-      // caller created a cadence programatically, but the conditions were such
-      // that no steps were added to the cadence. If we don't skip the empty
-      // array, then the next step will flatten the array and we'll end up
-      // treating it as a call with no arguments, which generates a callback.
-
-      //
-      if (vargs.length == 1 && Array.isArray(vargs[0]) && !vargs[0].length)
-        return;
-
       // The caller as invoked the async function directly as an explicit early
       // return to exit the entire cadence.
       if (vargs.length && (vargs[0] == null || vargs[0] instanceof Error)) {
