@@ -364,6 +364,9 @@ function factory () {
 
       timeout();
 
+      invocation = { callbacks: [], count: 0 , called: 0, context: context, index: index, callback: callback };
+      invocation.arguments = [ steps, index + 1, context, invocation.callbacks, callback ]
+
       if (steps[index] && /^errors?$/.test(steps[index].parameters[0]) && !context.errors.length) {
         invoke(steps, index + 1, context, callbacks, callback);
       } else {
@@ -398,9 +401,6 @@ function factory () {
             step.parameters = parameters;
             step.original = original;
           });
-
-        invocation = { callbacks: [], count: 0 , called: 0, context: context, index: index, callback: callback };
-        invocation.arguments = [ steps, index + 1, context, invocation.callbacks, callback ]
 
         step.parameters.forEach(function (parameter) {
           if (parameter == options.alias) {
