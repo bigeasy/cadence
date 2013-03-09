@@ -297,3 +297,114 @@ it's arguments into the first step of the cadence.
 This invocation of step will strip arity and type arguments off of the front of
 the argument list, the presence of one or more functions thereafter indicates
 that the invocation is a sub-cadence.
+
+However, in our above example, it could be the case that some of the files in
+the directory are other directories.
+
+Each file needs a call to `stat`, but not all of
+them will go onto `readFile`. I can see a solution that works with an object in
+a scope outside of the inner cadence.
+
+```javascript
+var fs = require('fs'), cadence = require('cadence');
+
+cadence(function (directory, since, step) {
+
+    var objects = [];
+
+    step(function () {
+
+        fs.readdir(directory, step()); 
+
+    }, function (files, step) {
+
+      files.forEach(function (file) {
+
+        step(function () {
+
+          fs.stat(path.join(directory, file), step());
+
+        }, function (stat, file) {
+
+          if (!stat.isDirectory()) {
+
+            step(function () {
+
+              fs.readFile(path.join(directory, file), step());
+
+            }, function (body, stat, file) {
+
+              objects.push({ name: file, stat: stat, body: body });
+
+            })
+
+          });
+
+      });
+
+    }, function _() {
+
+      // Ignore return and return our objects array.
+
+      return objects;
+
+    });
+
+})(".", function (error, results) {
+  if (error) throw error;
+  console.log(results);
+});
+```
+
+Not that much different from a hoisted function solution. What would actually go
+inside the inner loop that 
+
+Each call to step indicates both a callback and a spot in the array. How do we
+separate the callback from the spot in the array?
+
+```javascript
+var fs = require('fs'), cadence = require('cadence');
+
+cadence(function (directory, since, step) {
+
+    step(function () {
+
+      fs.readdir(directory, step()); 
+
+    }, function (files, step) {
+
+      var objects = step([], function (body, stat, file) {
+
+        return { name: file, stat: stat, body: body };
+
+      });
+
+      var stats = step([], function (file) {
+
+        fs.stat(path.join(directory, file), step());
+
+      }, function (stat, file) {
+
+        fs.readFile(path.join(directory, file), step());
+
+      }, objects);
+      
+
+      files.forEach(function (file) {
+        stats(file);
+      });
+
+    }, function (objects) {
+
+      // Superfluous step here. It would have been returned from the previous
+      // function out to the caller.
+
+      return objects;
+
+    });
+
+})(".", function (error, results) {
+  if (error) throw error;
+  console.log(results);
+});
+```
