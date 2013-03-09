@@ -163,6 +163,12 @@ cadence(function (step) {
 
 Changes for each release.
 
+### Version 0.0.9
+
+Released: Sat Mar  9 04:06:57 UTC 2013
+
+ * New logic to specify order of parameters to subsequent function. #58.
+
 ### Version 0.0.8
 
 Released: Mon Mar  4 06:56:26 UTC 2013
