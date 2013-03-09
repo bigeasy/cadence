@@ -27,16 +27,18 @@ a library that does what I feel the existing libraries don't.
 
 Oddly, I was very happy using language extensions to make callbacks go away, but
 libraries that are not pure JavaScript suffer for adoption in Node.js.
+Converting these libraries to pure JavaScript meant a callback explosion.
+
+I've given control flow more than enough time and attention now, especially in
+navigating the many tiny evented steps in
+[Strata](https://github.com/bigeasy/strata), that I'd like to have a place to
+explore the insights. That would be this project.
 
 Which is why Cadence is a curse of insight. It's not that I'm confident that I
 have a better solution than those that exist. There appears to be room for
 improvement, but that could simply be an assumption that comes from frustration,
 one that could be entirely ungrounded. If there is room for improvement, I'm not
 confident that I'll find that room or know what to do once I'm in it.
-
-I've given control flow enough time and attention now, especially in navigating
-the many tiny evented steps in [Strata](https://github.com/bigeasy/strata), that
-I'd like to have a place to explore the insights. That would be this project.
 
 ## A Bunch of Unrecorded Decisions
 
