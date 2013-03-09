@@ -36,6 +36,7 @@ function factory () {
       , called
       , count
       , exitCode = 0
+      // **TODO**: To support reentrancy, move this into `invocation`.
       , cadences = []
       , methods = { step: async }
       , abended
@@ -74,6 +75,11 @@ function factory () {
       if (options.timeout) timer = setTimeout(function () { callback(new Error("Timeout")) }, options.timeout);
     }
 
+    // **TODO**: To support renentrancy, you need to make this a stack, shift
+    // the invocation sturcture onto an array of invocations before calling the
+    // step, then shift it off when you're done. I am imagining that this will
+    // permit the immediate invocation of a sub-cadence, which may be necessary
+    // to support notions like recusive descent of a directory tree.
     var invocation;
 
     // We give this function to the caller to build control flow. In the
