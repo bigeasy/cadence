@@ -49,6 +49,10 @@ that I've not been able to make through noodling alone.
  * Use of `_` before a callback to indicate that function takes no arguments.
  * How we're not that concerned about events that may or may not happen.
 
+## The Cadence Beastiary
+
+TK.
+
 ## Order and Arity of Subsequent Functions
 
 It appears that there would be a common case when working with `fs` where you'd
@@ -427,3 +431,84 @@ something from the stat sub-cadnece, even though we don't use it. This would
 probably be the case most of the time, making this an invitation to busy work,
 or comments along the lines of, "we don't need the return value so we don't
 worry if this returns undefined."
+
+This design would be nightmarish, but it helps to flesh out alternatives,
+because until I'm able to see how bad it is, it is going to nag. I suppose this
+is meta and about the design process, but when I'm holding this in my head, I
+will think of this again, what if you composed sub-cadences? What if one
+sub-cadence called another, so you could use the same odering logic? Then I have
+to think about it, realize that it doesn't look or read right, then wait a day
+or two and think, what if you composed sub-cadences? What if one sub-cadence
+called another, so you could use the same odering logic?
+
+It is good to have a catalog of what was said by the voices you heard calling
+you into dark alleys.
+
+Here's let's experiment with the concept of an early return, which is an
+undocumented decision, but one that is still implemented.
+
+```javascript
+var fs = require('fs'), cadence = require('cadence');
+
+cadence(function (directory, since, step) {
+
+    step(function () {
+
+        fs.readdir(directory, step());
+
+    }, function (files, step) {
+
+      files.forEach(step([], function (file) {
+
+        fs.stat(path.join(directory, file), step());
+
+      }, function (stat, file) {
+
+        if (stat.isDirectory()) step(null);
+        else fs.readFile(path.join(directory, file), step());
+
+      }, function (body, stat, file) {
+
+        return { name: file, stat: stat, body: body };
+
+      }));
+
+    }, function (objects) {
+
+      // Superfluous step here. It would have been returned from the previous
+      // function out to the caller.
+
+      return objects;
+
+    });
+
+})(".", function (error, results) {
+  if (error) throw error;
+  console.log(results);
+});
+```
+
+When you call step with either `null` or an `Error` as the first argument, the
+cadence will return immediately and not continue with the next step. If the
+first argument is an `Error`, then the cadence ends immediately with `Error` as
+the error result. If the first argument is `null`, it is as if you were invoking
+a callback, `null` indicates no error, what follows is the return value for the
+callback.
+
+When the early exit is invoked with no additional arguments, we'll interpret
+that to mean that no return value is provided, and therefore the element should
+be eliminated from the result set.
+
+From the bestiary, at this point in the design, we could use a different
+indicator to indicate an early return such as `step(this)` or `step(step)`, but
+upon some reflection, that is no shorter than `step(null)`. However, if we end
+up wanting `null` to mean something else, such as a scalar event that may not be
+triggered, we might have to use `null` for that purpose.
+
+However, if that is the case, one can use an array, and check the array length,
+or if they really want `undefined`, they can call `shift` and see what they get.
+
+The semanics of using an array in that case would have to be super annoying and
+the use case would have to be super common, but I can't even imagine an example
+of a scalar event that might not happen other than `error`, and I've got `error`
+covered.
