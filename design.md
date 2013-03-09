@@ -5,13 +5,10 @@ Outline...
  * The curse of time and attention.
  * Inhabiting the cracks in convention.
 
-Cadence has become an unpleasant challenge. Curious that one would pursue a
-project in their own time that is not a pleasant project, but 
-
-Merlin Mann writes about time and attention and creative work. His thesis is
-that if you give your time and attention to any endeavour, you are rewarded with
-insights into your endeavour. Give it your time and attention and it will give
-you direction. Take the direction.
+[Merlin Mann](http://youlooknicetoday.com/)  writes about time and attention and
+creative work. His thesis is that if you give your time and attention to any
+endeavour, you are rewarded with insights into your endeavour. Give it your time
+and attention and it will give you direction. Take the direction.
 
 There is a corallary, that when you're compelled to give your time and attention
 to an aspect of your endeavour that is not at the heart of your endeavour, those
@@ -40,3 +37,5 @@ confident that I'll find that room or know what to do once I'm in it.
 I've given control flow enough time and attention now, especially in navigating
 the many tiny evented steps in [Strata](https://github.com/bigeasy/strata), that
 I'd like to have a place to explore the insights. That would be this project.
+
+
