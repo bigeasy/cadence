@@ -93,7 +93,7 @@ cadence(function (emitter, step) {
   step(function () {
     step(emitter).once('end');
   }, function (end) {
-    assert.equal(end, 'done'); 
+    assert.equal(end, 'done');
   });
 })(emitter);
 
@@ -116,7 +116,7 @@ cadence(function (emitter, step) {
   step(function () {
     step(emitter).once('end');
   }, function (data) {
-    assert.deepEqual(data, [ 1, 2, 3 ]); 
+    assert.deepEqual(data, [ 1, 2, 3 ]);
   });
 })(emitter);
 
@@ -234,7 +234,7 @@ Released: Sun Jul  8 04:28:52 UTC 2012
  * Return values to application. #14.
  * Early exit. #30.
  * Plain old callbacks. #29.
- * Immediate context assignment within step function. #28. 
+ * Immediate context assignment within step function. #28.
  * Application specified base context. #27.
  * Application specified alias for `cadence`. #16.
  * Error-only error handling step functions. #26.

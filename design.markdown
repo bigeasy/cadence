@@ -62,10 +62,10 @@ passed to the subsequent function in the cadence.
 var fs = require('fs'), cadence = require('cadence');
 
 cadence(function (path, since, step) {
-  
+
     step(function () {
 
-      fs.readdir(path, step()); 
+      fs.readdir(path, step());
 
     }, function (listing) {
 
@@ -84,7 +84,7 @@ cadence(function (path, since, step) {
     }, function (bodies) {
 
       if (bodies.length) {
-        process.stdout.write(bodies.concat([ '' ]).join('\n')); 
+        process.stdout.write(bodies.concat([ '' ]).join('\n'));
       }
 
     });;
@@ -140,10 +140,10 @@ in the call to step by passing an empty array.
 var fs = require('fs'), cadence = require('cadence');
 
 cadence(function (path, since, step) {
-  
+
     step(function () {
 
-      fs.readdir(path, step()); 
+      fs.readdir(path, step());
 
     }, function (listing) {
 
@@ -162,7 +162,7 @@ cadence(function (path, since, step) {
     }, function (bodies) {
 
       if (bodies.length) {
-        process.stdout.write(bodies.concat([ '' ]).join('\n')); 
+        process.stdout.write(bodies.concat([ '' ]).join('\n'));
       }
 
     });;
@@ -193,7 +193,7 @@ cadence(function (directory, since, step) {
 
     step(function () {
 
-        fs.readdir(directory, step()); 
+        fs.readdir(directory, step());
 
     }, function (files, step) {
 
@@ -314,7 +314,7 @@ cadence(function (directory, since, step) {
 
     step(function () {
 
-        fs.readdir(directory, step()); 
+        fs.readdir(directory, step());
 
     }, function (files, step) {
 
@@ -357,7 +357,7 @@ cadence(function (directory, since, step) {
 ```
 
 Not that much different from a hoisted function solution. What would actually go
-inside the inner loop that 
+inside the inner loop that
 
 Each call to step indicates both a callback and a spot in the array. How do we
 separate the callback from the spot in the array?
@@ -369,7 +369,7 @@ cadence(function (directory, since, step) {
 
     step(function () {
 
-      fs.readdir(directory, step()); 
+      fs.readdir(directory, step());
 
     }, function (files, step) {
 
@@ -388,7 +388,7 @@ cadence(function (directory, since, step) {
         fs.readFile(path.join(directory, file), step());
 
       }, objects);
-      
+
 
       files.forEach(function (file) {
         stats(file);
