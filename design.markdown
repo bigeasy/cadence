@@ -46,6 +46,9 @@ It is not my intention at the time of this commit to back fill the decisions
 I've already made, I'm primarily interested in working through the decisions
 that I've not been able to make through noodling alone.
 
+ * Use of `_` before a callback to indicate that function takes no arguments.
+ * How we're not that concerned about events that may or may not happen.
+
 ## Order and Arity of Subsequent Functions
 
 It appears that there would be a common case when working with `fs` where you'd
@@ -256,7 +259,7 @@ cadence(function (directory, since, step) {
 
     step(function () {
 
-        fs.readdir(directory, step()); 
+        fs.readdir(directory, step());
 
     }, function (files, step) {
 
@@ -385,9 +388,13 @@ cadence(function (directory, since, step) {
 
       }, function (stat, file) {
 
-        fs.readFile(path.join(directory, file), step());
+        if (stat.isDirectory()) fs.readFile(path.join(directory, file), objects(file));
 
-      }, objects);
+      }, function _(stat) {
+
+        return stat;
+
+      });
 
 
       files.forEach(function (file) {
@@ -408,3 +415,15 @@ cadence(function (directory, since, step) {
   console.log(results);
 });
 ```
+
+The above solution would use fact that `objects` is declared before `stats` to
+establish the order of parameters to the subsequent function. Each call to stats
+causes Cadence to wait for a return, but the sub-cadence would invoke the
+objects sub-cadence, which would schedule an additional return and create space
+in the objects array. 
+
+At the end of the stat sub-cadence is a return that ensure that we always return
+something from the stat sub-cadnece, even though we don't use it. This would
+probably be the case most of the time, making this an invitation to busy work,
+or comments along the lines of, "we don't need the return value so we don't
+worry if this returns undefined."
