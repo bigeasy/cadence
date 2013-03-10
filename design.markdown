@@ -49,9 +49,183 @@ that I've not been able to make through noodling alone.
  * Use of `_` before a callback to indicate that function takes no arguments.
  * How we're not that concerned about events that may or may not happen.
 
+And some capture.
+
+step(function (thing) {
+
+  var items = step([]);
+  thing.mayOrMayNotCall(function (error, result) {
+    items()(error, result);
+  });
+  thing.willCallWhenDone(step());
+
+}, step (items, done) {
+
+  console.log({ items: items, done: done });
+
+});
+
+Not bad and for the uncommon case.
+
 ## The Cadence Beastiary
 
-TK.
+Cadence uses an function named `step` that is a magic function; if you call it
+with different sorts of parameters, it will behave differently.
+
+What sorts of parameters can we use with step? That is something to layout when
+designing the API that will use step; a list of the different beasties that we
+can give to step, so we can assign a meaning to each beastie. Look for my
+
+```javascript
+cadence(function (step) {
+  
+  step();           // arguments.length == 0;
+  step([]);         // Array.isArray(arguments[0]);
+  step({});         // typeof arguments[0] == "object"
+  step('');         // typeof arguments[0] == "string"
+  step('a');        // /^a$/.test(arguments[0]);
+  step(1);          // !isNaN(parseInt(arguments[0], 10)) && isFinite(arguments[0]);
+  step(null);       // arguments[0] === null;
+  step(this);       // arguments[0] === this;
+  step(step);       // arguments[0] === step;
+  step(cadence);    // arguments[0] === cadence;
+
+  step(named);      // Named function, see sub-cadences below.
+
+  step(new Error);          // arguments[0] instanceof Error
+  step(new EventEmitter);   // arguments[0] instanceof EventEmitter
+  step(new EventEmitter);   // typeof arguments[0].on == "function"
+
+  // Sub-cadences.
+  // arguments.every(function (a) { return typeof a == 'function' });
+  step(function (value, step) {
+
+    // In the above step will terminate the function list.
+
+  }, function named () {
+
+    // We can have named functions that appear in the context.
+
+  }, function _ (value, name) {
+
+    // We can have special names, or decorators, that change interpretation of
+    // the signature.
+
+  }, function name$flag$option (value, name) {
+
+    // We could use a special character to denote flags.
+  
+  }, function name$ig (value, name) {
+
+    // Or, like regular expressions, we can have single character switches.
+
+  }, function ($name, value) {
+
+    // Currently, starting with a `$` means we want to get the value, but we
+    // don't want it to be kept in context.
+
+  }, function (named) {
+
+    // We can reference functions named in the cadence and jump too them.
+    if (1 == 1) fs.readdir(".", step(named));
+    else step(named)(null, []);
+
+  }, function (_) {
+
+    // This still exists to support Streamline.js.
+
+  }, function (callback) {
+
+    // Create an old-fashioned callback, but maybe this is generalized.
+
+  });
+
+  // Signatures.
+
+  // Mix or match.
+  step([0]);
+  step({ $trigger: 3 });
+});
+```
+
+In the beastiary we can detect an empty argument list, we can have the length of
+the arguments mean something; if we pass a number and a string, the number could
+be the number of times we print the string, but if we pass just a number, then
+it could mean the number of seconds to wait before exiting. Nonsense example,
+but you get the picture.
+
+I require that the caller gives us an actual type, that it doesn't trigger any
+of the [typing
+pitfalls](http://webreflection.blogspot.ie/2012/06/javascript-typeof-operator-problem.html).
+About those I simply do not care. Those are "Doctor it hurts when I do this."
+problems, problems that a latched onto by those lookign to be Nerd Perfect(tm).
+
+Not only can we accept strings, but we can run regular expressions against
+strings so that they have different meanings.
+
+Currently, assignments are...
+
+ * Arrays of functions are sub-cadences.
+ * Integers indicate arity.
+ * An array indicates an array of responses.
+ * Order of invocations of step establish the order of arguments to subsequent
+ functions.
+
+Arrays of functions are sub-cadences.
+
+## Inhabiting the Cracks in Convention
+
+In a callback of the following form, the `error` is supposed to be an `Error`
+object by convention.
+
+```javascript
+function (error, result) {
+}
+```
+
+When it is not an error object, it can be an indicator that the callback is
+supposed to do something else. 
+
+```javascript
+cadence(function (step) {
+  step(function () {
+
+    fs.readFile(__filename, "utf8", step());
+
+  }, function (body) {
+
+    console.log(body.split(/\n/).length);
+    
+  });
+});
+```
+
+In the above, `step()` creates the callback invoked by `readFile`.
+
+```javascript
+cadence(function (step) {
+  step(function () {
+
+    var splitter = step();
+    fs.readFile(__filename, "utf8", splitter(function (body) { return body.split(/\n/) }));
+
+  }, function (lines) {
+
+    console.log(lines.length);
+    
+  });
+});
+```
+
+In the above, we create a callback then create a wrapper, when our callback gets
+a function as it's first argument, it knows that it is going to run a
+sub-cadence against the result.
+
+This collides with the use of sub-cadences with `forEach` below.
+
+## Sub-Cadence as Callback?
+
+Curious, found a great usage for a sub-cadence as callback.
 
 ## Order and Arity of Subsequent Functions
 
