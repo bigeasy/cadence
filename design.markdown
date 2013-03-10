@@ -1302,3 +1302,39 @@ any time really, possibly even exported from the `cadence` scope.
 This is becoming a won't do, I don't see the value in variable arguments. Where
 is there a callback that has a variable argument return? If it gets in the way
 at all, it goes away.
+
+## The Day After Tomorrow / Minifcation and the Sub-Context
+
+I woke up today and realized, this isn't going to be a MicroJS library, because
+it does minify. Once you minify, function parameters get renamed, because they
+are not in scope, and your Cadence breaks.
+
+Which isn't covered in this design document, stashing variables in the hidden
+context, it's not covered, but it is the magic with which Cadence came to be.
+
+Write my own minifier, of course. Patch UglifyJS to leave the function
+declarations alone, but that's never going to happen.
+
+Then I started to consider how it was used. I've begun to use `step` to
+create sub-cadences do I don't have to repeat myself, using the enclosed scope
+to capture parameters from a step in a cadence in a sub-cadence.
+
+Then, I've begun to be explicit about arity, in declarations, so the special
+variables that control arity don't matter anymore. At the same time, I'm passing
+in an array to indicate that values should be gathered, that array can be the
+array that gathers, so that can be declared at the outer scope and passed in.
+
+Finally, I've already demonstrated in tests here that you can assign a function
+to a variable and pass it into a cadence, so jumping still works.
+
+Unfortunately, this really does break Proof, where I've enjoyed the ability to
+hit the ground running because I can pull what I need out of this hidden
+context, so for the sake of Proof, I suppose the hidden context stays.
+
+Finally, it occurs to me that callbacks can write to the this object, but if
+we're building an object, it is not any more or less noxious to me to assign the
+variable to an object in scope.
+
+Creating my own minifier, a variation of UglifyJS that would skip functions if
+they had a particular name or naming convention, or might possibly look for
+`step`, and skip all the functions within it.
