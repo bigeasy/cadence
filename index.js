@@ -186,7 +186,7 @@ function factory () {
         context[step.name] = function () { async(step).apply(null, [ null ].concat(__slice.call(arguments, 0))) }
         context[step.name].original = step;
       }
-      step.parameters = $[1].split(/\s*,\s/);
+      step.parameters = $[1].split(/\s*,\s*/);
       if (!step.parameters[0].trim()) step.parameters.shift();
       return step;
     }
