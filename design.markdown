@@ -1103,8 +1103,22 @@ cadence(function () {
     // Objects first, then action, then definition. ('error' is special.)
     on(prog, prog.stdout, prog.stderr, 'error');
 
+    // Same, but no auto call.
+    var event = step(this);
+    prog.on('exit', event(2));
+    prog.stdout.on('data', event([]));
+    prog.stderr.on('data', event([], function (data) {
+      return data.map(function (buffer) { return buffer.toString() }).join('');
+    }));
+    // Then this gets monotonous.
+    prog.on('error', event('error'));
+    prog.stdout.on('error', event('error'));
+    prog.stderr.on('error', event('error'));
+
   }, function (code, signal, stdout, stderr) {
 
+    stdout = stdout.map(function (buffer) { return buffer.toString() }).join('');
+    console.log(code, signal, stdout, stderr);
 
   });
 
