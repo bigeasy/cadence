@@ -49,6 +49,65 @@ that I've not been able to make through noodling alone.
  * Use of `_` before a callback to indicate that function takes no arguments.
  * How we're not that concerned about events that may or may not happen.
 
+Super important that the common cases require less punctuation, even if it ruins
+the consistency. Key here is `step(function () {});` to create a sub-cadence,
+without having to deal with a return value.
+
+This...
+
+```javascript
+cadence(function (step) {
+  step(function () {
+
+    fs.readFile(__filename, "utf8", step());
+
+  }, function (body) {
+
+    console.log(body.split(/\n/).length);
+    
+  });
+});
+```
+
+Not this...
+
+```javascript
+cadence(function (step) {
+  step(function () {
+
+    fs.readFile(__filename, "utf8", step());
+
+  }, function (body) {
+
+    console.log(body.split(/\n/).length);
+    
+  })(); // NO!
+});
+```
+
+Whenever I've done that, I've hated it and forgot the invocation anyway.
+
+Here's a couple ideas...
+
+```javascript
+cadence(function (step) {
+  step(function () {
+
+    fs.readFile(__filename, "utf8", step());
+
+  }, function (body) {
+
+    console.log(body.split(/\n/).length);
+    
+  }).happy('happy').joy('joy')
+    .inscrubulate(2.2219, require('underscore'), 1 + 1 === 4)
+    .invoke('roger all systems go')
+    .oh('I forgot to say...').please();
+});
+```
+
+...that make me want to cry. No method chaining. No. Method. Chaining.
+
 ## The Cadence Beastiary
 
 Cadence uses an function named `step` that is a magic function; if you call it
@@ -992,3 +1051,67 @@ cadence(function (directory, since, step) {
 
 It would appear that the early return would work here as well. The return
 would propagate to the outer function.
+
+## Events
+
+With so much sorted out, events ought to get easier.
+
+```javascript
+var cadence = require('cadence')(function (object, step) {
+  if (object.on && object.stdout && object.stderr) {
+    // Magic. 
+  }
+});
+
+cadence(function () {
+
+  step(function () {
+
+    var prog = spwan('chatty', []);
+
+    // Hummm... Use an array to make things look like Objective-C for
+    //          no good reason?
+    step([prog, 'exit'], 2); // Need to specify arity.
+    step([prog, 'error'], 2); // 'error' is special
+    step([prog.stdout, 'data', []]);
+    step([prog.stderr, 'data', []]);
+
+    // Hermm... Use `this` to mean object based?
+    prog.on('exit', step(this, 2));
+    prog.on('error', step(this, 'error'));
+    prog.stdout.on('data', step(this, []));
+    prog.stderr.on('data', step(this, []);
+
+    // Erp... All errors at once?
+    step(this, 'error', prog, prog.stdout, prog.stderr);
+
+    // Custom handlers?
+    step(this, spawn);
+
+    // Argh... What do we have left in the beastiary?
+    var on = step(prog, prog.on);
+    on('exit', 2);
+    on('error', 'error');
+
+    // Create a callback builder?
+    var on = step(this, 'on');
+    on(prog, 'exit', 2);
+    on(prog.stdout, 'data', []);
+    on(prog.stderr, 'data', [], function (data) {
+      return data.map(function (buffer) { return buffer.toString() }).join('');
+    });
+    // Objects first, then action, then definition. ('error' is special.)
+    on(prog, prog.stdout, prog.stderr, 'error');
+
+  }, function (code, signal, stdout, stderr) {
+
+
+  });
+
+});
+```
+
+Okay, it's not easier. What needs to happen is that the first argument to a
+callback is shifted. Events will have events that do not get called, here might
+be more of a concept of null events, as opposed to definate events versus zero
+to many events.
