@@ -49,24 +49,6 @@ that I've not been able to make through noodling alone.
  * Use of `_` before a callback to indicate that function takes no arguments.
  * How we're not that concerned about events that may or may not happen.
 
-And some capture.
-
-step(function (thing) {
-
-  var items = step([]);
-  thing.mayOrMayNotCall(function (error, result) {
-    items()(error, result);
-  });
-  thing.willCallWhenDone(step());
-
-}, step (items, done) {
-
-  console.log({ items: items, done: done });
-
-});
-
-Not bad and for the uncommon case.
-
 ## The Cadence Beastiary
 
 Cadence uses an function named `step` that is a magic function; if you call it
@@ -432,6 +414,202 @@ not solve the problem of an empty listing. If `step()` is not called, there is
 no indication to Cadence that a value is expected.
 
 To solve this, I moved to having a declaration of an array.
+
+```javascript
+var fs = require('fs'), cadence = require('cadence');
+
+cadence(function (path, since, step) {
+
+    step(function () {
+
+      fs.readdir(path, step());
+
+    }, function (listing) {
+
+      var stats = step([]);
+      listing.forEach(function (file) { fs.stat(file, stats()); });
+
+    }, function (stats, listing) {
+
+      var bodies = step([]);
+      stats.forEach(function (stat, index) {
+        if (stat.mtime > since) {
+          fs.readFile(listing[index], 'utf8', bodies());
+        }
+      });
+
+    }, function (bodies) {
+
+      if (bodies.length) {
+        process.stdout.write(bodies.concat([ '' ]).join('\n'));
+      }
+
+    });;
+
+})(".", +(new Date()) - 1000 * 60 * 10);
+```
+
+Along the way, were were some incantations. Starting with having `step([])`
+generate a callback.
+
+```javascript
+var fs = require('fs'), cadence = require('cadence');
+
+cadence(function (path, since, step) {
+
+    step(function () {
+
+      fs.readdir(path, step());
+
+    }, function (listing) {
+
+      var stats = step([listing.length]);
+      listing.forEach(function (file) { fs.stat(file, stats); });
+
+    }, function (stats, listing) {
+
+      var bodies = step([]);
+      stats.forEach(function (stat, index) {
+        if (stat.mtime > since) {
+          fs.readFile(listing[index], 'utf8', bodies(1));
+        }
+      });
+
+    }, function (bodies) {
+
+      if (bodies.length) {
+        process.stdout.write(bodies.concat([ '' ]).join('\n'));
+      }
+
+    });;
+
+})(".", +(new Date()) - 1000 * 60 * 10);
+```
+
+In the above, we put a numeric value in the array to indicate that that step
+function will have that many callbacks. In the case of stats, we know already
+how many stats we're supposed to have, so we can declare our `stats` callback
+with a callback count.
+
+Except now we don't know the index of callback. In our solution before this one,
+when we call `stat()`, we know that the callback will append to the array at the
+current length of the array, each invocation adds an element. With this
+solution, we'd have to add our answers as they arrive, no inidcation of the
+index. Breakage one.
+
+If the order didn't matter, then this would be fine, but it will, almost
+always, because parallel arrays is what we do.
+
+Next we'd overload the `error` of the callback to look for a count. When the
+array is specified without a count, it will not count on anything to return. We
+need to tell it to wait by invoking the callback with a count to increment the
+number of times we're supposed to wait. If we didn't like overloading the return
+value, then we run it through `step`.
+
+```javascript
+var fs = require('fs'), cadence = require('cadence');
+
+cadence(function (path, since, step) {
+
+    step(function () {
+
+      fs.readdir(path, step());
+
+    }, function (listing) {
+
+      var stats = step([listing.length]);
+      listing.forEach(function (file) { fs.stat(file, stats); });
+
+    }, function (stats, listing) {
+
+      var bodies = step([]);
+      stats.forEach(function (stat, index) {
+        if (stat.mtime > since) {
+          fs.readFile(listing[index], 'utf8', step(bodies, 1));
+        }
+      });
+
+    }, function (bodies) {
+
+      if (bodies.length) {
+        process.stdout.write(bodies.concat([ '' ]).join('\n'));
+      }
+
+    });;
+
+})(".", +(new Date()) - 1000 * 60 * 10);
+```
+
+I don't see a second breakage, but I like the notion of being explicit in
+calling these. I can't imagine a case of using an `error` callback where things
+might not happen. We looked at using `step` to create  callbacks above, but I
+imagine that when we have the zero to many issue arrise with callbacks, we could
+so something like the following.
+
+```javascript
+step(function (thing) {
+
+  var items = step([]);
+  thing.mayOrMayNotCall(function (error, result) {
+    items()(error, result);
+  });
+  thing.willCallWhenDone(step());
+
+}, step (items, done) {
+
+  console.log({ items: items, done: done });
+
+});
+```
+
+Not bad and for the uncommon case.
+
+Now getting back to the solution we settled on, we're losing track of the
+details of our bodies, so can use an inner cadence, a cooking cadence, to gather
+up our data into an object.
+
+```javascript
+var fs = require('fs'), cadence = require('cadence');
+
+cadence(function (path, since, step) {
+
+    step(function () {
+
+      fs.readdir(path, step());
+
+    }, function (listing) {
+
+      var stats = step([]);
+      listing.forEach(function (file) { fs.stat(file, stats()); });
+
+    }, function (stats, listing) {
+
+      var bodies = step([]);
+      stats.forEach(function (stat, index) {
+        if (stat.mtime > since) {
+          fs.readFile(listing[index], 'utf8', bodies(step, function (body) {
+            return {
+              name: listing[index],
+              stat: stat,
+              body: body
+            }
+          }));
+        }
+      });
+
+    }, function (files) {
+
+      if (files.length) {
+        files.forEach(function (file) {
+          console.log("file: " + file.name + ", size: "  + file.stat.size + ", first line:");
+          console.log(file.body.split(/\n/).shift() + "\n");
+        });
+      }
+
+    });;
+
+})(".", +(new Date()) - 1000 * 60 * 10);
+```
 
 ## Sub-Cadences
 
