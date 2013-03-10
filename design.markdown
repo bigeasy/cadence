@@ -1296,3 +1296,9 @@ cadence(function (directory, since, step) {
 That would have to just work, creating an entirely new context. So, `step` runs
 immediately, but it also creates a callback that can be run subseuqently, or at
 any time really, possibly even exported from the `cadence` scope.
+
+## Variable Arguments
+
+This is becoming a won't do, I don't see the value in variable arguments. Where
+is there a callback that has a variable argument return? If it gets in the way
+at all, it goes away.
