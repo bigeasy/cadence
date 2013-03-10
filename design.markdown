@@ -512,3 +512,55 @@ The semanics of using an array in that case would have to be super annoying and
 the use case would have to be super common, but I can't even imagine an example
 of a scalar event that might not happen other than `error`, and I've got `error`
 covered.
+
+While we're looking  at this, let's consider how far we can nest cadences.
+
+```javascript
+var fs = require('fs'), cadence = require('cadence');
+
+cadence(function (directory, since, step) {
+
+    step(function () {
+
+        fs.readdir(directory, step());
+
+    }, function (files, step) {
+
+      files.forEach(step([], function (file) {
+
+        var resolved = path.join(directory, file);
+
+        step(function () {
+
+          fs.stat(resolved, step());
+
+        }, function (stat, file) {
+
+          if (stat.isDirectory()) step(null);
+          else fs.readFile(resolved, step());
+
+        }, function (body, stat, file) {
+
+          return { name: file, stat: stat, body: body };
+
+        });
+
+      }));
+
+    }, function (objects) {
+
+      // Superfluous step here. It would have been returned from the previous
+      // function out to the caller.
+
+      return objects;
+
+    });
+
+})(".", function (error, results) {
+  if (error) throw error;
+  console.log(results);
+});
+```
+
+It would appear that the early return would work here as well. The return
+would propagate to the outer function.
