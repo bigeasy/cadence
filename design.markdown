@@ -199,7 +199,7 @@ I require that the caller gives us an actual type, that it doesn't trigger any
 of the [typing
 pitfalls](http://webreflection.blogspot.ie/2012/06/javascript-typeof-operator-problem.html).
 About those I simply do not care. Those are "Doctor it hurts when I do this."
-problems, problems that a latched onto by those lookign to be Nerd Perfect(tm).
+problems, problems that a latched onto by those looking to be Nerd Perfect(tm).
 
 Not only can we accept strings, but we can run regular expressions against
 strings so that they have different meanings.
@@ -283,7 +283,7 @@ cadence(function (step) {
 });
 ```
 
-The assumption here is that in ordinary operation, noone is going to call us
+The assumption here is that in ordinary operation, no one is going to call us
 back with `typeof error === "function"`, but they could, I suppose, if they
 really wanted to.
 
@@ -553,7 +553,7 @@ with a callback count.
 Except now we don't know the index of callback. In our solution before this one,
 when we call `stat()`, we know that the callback will append to the array at the
 current length of the array, each invocation adds an element. With this
-solution, we'd have to add our answers as they arrive, no inidcation of the
+solution, we'd have to add our answers as they arrive, no indication of the
 index. Breakage one.
 
 If the order didn't matter, then this would be fine, but it will, almost
@@ -602,7 +602,7 @@ cadence(function (path, since, step) {
 I don't see a second breakage, but I like the notion of being explicit in
 calling these. I can't imagine a case of using an `error` callback where things
 might not happen. We looked at using `step` to create  callbacks above, but I
-imagine that when we have the zero to many issue arrise with callbacks, we could
+imagine that when we have the zero to many issue arise with callbacks, we could
 so something like the following.
 
 ```javascript
@@ -914,7 +914,7 @@ objects sub-cadence, which would schedule an additional return and create space
 in the objects array. 
 
 At the end of the stat sub-cadence is a return that ensure that we always return
-something from the stat sub-cadnece, even though we don't use it. This would
+something from the stat sub-cadence, even though we don't use it. This would
 probably be the case most of the time, making this an invitation to busy work,
 or comments along the lines of, "we don't need the return value so we don't
 worry if this returns undefined."
@@ -923,10 +923,10 @@ This design would be nightmarish, but it helps to flesh out alternatives,
 because until I'm able to see how bad it is, it is going to nag. I suppose this
 is meta and about the design process, but when I'm holding this in my head, I
 will think of this again, what if you composed sub-cadences? What if one
-sub-cadence called another, so you could use the same odering logic? Then I have
+sub-cadence called another, so you could use the same ordering logic? Then I have
 to think about it, realize that it doesn't look or read right, then wait a day
 or two and think, what if you composed sub-cadences? What if one sub-cadence
-called another, so you could use the same odering logic?
+called another, so you could use the same ordering logic?
 
 It is good to have a catalog of what was said by the voices you heard calling
 you into dark alleys.
@@ -995,7 +995,7 @@ triggered, we might have to use `null` for that purpose.
 However, if that is the case, one can use an array, and check the array length,
 or if they really want `undefined`, they can call `shift` and see what they get.
 
-The semanics of using an array in that case would have to be super annoying and
+The semantics of using an array in that case would have to be super annoying and
 the use case would have to be super common, but I can't even imagine an example
 of a scalar event that might not happen other than `error`, and I've got `error`
 covered.
