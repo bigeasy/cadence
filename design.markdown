@@ -173,6 +173,11 @@ Currently, assignments are...
 
 Arrays of functions are sub-cadences.
 
+## Sub-Cadence as Callback?
+
+Curious, found a great usage for a sub-cadence as callback. Here's where the
+cracks of the convention may be filled, so...
+
 ## Inhabiting the Cracks in Convention
 
 In a callback of the following form, the `error` is supposed to be an `Error`
@@ -259,9 +264,44 @@ cadence(function (step) {
 
 Which would be awful hard for anyone to abuse us with.
 
-## Sub-Cadence as Callback?
+Ah, but then, why not...
 
-Curious, found a great usage for a sub-cadence as callback.
+```javascript
+cadence(function (step) {
+  step(function () {
+
+    fs.readFile(__filename, "utf8", step(step, function (body) { return body.split(/\n/) }));
+
+  }, function (lines) {
+
+    console.log(lines.length);
+    
+  });
+});
+```
+
+This reads to me as, create a `step` callback, but run this sub-cadence against
+the response, here's a sub-cadence in a callback, i.e. `step(step`.
+
+Now we can address the problem of a callback that might not be called, this
+imaginary creature, something I've yet to see in the wild...
+
+```javascript
+cadence(function (thing) {
+  step(function () {
+
+    thing.happensWhenDone(step());
+    thing.mayOrMayNotHappen(step(step, []));
+
+  }, function (definately, maybe) {
+
+    console.log(definately, maybe.length);
+    
+  });
+})(require("thing"));
+```
+
+Looks like I'm not going to make use of an overloaded `error`.
 
 ## Order and Arity of Subsequent Functions
 
