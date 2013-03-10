@@ -223,6 +223,42 @@ sub-cadence against the result.
 
 This collides with the use of sub-cadences with `forEach` below.
 
+```javascript
+cadence(function (step) {
+  step(function () {
+
+    fs.readFile(__filename, "utf8", step()(function (body) { return body.split(/\n/) }));
+
+  }, function (lines) {
+
+    console.log(lines.length);
+    
+  });
+});
+```
+
+The assumption here is that in ordinary operation, noone is going to call us
+back with `typeof error === "function"`, but they could, I suppose, if they
+really wanted to.
+
+We could be more explicit, using one of our special variables.
+
+```javascript
+cadence(function (step) {
+  step(function () {
+
+    fs.readFile(__filename, "utf8", step()(step, function (body) { return body.split(/\n/) }));
+
+  }, function (lines) {
+
+    console.log(lines.length);
+    
+  });
+});
+```
+
+Which would be awful hard for anyone to abuse us with.
+
 ## Sub-Cadence as Callback?
 
 Curious, found a great usage for a sub-cadence as callback.
