@@ -1129,3 +1129,111 @@ Okay, it's not easier. What needs to happen is that the first argument to a
 callback is shifted. Events will have events that do not get called, here might
 be more of a concept of null events, as opposed to definate events versus zero
 to many events.
+
+## Reentrancy
+
+Something like this, where `sub` is called and a new state is created. The
+return values here are not correct; I'm not sure what it is building, but the
+call to sub, well how is that different from out looping construct?
+
+Grr...
+
+```javascript
+var fs = require('fs'), cadence = require('cadence');
+
+cadence(function (directory, since, step) {
+
+    step({ directory: directory, parent: {} });
+
+    step(function sub (directory) {
+
+        fs.readdir(directory, step());
+
+    }, function (files, step) {
+
+      files.forEach(step([], function (file) {
+
+        var resolved = path.join(directory, file);
+
+        step(function () {
+
+          fs.stat(resolved, step());
+
+        }, function (stat, file, sub) {
+
+          if (stat.isDirectory()) step(sub)(step());
+          else fs.readFile(resolved, step());
+
+        }, function (body, stat, file) {
+
+          return { name: file, stat: stat, content: body };
+
+        });
+
+      }));
+
+    }, function (entries, parent) {
+
+      parent.entries = entries;
+      return parent;
+
+    });
+
+})(".", function (error, results) {
+  if (error) throw error;
+  console.log(results);
+});
+```
+
+Okay, how about this then?
+
+```javascript
+var fs = require('fs'), cadence = require('cadence');
+
+cadence(function (directory, since, step) {
+
+    step({ directory: directory, parent: {} });
+
+    var descend = step(function sub (directory) {
+
+        fs.readdir(directory, step());
+
+    }, function (files, step) {
+
+      files.forEach(step([], function (file) {
+
+        var resolved = path.join(directory, file);
+
+        step(function () {
+
+          fs.stat(resolved, step());
+
+        }, function (stat, file, sub) {
+
+          if (stat.isDirectory()) step(descend)(step());
+          else fs.readFile(resolved, step());
+
+        }, function (body, stat, file) {
+
+          return { name: file, stat: stat, content: body };
+
+        });
+
+      }));
+
+    }, function (entries, parent) {
+
+      parent.entries = entries;
+      return parent;
+
+    });
+
+})(".", function (error, results) {
+  if (error) throw error;
+  console.log(results);
+});
+```
+
+That would have to just work, creating an entirely new context. So, `step` runs
+immediately, but it also creates a callback that can be run subseuqently, or at
+any time really, possibly even exported from the `cadence` scope.
