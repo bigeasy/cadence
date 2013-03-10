@@ -1,10 +1,5 @@
 # Design
 
-Outline...
-
- * The curse of time and attention.
- * Inhabiting the cracks in convention.
-
 [Merlin Mann](http://youlooknicetoday.com/)  writes about time and attention and
 creative work. His thesis is that if you give your time and attention to any
 endeavour, you are rewarded with insights into your endeavour. Give it your time
@@ -12,12 +7,19 @@ and attention and it will give you direction. Take the direction.
 
 There is a corollary, that when you're compelled to give your time and attention
 to an aspect of your endeavour that is not at the heart of your endeavour, those
-insights still come, they hound you with direction, until you finally succumb to
-the hounding and set out to codify your insights in code.
+insights still come, although you don't want to hear from them, since these
+insights merely distract you from where you ought to be focused. But these
+insights start to nag you, they hound you with direction, they bombard you with
+clarity, until you finally succumb to the nagging, and the hounding, and
+bombardment,  and set out to codify your insights in code.
 
-This is why there are so many unit test frameworks. It is the programmer's
-prayer: This is my unit testing framework. There are many like it, but this one
-is mine.
+This is why there are so many unit test frameworks. Not because we really need
+another one, but because it's something you spend so much time with, you want to
+have a place to capture your own experience with this huge, cross-cutting aspect
+of your practice.
+
+It is the programmer's variation of the Rifleman's Prayer: This is my unit
+testing framework. There are many like it, but this one is mine.
 
 A JavaScript developer is going to spend a lot of time considering the control
 flow given the prevalence of callbacks in JavaScript programming. I am such a
