@@ -7,10 +7,10 @@ require('proof')(13, function (step, equal, ok) {
 
   cadence(function (step) {
 
-    var callback = step(2, []);
-    callback(null, "a", 1);
-    callback(null, "b", 2);
-    callback(null, "c", 3);
+    var arrays = step([]);
+    arrays()(null, "a", 1);
+    arrays()(null, "b", 2);
+    arrays()(null, "c", 3);
 
   }, function (letters, numbers) {
 

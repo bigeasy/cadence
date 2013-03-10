@@ -107,7 +107,7 @@ function factory () {
 
       // If we're called with a single object argument, we merge the given
       // object into the cadence context.
-      if (vargs.length == 1 && typeof vargs[0] == "object" && vargs[0]) {
+      if (vargs.length == 1 && typeof vargs[0] == "object" && vargs[0] && !Array.isArray(vargs[0])) {
         extend(invocation.context, vargs[0]);
         return;
       }
@@ -145,17 +145,36 @@ function factory () {
         if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
           var arrayed = !! vargs.shift(); 
         }
-        if (!arrayed) invocation.count++;
         if (vargs.length) throw new Error("invalid arguments");
-        return createCallback(invocation, arity, arrayed);
+        if (arrayed) {
+          return createArray(invocation, arity);
+        } else {
+          return createScalar(invocation, arity);
+        }
       }
     }
 
-    function createCallback (invocation, arity, arrayed) {
+    function createArray (invocation, arity) {
       var callback = { results: [] };
       if (arity) callback.arity = arity;
-      if (arrayed) callback.arrayed = arrayed;
+      callback.arrayed = true;
       invocation.callbacks.push(callback);
+      return function () {
+        var vargs = __slice.call(arguments);
+        return createCallback(invocation, callback)
+      }
+    }
+
+    function createScalar (invocation, arity) {
+      var callback = { results: [] };
+      if (arity) callback.arity = arity;
+      invocation.callbacks.push(callback);
+      return createCallback(invocation, callback);
+
+    }
+
+    function createCallback (invocation, callback) {
+      invocation.count++;
       return function (error) {
         var vargs = __slice.call(arguments, 1);
         if (error) {
@@ -173,7 +192,7 @@ function factory () {
             });
           }
         }
-        if (!arrayed && ++invocation.called == invocation.count) {
+        if (++invocation.called == invocation.count) {
           invoke.apply(null, invocation.arguments);
         }
       }
