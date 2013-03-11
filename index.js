@@ -59,7 +59,7 @@ function factory () {
       var vargs = __slice.call(arguments, 0), callbacks = [], callback = exceptional;
       if (vargs.length) {
         callback = vargs.pop();
-        callbacks = [{ results: [{ names: [], vargs: vargs }] }];
+        callbacks = [{ results: [vargs] }];
       }
       steps = firstSteps.slice(0);
       cadences.length = 0;
@@ -180,7 +180,7 @@ function factory () {
         if (error) {
           thrown(invocation, error);
         } else {
-          callback.results.push({ names: [], vargs: vargs });
+          callback.results.push(vargs);
           // Indicates that the function has completed, so we need create
           // the callbacks for parallel cadences now, the next increment of
           // the called counter, which may be the last.
@@ -259,7 +259,7 @@ function factory () {
         } else {
           arity = 0;
           callback.results.forEach(function (result) {
-            arity = Math.max(arity, result.vargs.length);
+            arity = Math.max(arity, result.length);
           });
         }
         for (index = 0; index < arity; index++) {
@@ -268,7 +268,7 @@ function factory () {
         }
         callback.results.forEach(function (result) {
           for (var i = 0; i < arity; i++) {
-            vargs[arg + i].values.push(result.vargs[i]);
+            vargs[arg + i].values.push(result[i]);
           }
         });
         arg += arity;
@@ -324,17 +324,17 @@ function factory () {
       } else {
         // No callbacks means that we use the function return value, if any.
         if (callbacks.length == 1) {
-          if (callbacks[0].results.length && callbacks[0].results[0].vargs[0] == invoke) {
-            callbacks[0].results[0].vargs.shift()
+          if (callbacks[0].results.length && callbacks[0].results[0][0] == invoke) {
+            callbacks[0].results[0].shift()
           }
         } else {
           callbacks = callbacks.filter(function (callback) {
-            return callback.results[0] && callback.results[0].vargs[0] !== invoke
+            return callback.results[0] && callback.results[0][0] !== invoke
           });
         }
 
         if (steps.length == index) {
-          callback.apply(null, [ null ].concat(callbacks.length == 1 ? callbacks[0].results[0].vargs : []));
+          callback.apply(null, [ null ].concat(callbacks.length == 1 ? callbacks[0].results[0] : []));
           return;
         }
 
