@@ -170,8 +170,8 @@ function factory () {
       }
     }
 
-    function createArray (invocation, arity) {
-      var callback = { results: [] }, index = 0;
+    function createArray (invocation, arity, cadence) {
+      var callback = { results: [], cadence: cadence }, index = 0;
       if (arity) callback.arity = arity;
       callback.arrayed = true;
       invocation.callbacks.push(callback);
