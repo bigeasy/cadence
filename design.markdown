@@ -672,6 +672,55 @@ cadence(function (path, since, step) {
 })(".", +(new Date()) - 1000 * 60 * 10);
 ```
 
+Having delved into the implementation, I now see a pattern that can be resused
+across steps, sub-cadences and fix-up cadences.
+
+
+```javascript
+step(function (thing) {
+
+  var items = step([])([]);
+  thing.mayOrMayNotCall(items);
+  thing.willCallWhenDone(step());
+
+}, step (items, done) {
+
+  console.log({ items: items, done: done });
+
+});
+```
+
+Simply have the callback generator function be the one to determine if the
+callback it generates is definate or zero to many. 
+
+```javascript
+step(function (ee) {
+
+  ee.on('error', step([], 0)([]);
+  ee.on('done', step(2));
+  ee.on('data', step([])([], null));
+
+}, step (code, signal, data) {
+
+  console.log({ code: code, signal: signal, data: data });
+
+});
+```
+
+In the above, the second array means that it is a zero to many event, while the
+null means that the error is always `null`, or shift the error. We could have
+`-1` mean shift the error.
+
+The error handler has an `arity` of zero, so it doesn't get added to the
+signature of the subsequent function.
+
+We could also pass in `Error` to indicate an error handler.
+
+We might even be able to have a way to express a scalar that may or may not
+happen, but I don't see it here. Still isn't anything I've encountered in the
+while except for the error handler. Usually if it may or many not happen, it may
+or may not also happen twice.
+
 ## Sub-Cadences
 
 I need to go and back fill, here, but there are ways in which I expect Cadence
