@@ -177,6 +177,11 @@ function factory () {
       invocation.callbacks.push(callback);
       return function () {
         var vargs = __slice.call(arguments);
+        if (callback.built) throw new Error("already zero to many");
+        if (Array.isArray(vargs[0])) {
+          index = -1;
+          callback.built = true;
+        }
         return createCallback(invocation, callback, index++);
       }
     }
@@ -189,7 +194,7 @@ function factory () {
     }
 
     function createCallback (invocation, callback, index) {
-      invocation.count++;
+      if (-1 < index) invocation.count++;
       return function (error) {
         var vargs = __slice.call(arguments, 1);
         if (error) {
@@ -207,7 +212,7 @@ function factory () {
               } else {
                 callback.results[index] = __slice.call(arguments, 1); 
               }
-              if (++invocation.called == invocation.count) {
+              if (-1 < index && ++invocation.called == invocation.count) {
                 invoke.apply(null, invocation.arguments);
               }
             });
@@ -221,7 +226,7 @@ function factory () {
             });
           }
         }
-        if (++invocation.called == invocation.count) {
+        if (index > -1 && ++invocation.called == invocation.count) {
           invoke.apply(null, invocation.arguments);
         }
       }
@@ -378,6 +383,7 @@ function factory () {
           }
         } else {
           callbacks = callbacks.filter(function (callback) {
+            // **TODO**: FIXME Results can empty
             return callback.results[0] && callback.results[0][0] !== invoke
           });
         }
