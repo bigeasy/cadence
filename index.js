@@ -136,20 +136,27 @@ function factory () {
       // we've been asked to build a callback, otherwise, this is a sub-cadence.
 
       //
-      if (vargs.length && vargs.every(function (arg) { return typeof arg == "function" })) {
+      if (vargs.length && vargs.every(function (arg) { return typeof arg == "function" }) && vargs[0] !== async) {
         cadences.push(vargs);
       } else {
+        var inline;
+        if (inline = (vargs[0] === async)) {
+          vargs.shift();
+        }
         if (!isNaN(parseFloat(vargs[0])) && isFinite(vargs[0])) {
           var arity = parseInt(vargs.shift(), 10);
         }
         if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
           var arrayed = !! vargs.shift(); 
         }
+        if (vargs.length && vargs.every(function (arg) { return typeof arg == "function" })) {
+          var cadence = vargs.splice(0, vargs.length);
+        }
         if (vargs.length) throw new Error("invalid arguments");
         if (arrayed) {
-          return createArray(invocation, arity);
+          return createArray(invocation, arity, cadence);
         } else {
-          return createScalar(invocation, arity);
+          return createScalar(invocation, arity, cadence);
         }
       }
     }
@@ -165,11 +172,11 @@ function factory () {
       }
     }
 
-    function createScalar (invocation, arity) {
-      var callback = { results: [] };
+    function createScalar (invocation, arity, cadence) {
+      var callback = { results: [], cadence: cadence };
       if (arity) callback.arity = arity;
       invocation.callbacks.push(callback);
-      return createCallback(invocation, callback, -1);
+      return createCallback(invocation, callback, 0);
     }
 
     function createCallback (invocation, callback, index) {
@@ -181,6 +188,21 @@ function factory () {
         } else {
           if (index < 0) callback.results.push(vargs);
           else callback.results[index] = vargs;
+          if (callback.cadence) {
+            invocation.count++;
+            var subtext = Object.create(invocation.context);
+            var steps = callback.cadence.slice(0).map(function (step) { return parameterize(step, subtext) });
+            invoke(steps, 0, subtext, [{ results: [callback.results[index]] }], function (error, result) {
+              if (error) {
+                thrown(invocation, error);
+              } else {
+                callback.results[index] = __slice.call(arguments, 1); 
+              }
+              if (++invocation.called == invocation.count) {
+                invoke.apply(null, invocation.arguments);
+              }
+            });
+          }
           // Indicates that the function has completed, so we need create
           // the callbacks for parallel cadences now, the next increment of
           // the called counter, which may be the last.
