@@ -254,7 +254,7 @@ function factory () {
       arg = 0;
       while (callbacks.length) {
         callback = callbacks.shift();
-        if (arity in callback) {
+        if ('arity' in callback) {
           arity = callback.arity;
         } else {
           arity = 0;
@@ -274,7 +274,6 @@ function factory () {
         arg += arity;
       }
 
-      
       while (names.length) {
         name = names.shift();
         if ($ = /^\$vargs(?:\$(\d+))?$/.exec(name)) {
@@ -367,8 +366,8 @@ function factory () {
           // Did not know that `/^_|callback$/` means `^_` or `done$`.
           } else if (/^(_|callback)$/.test(parameter)) {
             arg = async();
-          } else if ((arg  = context[parameter]) == void(0)) {
-            if ((arg = ephemeral[parameter]) == void(0)) arg = methods[parameter];
+          } else if ((arg = context[parameter]) === void(0)) {
+            if ((arg = ephemeral[parameter]) === void(0)) arg = methods[parameter];
           }
           args.push(arg);
         });
