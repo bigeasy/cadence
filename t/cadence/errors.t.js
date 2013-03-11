@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(5, function (equal, ok) {
+require('proof')(4, function (equal, ok) {
   var fs = require('fs')
     , cadence = require('../..')
     , errors = []
@@ -25,7 +25,8 @@ require('proof')(5, function (equal, ok) {
   }, function () {
     ok(true, "no error");
   })();
-
+/*
+    **TODO**: Rethink.
   cadence(function (step) {
     step()(new Error(1));
     step()(new Error(2));
@@ -33,7 +34,7 @@ require('proof')(5, function (equal, ok) {
   }, function (errors) {
     equal(errors.length, 2, "two errors");
   })();
-  
+ */ 
   cadence(function (step) {
     step()(null, 1);
   }, function (error) {

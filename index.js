@@ -312,7 +312,7 @@ function factory () {
         if ('arity' in callback) {
           arity = callback.arity;
         } else {
-          arity = 0;
+          arity = 1;
           callback.results.forEach(function (result) {
             arity = Math.max(arity, result.length);
           });
@@ -378,13 +378,15 @@ function factory () {
       } else {
         // No callbacks means that we use the function return value, if any.
         if (callbacks.length == 1) {
-          if (callbacks[0].results.length && callbacks[0].results[0][0] == invoke) {
+          if (callbacks[0].results[0][0] === invoke) {
             callbacks[0].results[0].shift()
+          }
+          if (!callbacks[0].results[0].length) {
+            callbacks.shift();
           }
         } else {
           callbacks = callbacks.filter(function (callback) {
-            // **TODO**: FIXME Results can empty
-            return callback.results[0] && callback.results[0][0] !== invoke
+            return !callback.results.length || callback.results[0][0] !== invoke
           });
         }
 
@@ -433,9 +435,11 @@ function factory () {
         try {
           hold = async();
           result = step.apply(null, args);
-          hold.apply(null, [ null, invoke ].concat(result == void(0) ? [] : [ result ]));
+          hold.apply(null, [ null, invoke ].concat(result === void(0) ? [] : [ result ]));
         } catch (error) {
           thrown(invocation, error);
+          invocation.count++;  // Don't trigger, we do it ourselves next.
+          hold.apply(null, [ null, invoke ]);
           invoke.apply(null, invocation.arguments);
         }
       }

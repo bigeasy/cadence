@@ -10,7 +10,7 @@ require('proof')(5, function (equal) {
     }, inc = function (count) {
       step()(null, count + 1);
     }, function (count) {
-      if (count != 10) step(inc)();
+      if (count != 10) step(inc)(null, count);
     }, function (count) {
       equal(count, 10, "var");
     });
@@ -22,7 +22,7 @@ require('proof')(5, function (equal) {
     }, function inc (count) {
       step()(null, count + 1);
     }, function (count, inc) {
-      if (count != 10) step(inc)();
+      if (count != 10) step(inc)(null, count);
     }, function (count) {
       equal(count, 10, "deferred");
     });
@@ -34,7 +34,7 @@ require('proof')(5, function (equal) {
     }, function inc (count) {
       step()(null, count + 1);
     }, function (count, inc) {
-      if (count != 10) inc();
+      if (count != 10) inc(count);
     }, function (count) {
       equal(count, 10, "invoked");
     });

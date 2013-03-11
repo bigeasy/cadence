@@ -13,6 +13,7 @@ require('proof')(4, function (step, equal) {
   }, function (number, step) {
 
     equal(number, 1, "set");
+    // **TODO**: Expecting `step(0, function (number) {` to mean no response.
     step(function (number) {
 
       equal(number, 1, "inherited");
@@ -24,8 +25,9 @@ require('proof')(4, function (step, equal) {
 
     });
 
-  }, function (number) {
+  }, function (x, number) {
 
+    console.log(x);
     equal(number, 1, "popped");
 
   })(step());
