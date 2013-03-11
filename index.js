@@ -155,13 +155,13 @@ function factory () {
     }
 
     function createArray (invocation, arity) {
-      var callback = { results: [] };
+      var callback = { results: [] }, index = 0;
       if (arity) callback.arity = arity;
       callback.arrayed = true;
       invocation.callbacks.push(callback);
       return function () {
         var vargs = __slice.call(arguments);
-        return createCallback(invocation, callback)
+        return createCallback(invocation, callback, index++)
       }
     }
 
@@ -169,18 +169,18 @@ function factory () {
       var callback = { results: [] };
       if (arity) callback.arity = arity;
       invocation.callbacks.push(callback);
-      return createCallback(invocation, callback);
-
+      return createCallback(invocation, callback, -1);
     }
 
-    function createCallback (invocation, callback) {
+    function createCallback (invocation, callback, index) {
       invocation.count++;
       return function (error) {
         var vargs = __slice.call(arguments, 1);
         if (error) {
           thrown(invocation, error);
         } else {
-          callback.results.push(vargs);
+          if (index < 0) callback.results.push(vargs);
+          else callback.results[index] = vargs;
           // Indicates that the function has completed, so we need create
           // the callbacks for parallel cadences now, the next increment of
           // the called counter, which may be the last.
@@ -254,6 +254,9 @@ function factory () {
       arg = 0;
       while (callbacks.length) {
         callback = callbacks.shift();
+        if (callback.arrayed) {
+          callback.results = callback.results.filter(function (vargs) { return vargs.length });
+        }
         if ('arity' in callback) {
           arity = callback.arity;
         } else {

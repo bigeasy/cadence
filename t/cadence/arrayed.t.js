@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(13, function (step, equal, ok) {
+require('proof')(18, function (step, equal, ok) {
   var fs = require('fs')
     , cadence = require('../..')
     ;
@@ -36,9 +36,25 @@ require('proof')(13, function (step, equal, ok) {
 
   // **TODO**: Undone.
   cadence(function (step) {
-    step()(null);
-    step()(null);
-  }, function () {
-    ok(true, 'no arguments');
+    var array = step([]);
+
+    var first = array();
+
+    array()(null);
+    array()(null, 'b', 2);
+
+    first(null, 'a');
+
+  }, function (letters, numbers) {
+
+    equal(letters.length, 2, "some undefineds letters count");
+    equal(letters.length, 2, "some undefineds numbers count");
+
+    equal(letters[0], "a", "some undefines letter one");
+    equal(letters[1], "b", "some undefines letter two");
+
+    ok(numbers[0] === undefined, "some undefines numbers one");
+    equal(numbers[1], 2, "some undefines numbers two");
+    
   })();
 });
