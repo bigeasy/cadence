@@ -37,7 +37,6 @@ function factory () {
       , count
       , exitCode = 0
       // **TODO**: To support reentrancy, move this into `invocation`.
-      , cadences = []
       , methods = { step: async }
       , abended
       , key
@@ -62,7 +61,6 @@ function factory () {
         callbacks = [{ results: [vargs] }];
       }
       steps = firstSteps.slice(0);
-      cadences.length = 0;
       abended = false;
       invoke(steps, 0, Object.create(options.context), callbacks, callback);
     }
@@ -132,32 +130,43 @@ function factory () {
         vargs.shift();
       }
 
+      var fixup;
+      if (fixup = (vargs[0] === async)) {
+        vargs.shift();
+      }
+      if (!isNaN(parseFloat(vargs[0])) && isFinite(vargs[0])) {
+        var arity = parseInt(vargs.shift(), 10);
+      }
+      if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
+        var arrayed = !! vargs.shift(); 
+      }
+      if (vargs.length && vargs.every(function (arg) { return typeof arg == "function" })) {
+        var cadence = vargs.splice(0, vargs.length);
+      }
+
       // If we have no arguments, or else if every argument is a string, then
       // we've been asked to build a callback, otherwise, this is a sub-cadence.
 
       //
-      if (vargs.length && vargs.every(function (arg) { return typeof arg == "function" }) && vargs[0] !== async) {
-        cadences.push(vargs);
+      if (cadence && !fixup) {
+        return createCadence(invocation, arity, cadence, arrayed);
       } else {
-        var inline;
-        if (inline = (vargs[0] === async)) {
-          vargs.shift();
-        }
-        if (!isNaN(parseFloat(vargs[0])) && isFinite(vargs[0])) {
-          var arity = parseInt(vargs.shift(), 10);
-        }
-        if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
-          var arrayed = !! vargs.shift(); 
-        }
-        if (vargs.length && vargs.every(function (arg) { return typeof arg == "function" })) {
-          var cadence = vargs.splice(0, vargs.length);
-        }
         if (vargs.length) throw new Error("invalid arguments");
         if (arrayed) {
           return createArray(invocation, arity, cadence);
         } else {
           return createScalar(invocation, arity, cadence);
         }
+      }
+    }
+
+    function createCadence (invocation, arity, cadence, arrayed) {
+      var callback = { results: [], run: ! arrayed, cadence: cadence, arrayed: arrayed }, index = 0;
+      if (arity) callback.arity = arity;
+      invocation.callbacks.push(callback);
+      return function () {
+        var vargs = __slice.call(arguments);
+        runSubCadence(invocation, callback, index++, [{ results: [vargs] }]);
       }
     }
 
@@ -168,7 +177,7 @@ function factory () {
       invocation.callbacks.push(callback);
       return function () {
         var vargs = __slice.call(arguments);
-        return createCallback(invocation, callback, index++)
+        return createCallback(invocation, callback, index++);
       }
     }
 
@@ -207,10 +216,8 @@ function factory () {
           // the callbacks for parallel cadences now, the next increment of
           // the called counter, which may be the last.
           if (vargs[0] == invoke) {
-            cadences.slice(0).forEach(function (steps) {
-              var subtext = Object.create(invocation.context);
-              steps = steps.map(function (step) { return parameterize(step, subtext) });
-              invoke(steps, 0, subtext, [], async());
+            invocation.callbacks.filter(function (callback) { return callback.run }).forEach(function (callback) {
+              runSubCadence(invocation, callback, 0, []);
             });
           }
         }
@@ -218,6 +225,24 @@ function factory () {
           invoke.apply(null, invocation.arguments);
         }
       }
+    }
+
+    function runSubCadence (invocation, callback, index, vargs) {
+      delete callback.run;
+      var subtext = Object.create(invocation.context);
+      steps = callback.cadence.map(function (step) { return parameterize(step, subtext) });
+      invocation.count++;
+      invoke(steps, 0, subtext, vargs, function (error) {
+        var vargs = __slice.call(arguments, 1);
+        if (error) {
+          thrown(invocation, error);
+        } else {
+          callback.results[index] = vargs;
+        }
+        if (++invocation.called == invocation.count) {
+          invoke.apply(null, invocation.arguments);
+        }
+      });
     }
 
     function parameterize (step, context) {
@@ -397,7 +422,6 @@ function factory () {
           args.push(arg);
         });
 
-        cadences.length = 0;
         context.errors = [];
 
         try {
