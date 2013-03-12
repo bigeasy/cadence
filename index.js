@@ -37,7 +37,6 @@ function factory () {
       , count
       , exitCode = 0
       // **TODO**: To support reentrancy, move this into `invocation`.
-      , cadences = []
       , methods = { step: async }
       , abended
       , key
@@ -59,10 +58,9 @@ function factory () {
       var vargs = __slice.call(arguments, 0), callbacks = [], callback = exceptional;
       if (vargs.length) {
         callback = vargs.pop();
-        callbacks = [{ results: [{ names: [], vargs: vargs }] }];
+        callbacks = [{ results: [vargs] }];
       }
       steps = firstSteps.slice(0);
-      cadences.length = 0;
       abended = false;
       invoke(steps, 0, Object.create(options.context), callbacks, callback);
     }
@@ -107,7 +105,7 @@ function factory () {
 
       // If we're called with a single object argument, we merge the given
       // object into the cadence context.
-      if (vargs.length == 1 && typeof vargs[0] == "object" && vargs[0]) {
+      if (vargs.length == 1 && typeof vargs[0] == "object" && vargs[0] && !Array.isArray(vargs[0])) {
         extend(invocation.context, vargs[0]);
         return;
       }
@@ -132,51 +130,124 @@ function factory () {
         vargs.shift();
       }
 
+      var fixup;
+      if (fixup = (vargs[0] === async)) {
+        vargs.shift();
+      }
+      if (!isNaN(parseFloat(vargs[0])) && isFinite(vargs[0])) {
+        var arity = parseInt(vargs.shift(), 10);
+      }
+      if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
+        var arrayed = !! vargs.shift(); 
+      }
+      if (vargs.length && vargs.every(function (arg) { return typeof arg == "function" })) {
+        var cadence = vargs.splice(0, vargs.length);
+      }
+
       // If we have no arguments, or else if every argument is a string, then
       // we've been asked to build a callback, otherwise, this is a sub-cadence.
 
       //
-      if (vargs.length && vargs.every(function (arg) { return typeof arg == "function" })) {
-        cadences.push(vargs);
+      if (cadence && !fixup) {
+        return createCadence(invocation, arity, cadence, arrayed);
       } else {
-        if (!isNaN(parseFloat(vargs[0])) && isFinite(vargs[0])) {
-          var arity = parseInt(vargs.shift(), 10);
-        }
-        if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
-          var arrayed = !! vargs.shift(); 
-        }
-        if (!arrayed) invocation.count++;
         if (vargs.length) throw new Error("invalid arguments");
-        return createCallback(invocation, arity, arrayed);
+        if (arrayed) {
+          return createArray(invocation, arity, cadence);
+        } else {
+          return createScalar(invocation, arity, cadence);
+        }
       }
     }
 
-    function createCallback (invocation, arity, arrayed) {
-      var callback = { results: [] };
+    function createCadence (invocation, arity, cadence, arrayed) {
+      var callback = { results: [], run: ! arrayed, cadence: cadence, arrayed: arrayed }, index = 0;
       if (arity) callback.arity = arity;
-      if (arrayed) callback.arrayed = arrayed;
       invocation.callbacks.push(callback);
+      return function () {
+        var vargs = __slice.call(arguments);
+        runSubCadence(invocation, callback, index++, [{ results: [vargs] }]);
+      }
+    }
+
+    function createArray (invocation, arity, cadence) {
+      var callback = { results: [], cadence: cadence }, index = 0;
+      if (arity) callback.arity = arity;
+      callback.arrayed = true;
+      invocation.callbacks.push(callback);
+      return function () {
+        var vargs = __slice.call(arguments);
+        if (callback.built) throw new Error("already zero to many");
+        if (Array.isArray(vargs[0])) {
+          index = -1;
+          callback.built = true;
+        }
+        return createCallback(invocation, callback, index++);
+      }
+    }
+
+    function createScalar (invocation, arity, cadence) {
+      var callback = { results: [], cadence: cadence };
+      if (arity) callback.arity = arity;
+      invocation.callbacks.push(callback);
+      return createCallback(invocation, callback, 0);
+    }
+
+    function createCallback (invocation, callback, index) {
+      if (-1 < index) invocation.count++;
       return function (error) {
         var vargs = __slice.call(arguments, 1);
         if (error) {
           thrown(invocation, error);
         } else {
-          callback.results.push({ names: [], vargs: vargs });
+          if (index < 0) callback.results.push(vargs);
+          else callback.results[index] = vargs;
+          if (callback.cadence) {
+            invocation.count++;
+            var subtext = Object.create(invocation.context);
+            var steps = callback.cadence.slice(0).map(function (step) { return parameterize(step, subtext) });
+            invoke(steps, 0, subtext, [{ results: [callback.results[index]] }], function (error, result) {
+              if (error) {
+                thrown(invocation, error);
+              } else {
+                callback.results[index] = __slice.call(arguments, 1); 
+              }
+              if (-1 < index && ++invocation.called == invocation.count) {
+                invoke.apply(null, invocation.arguments);
+              }
+            });
+          }
           // Indicates that the function has completed, so we need create
           // the callbacks for parallel cadences now, the next increment of
           // the called counter, which may be the last.
           if (vargs[0] == invoke) {
-            cadences.slice(0).forEach(function (steps) {
-              var subtext = Object.create(invocation.context);
-              steps = steps.map(function (step) { return parameterize(step, subtext) });
-              invoke(steps, 0, subtext, [], async());
+            invocation.callbacks.filter(function (callback) { return callback.run }).forEach(function (callback) {
+              runSubCadence(invocation, callback, 0, []);
             });
           }
         }
-        if (!arrayed && ++invocation.called == invocation.count) {
+        if (index > -1 && ++invocation.called == invocation.count) {
           invoke.apply(null, invocation.arguments);
         }
       }
+    }
+
+    function runSubCadence (invocation, callback, index, vargs) {
+      delete callback.run;
+      var subtext = Object.create(invocation.context);
+      steps = callback.cadence.map(function (step) { return parameterize(step, subtext) });
+      invocation.count++;
+      invoke(steps, 0, subtext, vargs, function (error) {
+        var vargs = __slice.call(arguments, 1);
+        if (error) {
+          thrown(invocation, error);
+        } else {
+          callback.results[index] = vargs;
+        }
+        if (++invocation.called == invocation.count) {
+          invoke.apply(null, invocation.arguments);
+        }
+      });
     }
 
     function parameterize (step, context) {
@@ -235,12 +306,15 @@ function factory () {
       arg = 0;
       while (callbacks.length) {
         callback = callbacks.shift();
-        if (arity in callback) {
+        if (callback.arrayed) {
+          callback.results = callback.results.filter(function (vargs) { return vargs.length });
+        }
+        if ('arity' in callback) {
           arity = callback.arity;
         } else {
-          arity = 0;
+          arity = 1;
           callback.results.forEach(function (result) {
-            arity = Math.max(arity, result.vargs.length);
+            arity = Math.max(arity, result.length);
           });
         }
         for (index = 0; index < arity; index++) {
@@ -249,13 +323,12 @@ function factory () {
         }
         callback.results.forEach(function (result) {
           for (var i = 0; i < arity; i++) {
-            vargs[arg + i].values.push(result.vargs[i]);
+            vargs[arg + i].values.push(result[i]);
           }
         });
         arg += arity;
       }
 
-      
       while (names.length) {
         name = names.shift();
         if ($ = /^\$vargs(?:\$(\d+))?$/.exec(name)) {
@@ -305,17 +378,20 @@ function factory () {
       } else {
         // No callbacks means that we use the function return value, if any.
         if (callbacks.length == 1) {
-          if (callbacks[0].results.length && callbacks[0].results[0].vargs[0] == invoke) {
-            callbacks[0].results[0].vargs.shift()
+          if (callbacks[0].results[0][0] === invoke) {
+            callbacks[0].results[0].shift()
+          }
+          if (!callbacks[0].results[0].length) {
+            callbacks.shift();
           }
         } else {
           callbacks = callbacks.filter(function (callback) {
-            return callback.results[0] && callback.results[0].vargs[0] !== invoke
+            return !callback.results.length || callback.results[0][0] !== invoke
           });
         }
 
         if (steps.length == index) {
-          callback.apply(null, [ null ].concat(callbacks.length == 1 ? callbacks[0].results[0].vargs : []));
+          callback.apply(null, [ null ].concat(callbacks.length == 1 ? callbacks[0].results[0] : []));
           return;
         }
 
@@ -348,21 +424,22 @@ function factory () {
           // Did not know that `/^_|callback$/` means `^_` or `done$`.
           } else if (/^(_|callback)$/.test(parameter)) {
             arg = async();
-          } else if ((arg  = context[parameter]) == void(0)) {
-            if ((arg = ephemeral[parameter]) == void(0)) arg = methods[parameter];
+          } else if ((arg = context[parameter]) === void(0)) {
+            if ((arg = ephemeral[parameter]) === void(0)) arg = methods[parameter];
           }
           args.push(arg);
         });
 
-        cadences.length = 0;
         context.errors = [];
 
         try {
           hold = async();
           result = step.apply(null, args);
-          hold.apply(null, [ null, invoke ].concat(result == void(0) ? [] : [ result ]));
+          hold.apply(null, [ null, invoke ].concat(result === void(0) ? [] : [ result ]));
         } catch (error) {
           thrown(invocation, error);
+          invocation.count++;  // Don't trigger, we do it ourselves next.
+          hold.apply(null, [ null, invoke ]);
           invoke.apply(null, invocation.arguments);
         }
       }

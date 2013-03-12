@@ -135,8 +135,8 @@ cadence(function (step) {
 
   step(named);      // Named function, see sub-cadences below.
 
+  step(Error);              // arguments[0] === Error
   step(new Error);          // arguments[0] instanceof Error
-  step(new EventEmitter);   // arguments[0] instanceof EventEmitter
   step(new EventEmitter);   // typeof arguments[0].on == "function"
 
   // Sub-cadences.
@@ -196,6 +196,12 @@ the arguments mean something; if we pass a number and a string, the number could
 be the number of times we print the string, but if we pass just a number, then
 it could mean the number of seconds to wait before exiting. Nonsense example,
 but you get the picture.
+
+In the case of objects, for JavaScript objects, we can pass in the constructor
+function, so `Error` could be used to indicate something about error handling.
+We can accommodate Node.js special cases with duck typeing, we can identify
+event emitting objects using configurale duck typing so that cadence can
+discover event emitting objects in frameworks outside of Node.js.
 
 I require that the caller gives us an actual type, that it doesn't trigger any
 of the [typing
@@ -671,6 +677,55 @@ cadence(function (path, since, step) {
 
 })(".", +(new Date()) - 1000 * 60 * 10);
 ```
+
+Having delved into the implementation, I now see a pattern that can be resused
+across steps, sub-cadences and fix-up cadences.
+
+
+```javascript
+step(function (thing) {
+
+  var items = step([])([]);
+  thing.mayOrMayNotCall(items);
+  thing.willCallWhenDone(step());
+
+}, step (items, done) {
+
+  console.log({ items: items, done: done });
+
+});
+```
+
+Simply have the callback generator function be the one to determine if the
+callback it generates is definate or zero to many. 
+
+```javascript
+step(function (ee) {
+
+  ee.on('error', step([], 0)([]);
+  ee.on('done', step(2));
+  ee.on('data', step([])([], null));
+
+}, step (code, signal, data) {
+
+  console.log({ code: code, signal: signal, data: data });
+
+});
+```
+
+In the above, the second array means that it is a zero to many event, while the
+null means that the error is always `null`, or shift the error. We could have
+`-1` mean shift the error.
+
+The error handler has an `arity` of zero, so it doesn't get added to the
+signature of the subsequent function.
+
+We could also pass in `Error` to indicate an error handler.
+
+We might even be able to have a way to express a scalar that may or may not
+happen, but I don't see it here. Still isn't anything I've encountered in the
+while except for the error handler. Usually if it may or many not happen, it may
+or may not also happen twice.
 
 ## Sub-Cadences
 
@@ -1338,3 +1393,72 @@ variable to an object in scope.
 Creating my own minifier, a variation of UglifyJS that would skip functions if
 they had a particular name or naming convention, or might possibly look for
 `step`, and skip all the functions within it.
+
+## Errors
+
+It is the opinion of the programmers that exceptions are for exceptional
+conditions, and that each exception should be handled as it occurs, so we don't
+have a straight-forward way to gather errors. If something might error, catch
+the error immdiately.
+
+However, you might disagree with me. You're wrong, of course, I'm sure you have
+your reasons. Here's what I got for you.
+
+This is were we're going to use `Error` in the beastiary. If you create an
+arrayed response, then you can have the option of passing `Error` to gather up
+errors instead of abending immediately. 
+
+```javascript
+cadence(function (step) {
+  var errors = step([])(Error);
+  errors(new Error(1));
+  errors(new Error(2));
+  step()();
+}, function (errors) {
+  equal(errors.length, 2, "two errors");
+})();
+```
+
+You, know. No. It's so wolly. Where in the API is a `EventEmitter` that pumps
+out errors one after another?
+
+>  Error events are treated as a special case in node. If there is no listener
+for it, then the default action is to print a stack trace and exit the program.
+
+So say [the documentation](http://nodejs.org/api/events.html). So shall it be.
+You can handle the error, I suppose.
+
+```javascript
+cadence(function (step) {
+  var errors = []
+  step(function () {
+    erroneous(step());
+  }, function (error) {
+    if (error.message == "okay") return 1;
+    else throw error;
+  }, function (result) {
+    console.log(result);
+  });
+  console.log(errors);
+}, function (errors) {
+  equal(errors.length, 2, "two errors");
+})();
+```
+
+Bah, I just don't see it, so it is super hard to care. It gets into a confusing
+argument with confused people about [when to use
+exceptions](http://www.drmaciver.com/2009/03/exceptions-for-control-flow-considered-perfectly-acceptable-thanks-very-much/) they  are the high-ceremony components of high-ceremony languages.
+
+I've used them for control flow, to indicate a redirect, which feels like an
+exception; stop what you're doing and do somehting else. They are not meant to
+be gathered.
+
+There are applications that produce errors, and warnings, a parser is a perfect
+example. When you parse a language, you're liable to encounter errors. Detecting
+errors in the parsed language is central to the of the parser. It is not
+exceptional. You should not stop and unwind the stack.
+
+Incidentally, the use of `Error` could indicate a subsequent error handler
+without having to depend on the name `error` in the function signature, which
+would be, I think, the last use case for named parameters outside of convenience
+or for the sake of magic.

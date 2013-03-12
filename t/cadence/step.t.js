@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
-require('proof')(1, function (step, ok) {
-  var fs = require('fs')
-    , cadence = require('../..')
-    ;
+require('proof')(1, function (step, deepEqual) {
+  var fs = require('fs'), cadence = require('../..');
 
   cadence(function (step) {
 
-    fs.readFile(__filename, 'utf8', step());
+    item(1, step());
 
-  }, function (body) {
+  }, function (number) {
 
-    ok(/#!/.test(body), "read");
+    deepEqual(number, 1, 'step');
 
   })(step());
 });
+
+function item (number, callback) { callback(null, number) };
