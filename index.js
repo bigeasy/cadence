@@ -36,7 +36,6 @@ function factory () {
       , called
       , count
       , exitCode = 0
-      // **TODO**: To support reentrancy, move this into `invocation`.
       , methods = { step: async }
       , abended
       , key
@@ -271,9 +270,6 @@ function factory () {
       return proc.name == name || (proc.name && !proc.name.indexOf(name + '__'));
     }
 
-    // TODO And what if there are many, many errors?
-
-    //
     function thrown (invocation, error) {
       var steps = invocation.arguments[0]
         , next = steps[invocation.index + 1]
@@ -296,7 +292,7 @@ function factory () {
       if (~(index = names.indexOf('step')) || ~(index = names.indexOf(options.alias))) {
         names.length = index;
       }
-      // **TODO**: Why? Do I care anymore? Why not callback?
+
       if (step.name == '_') {
         names.length = 0;
       }
@@ -421,9 +417,6 @@ function factory () {
           }
           if (parameter == "error") {
             arg = context.errors[0];
-          // Did not know that `/^_|callback$/` means `^_` or `done$`.
-/*          } else if (/^(_|callback)$/.test(parameter)) {
-            arg = async();*/
           } else if ((arg = context[parameter]) === void(0)) {
             if ((arg = ephemeral[parameter]) === void(0)) arg = methods[parameter];
           }
