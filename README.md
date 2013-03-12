@@ -162,6 +162,16 @@ cadence(function (step) {
 
 Changes for each release.
 
+### Version 0.0.10
+
+ * Drop support for parameter inferred plain callbacks. #70.
+ * Implement zero-to-many callback functions. #62.
+ * Spell check and tidy prose. #69. #65.
+ * Implement arrayed sub-cadences. #64.
+ * Implement fix-up cadences. #61.
+ * Fix snuggled parameters. #60.
+ * Created a design document in `design.markdown`.
+
 ### Version 0.0.9
 
 Released: Sat Mar  9 04:06:57 UTC 2013
