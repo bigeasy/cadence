@@ -20,14 +20,16 @@ Cadence takes a series of functions and runs them in serial. We call the series
 of functions a ***cadence***. We call an individual function in a cadence a
 ***step***.
 
+A step can contain a sub-cadence. We can run multiple sub-cadences in parallel.
+With this, you've got your serial and your parallel, and you mix or match to
+create the asynchronous program you want to run.
+
 Cadence is a function generator that creates a `step` function that accepts a
 conventional Node.js error, results callback function. You can then use the
 generated function anywhere in your code.
 
 ```javascript
-var cadance = require('cadence')
-  , fs = require('fs')
-  ;
+var cadance = require('cadence'), fs = require('fs');
 
 var deleteIf = cadence(function (step, file, condition) {
   fs.stat(file, step());
@@ -48,19 +50,19 @@ assign our cadence to a variable named `deleteIf`. We can now call `deleteIf`
 providing a standard issue Node.js error reporting callback.
 
 Let's extend our `deleteIf` function. Let's say that if the file doesn't exist,
-we ignore the error raised when we stat the file. If we add a step function that
-takes `error` as it's first argument, it is called only if an error has occured
-in the previous step.
+we ignore the error raised when we stat the file. If we pass `Error` to our
+`step` constructor, the next function in an error handler function. The error
+handler function will be called with the `error` as the first argument if an
+error is returned. If there is no error, the error handler function is skipped.
 
 ```javascript
-var cadance = require('cadence')
-  , fs = require('fs')
-  ;
+var cadance = require('cadence'), fs = require('fs');
 
 var deleteIf = cadence(function (step, file, condition) {
-  fs.stat(file, step());
+  fs.stat(file, step(Error));
 }, function (error) {
   if (error.code != "ENOENT") throw error;
+  else step(null);
 }, function (step, stat) {
   if (stat && condition(stat)) fs.unlink(step());
 });
@@ -74,11 +76,8 @@ deleteIf(__filename, empty, function (error) {
 
 We test to see if the error is `ENOENT`. If not, we have a real problem, so we
 throw the error. The cadence stops and the callback is called with error. The
-error is `ENOENT`, we move onto the next step.
-
-If there is no error, the error handling step is not called, so we do not have
-to check to see if `error` is null. We do need to see if `stat` is null,
-however.
+error is `ENOENT`, we exit early by calling the step function directly as a
+callback, passing `null` to indicate no error.
 
 ## Working with `EventEmitter`s
 
@@ -192,9 +191,9 @@ Released: Wed Feb 27 00:33:51 UTC 2013
 
 ### Version 0.0.6
 
-Relased: Fri Jul 13 16:27:39 UTC 2012
+Released: Fri Jul 13 16:27:39 UTC 2012
 
- * Flatten aguments to inner `cadence` unless first arg is null. #44.
+ * Flatten arguments to inner `cadence` unless first arg is null. #44.
 
 ### Version 0.0.5
 
@@ -258,4 +257,3 @@ Released: Tue Jul  3 19:17:38 UTC 2012
 
  * Build on Travis CI. #5.
  * Extract Cadence from Proof. #6.
->>>>>>> master

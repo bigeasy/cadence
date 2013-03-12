@@ -199,9 +199,9 @@ but you get the picture.
 
 In the case of objects, for JavaScript objects, we can pass in the constructor
 function, so `Error` could be used to indicate something about error handling.
-We can accommodate Node.js special cases with duck typeing, we can identify
-event emitting objects using configurale duck typing so that cadence can
-discover event emitting objects in frameworks outside of Node.js.
+We can accommodate Node.js special cases with duck typing, we can identify event
+emitting objects using configurable duck typing so that cadence can discover
+event emitting objects in frameworks outside of Node.js.
 
 I require that the caller gives us an actual type, that it doesn't trigger any
 of the [typing
@@ -678,7 +678,7 @@ cadence(function (path, since, step) {
 })(".", +(new Date()) - 1000 * 60 * 10);
 ```
 
-Having delved into the implementation, I now see a pattern that can be resused
+Having delved into the implementation, I now see a pattern that can be reused
 across steps, sub-cadences and fix-up cadences.
 
 
@@ -697,7 +697,7 @@ step(function (thing) {
 ```
 
 Simply have the callback generator function be the one to determine if the
-callback it generates is definate or zero to many.
+callback it generates is definite or zero to many.
 
 ```javascript
 step(function (ee) {
@@ -1241,7 +1241,7 @@ cadence(function () {
 
 Okay, it's not easier. What needs to happen is that the first argument to a
 callback is shifted. Events will have events that do not get called, here might
-be more of a concept of null events, as opposed to definate events versus zero
+be more of a concept of null events, as opposed to definite events versus zero
 to many events.
 
 ## Reentrancy
@@ -1349,7 +1349,7 @@ cadence(function (directory, since, step) {
 ```
 
 That would have to just work, creating an entirely new context. So, `step` runs
-immediately, but it also creates a callback that can be run subseuqently, or at
+immediately, but it also creates a callback that can be run subsequently, or at
 any time really, possibly even exported from the `cadence` scope.
 
 ## Variable Arguments
@@ -1399,7 +1399,7 @@ they had a particular name or naming convention, or might possibly look for
 It is the opinion of the programmers that exceptions are for exceptional
 conditions, and that each exception should be handled as it occurs, so we don't
 have a straight-forward way to gather errors. If something might error, catch
-the error immdiately.
+the error immediately.
 
 However, you might disagree with me. You're wrong, of course, I'm sure you have
 your reasons. Here's what I got for you.
@@ -1419,7 +1419,7 @@ cadence(function (step) {
 })();
 ```
 
-You, know. No. It's so wolly. Where in the API is a `EventEmitter` that pumps
+You, know. No. It's so woolly. Where in the API is a `EventEmitter` that pumps
 out errors one after another?
 
 >  Error events are treated as a special case in node. If there is no listener
@@ -1450,7 +1450,7 @@ argument with confused people about [when to use
 exceptions](http://www.drmaciver.com/2009/03/exceptions-for-control-flow-considered-perfectly-acceptable-thanks-very-much/) they  are the high-ceremony components of high-ceremony languages.
 
 I've used them for control flow, to indicate a redirect, which feels like an
-exception; stop what you're doing and do somehting else. They are not meant to
+exception; stop what you're doing and do something else. They are not meant to
 be gathered.
 
 There are applications that produce errors, and warnings, a parser is a perfect
