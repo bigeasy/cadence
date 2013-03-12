@@ -56,6 +56,18 @@ require('proof')(4, function (step, deepEqual) {
 
   })(step());
 
+  cadence(function (step) {
+
+    [ 1 ].forEach(step([], function (number) {
+      step(function () {}, function () { return number });
+    }));
+
+  }, function (items) {
+
+    deepEqual(items, [ 1 ], 'step arrayed single');
+
+  })(step());
+
 });
 
 function item (number, callback) { callback(null, number) };
