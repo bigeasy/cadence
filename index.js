@@ -319,20 +319,13 @@ function factory () {
 
       while (names.length) {
         name = names.shift();
-        if ($ = /^\$vargs(?:\$(\d+))?$/.exec(name)) {
-          ephemeral[name] = vargs.splice(0, vargs.length - (+($[1] || 0)))
-                                 .map(function (varg) {
-                                    return varg.arrayed ? varg.values : varg.values.shift()
-                                 });
+        if (vargs.length) {
+          value = vargs.shift();
+          value = value.arrayed ? value.values : value.values.shift();
         } else {
-          if (vargs.length) {
-            value = vargs.shift();
-            value = value.arrayed ? value.values : value.values.shift();
-          } else {
-            break;
-          }
-          (name[0] == '$' ? ephemeral : context)[name] = value;
+          break;
         }
+        (name[0] == '$' ? ephemeral : context)[name] = value;
       }
     }
 
