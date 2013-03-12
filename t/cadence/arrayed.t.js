@@ -55,6 +55,6 @@ require('proof')(18, function (step, equal, ok) {
 
     ok(numbers[0] === undefined, "some undefines numbers one");
     equal(numbers[1], 2, "some undefines numbers two");
-    
+
   })();
 });

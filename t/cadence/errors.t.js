@@ -34,7 +34,7 @@ require('proof')(4, function (equal, ok) {
   }, function (errors) {
     equal(errors.length, 2, "two errors");
   })();
- */ 
+ */
   cadence(function (step) {
     step()(null, 1);
   }, function (error) {

@@ -138,7 +138,7 @@ function factory () {
         var arity = parseInt(vargs.shift(), 10);
       }
       if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
-        var arrayed = !! vargs.shift(); 
+        var arrayed = !! vargs.shift();
       }
       if (vargs.length && vargs.every(function (arg) { return typeof arg == "function" })) {
         var cadence = vargs.splice(0, vargs.length);
@@ -210,7 +210,7 @@ function factory () {
               if (error) {
                 thrown(invocation, error);
               } else {
-                callback.results[index] = __slice.call(arguments, 1); 
+                callback.results[index] = __slice.call(arguments, 1);
               }
               if (-1 < index && ++invocation.called == invocation.count) {
                 invoke.apply(null, invocation.arguments);

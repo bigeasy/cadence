@@ -10,7 +10,7 @@ require('proof')(1, function (equal, ok) {
     return tree;
   }, function nextBranch (branch) {
     if (!array.length || !Array.isArray(branch[0])) {
-    
+
     } else {
     }
   }, function (number, cadence) {

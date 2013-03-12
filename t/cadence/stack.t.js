@@ -8,7 +8,7 @@ require('proof')(4, function (step, equal) {
 
   cadence(function (step) {
 
-    step()(null, 1); 
+    step()(null, 1);
 
   }, function (number, step) {
 
@@ -17,10 +17,10 @@ require('proof')(4, function (step, equal) {
     step(function (number) {
 
       equal(number, 1, "inherited");
-      step()(null, 2); 
-      
+      step()(null, 2);
+
     }, function (number) {
-    
+
       equal(number, 2, "overwritten");
 
     });

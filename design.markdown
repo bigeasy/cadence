@@ -66,7 +66,7 @@ cadence(function (step) {
   }, function (body) {
 
     console.log(body.split(/\n/).length);
-    
+
   });
 });
 ```
@@ -82,7 +82,7 @@ cadence(function (step) {
   }, function (body) {
 
     console.log(body.split(/\n/).length);
-    
+
   })(); // NO!
 });
 ```
@@ -100,7 +100,7 @@ cadence(function (step) {
   }, function (body) {
 
     console.log(body.split(/\n/).length);
-    
+
   }).happy('happy').joy('joy')
     .inscrubulate(2.2219, require('underscore'), 1 + 1 === 4)
     .invoke('roger all systems go')
@@ -121,7 +121,7 @@ can give to step, so we can assign a meaning to each beastie. Look for my
 
 ```javascript
 cadence(function (step) {
-  
+
   step();           // arguments.length == 0;
   step([]);         // Array.isArray(arguments[0]);
   step({});         // typeof arguments[0] == "object"
@@ -157,7 +157,7 @@ cadence(function (step) {
   }, function name$flag$option (value, name) {
 
     // We could use a special character to denote flags.
-  
+
   }, function name$ig (value, name) {
 
     // Or, like regular expressions, we can have single character switches.
@@ -238,7 +238,7 @@ function (error, result) {
 ```
 
 When it is not an error object, it can be an indicator that the callback is
-supposed to do something else. 
+supposed to do something else.
 
 ```javascript
 cadence(function (step) {
@@ -249,7 +249,7 @@ cadence(function (step) {
   }, function (body) {
 
     console.log(body.split(/\n/).length);
-    
+
   });
 });
 ```
@@ -266,7 +266,7 @@ cadence(function (step) {
   }, function (lines) {
 
     console.log(lines.length);
-    
+
   });
 });
 ```
@@ -286,7 +286,7 @@ cadence(function (step) {
   }, function (lines) {
 
     console.log(lines.length);
-    
+
   });
 });
 ```
@@ -306,7 +306,7 @@ cadence(function (step) {
   }, function (lines) {
 
     console.log(lines.length);
-    
+
   });
 });
 ```
@@ -324,7 +324,7 @@ cadence(function (step) {
   }, function (lines) {
 
     console.log(lines.length);
-    
+
   });
 });
 ```
@@ -345,7 +345,7 @@ cadence(function (thing) {
   }, function (definately, maybe) {
 
     console.log(definately, maybe.length);
-    
+
   });
 })(require("thing"));
 ```
@@ -697,7 +697,7 @@ step(function (thing) {
 ```
 
 Simply have the callback generator function be the one to determine if the
-callback it generates is definate or zero to many. 
+callback it generates is definate or zero to many.
 
 ```javascript
 step(function (ee) {
@@ -968,7 +968,7 @@ The above solution would use fact that `objects` is declared before `stats` to
 establish the order of parameters to the subsequent function. Each call to stats
 causes Cadence to wait for a return, but the sub-cadence would invoke the
 objects sub-cadence, which would schedule an additional return and create space
-in the objects array. 
+in the objects array.
 
 At the end of the stat sub-cadence is a return that ensure that we always return
 something from the stat sub-cadence, even though we don't use it. This would
@@ -1129,7 +1129,7 @@ cadence(function (directory, since, step) {
 
       if (files.length()) return files.shift();
       else step(null, objects);
-    
+
     }, function (file) {
 
         var resolved = path.join(directory, file);
@@ -1173,7 +1173,7 @@ With so much sorted out, events ought to get easier.
 ```javascript
 var cadence = require('cadence')(function (object, step) {
   if (object.on && object.stdout && object.stderr) {
-    // Magic. 
+    // Magic.
   }
 });
 
@@ -1406,7 +1406,7 @@ your reasons. Here's what I got for you.
 
 This is were we're going to use `Error` in the beastiary. If you create an
 arrayed response, then you can have the option of passing `Error` to gather up
-errors instead of abending immediately. 
+errors instead of abending immediately.
 
 ```javascript
 cadence(function (step) {

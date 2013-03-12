@@ -39,7 +39,7 @@ function generate (values, array, done) {
 }
 
 function generateIf (values, array, done) {
-  values.forEach(function (value) { 
+  values.forEach(function (value) {
     if (value % 2) array(null, value)
     else array(null);
   });

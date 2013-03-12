@@ -26,8 +26,8 @@ if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
     cat $bak | uglifyjs > index.js
   else
     cat $bak | uglifyjs --lift-vars > index.js
-  fi 
- 
+  fi
+
   (proof run t/*/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
 fi
 

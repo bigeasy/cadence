@@ -12,7 +12,7 @@ require('proof')(1, function (step, ok) {
   }, function (body) {
 
     // Get body loaded into the conext.
-  
+
   }, function (step,body) { // Was broken, unable to separate parameters.
 
     ok(body, "read");
