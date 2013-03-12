@@ -1462,3 +1462,8 @@ Incidentally, the use of `Error` could indicate a subsequent error handler
 without having to depend on the name `error` in the function signature, which
 would be, I think, the last use case for named parameters outside of convenience
 or for the sake of magic.
+
+## Inbox
+
+Take note that the default arity of scalars should be zero, but it is one for
+arrays because why would be gather into an array if there is nothing to gather.
