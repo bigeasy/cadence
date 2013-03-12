@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(4, function (equal, ok) {
+require('proof')(5, function (equal, ok) {
   var fs = require('fs')
     , cadence = require('../..')
     , errors = []
@@ -41,4 +41,12 @@ require('proof')(4, function (equal, ok) {
   }, function (number) {
     equal(number, 1, "no error");
   })();
+
+  try {
+    cadence(function () {
+      throw new Error('exceptional');
+    })();
+  } catch (e) {
+    equal(e.message, 'exceptional', 'default error handler');
+  }
 });
