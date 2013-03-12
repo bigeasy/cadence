@@ -135,8 +135,8 @@ cadence(function (step) {
 
   step(named);      // Named function, see sub-cadences below.
 
+  step(Error);              // arguments[0] === Error
   step(new Error);          // arguments[0] instanceof Error
-  step(new EventEmitter);   // arguments[0] instanceof EventEmitter
   step(new EventEmitter);   // typeof arguments[0].on == "function"
 
   // Sub-cadences.
@@ -196,6 +196,12 @@ the arguments mean something; if we pass a number and a string, the number could
 be the number of times we print the string, but if we pass just a number, then
 it could mean the number of seconds to wait before exiting. Nonsense example,
 but you get the picture.
+
+In the case of objects, for JavaScript objects, we can pass in the constructor
+function, so `Error` could be used to indicate something about error handling.
+We can accommodate Node.js special cases with duck typeing, we can identify
+event emitting objects using configurale duck typing so that cadence can
+discover event emitting objects in frameworks outside of Node.js.
 
 I require that the caller gives us an actual type, that it doesn't trigger any
 of the [typing
@@ -1452,3 +1458,7 @@ example. When you parse a language, you're liable to encounter errors. Detecting
 errors in the parsed language is central to the of the parser. It is not
 exceptional. You should not stop and unwind the stack.
 
+Incidentally, the use of `Error` could indicate a subsequent error handler
+without having to depend on the name `error` in the function signature, which
+would be, I think, the last use case for named parameters outside of convenience
+or for the sake of magic.
