@@ -308,7 +308,7 @@ function factory () {
         if ('arity' in callback) {
           arity = callback.arity;
         } else {
-          arity = 1;
+          arity = callback.arrayed ? 1 : 0;
           callback.results.forEach(function (result) {
             arity = Math.max(arity, result.length);
           });
