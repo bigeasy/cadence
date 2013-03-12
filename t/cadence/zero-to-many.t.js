@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(6, function (step, deepEqual, say) {
+require('proof')(9, function (step, deepEqual, say) {
   var fs = require('fs'), cadence = require('../..');
 
   cadence(function (step) {
@@ -28,6 +28,20 @@ require('proof')(6, function (step, deepEqual, say) {
     deepEqual(one, 1, 'prune first');
     deepEqual(two, 2, 'prune second');
     deepEqual(items, [ 1, 3 ], 'prune gathered');
+
+  })(step());
+
+  cadence(function (step) {
+
+    var done = step(2);
+    var items = step([])([]);
+    generate([], items, done);
+
+  }, function (one, two, items) {
+
+    deepEqual(one, 1, 'empty first');
+    deepEqual(two, 2, 'empty second');
+    deepEqual(items, [], 'empty gathered');
 
   })(step());
 
