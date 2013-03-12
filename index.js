@@ -422,8 +422,8 @@ function factory () {
           if (parameter == "error") {
             arg = context.errors[0];
           // Did not know that `/^_|callback$/` means `^_` or `done$`.
-          } else if (/^(_|callback)$/.test(parameter)) {
-            arg = async();
+/*          } else if (/^(_|callback)$/.test(parameter)) {
+            arg = async();*/
           } else if ((arg = context[parameter]) === void(0)) {
             if ((arg = ephemeral[parameter]) === void(0)) arg = methods[parameter];
           }

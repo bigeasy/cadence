@@ -18,8 +18,8 @@ require('proof')(3, function (equal) {
   })();
 
   cadence(function (step) {
-    step(function (callback) {
-      callback(null, { number: 1 });
+    step(function (step) {
+      step()(null, { number: 1 });
     });
   }, function (object, step) {
     if (typeof object == 'object') step(object);
