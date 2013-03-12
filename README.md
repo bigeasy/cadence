@@ -164,6 +164,8 @@ Changes for each release.
 
 ### Version 0.0.10
 
+Tue Mar 12 05:57:10 UTC 2013
+
  * Drop support for parameter inferred plain callbacks. #70.
  * Implement zero-to-many callback functions. #62.
  * Spell check and tidy prose. #69. #65.
