@@ -162,6 +162,10 @@ cadence(function (step) {
 
 Changes for each release.
 
+### Version 0.0.11
+
+ *  Make default arity of scalars zero. #71. 
+
 ### Version 0.0.10
 
 Tue Mar 12 05:57:10 UTC 2013
