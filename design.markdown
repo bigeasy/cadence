@@ -1387,3 +1387,68 @@ variable to an object in scope.
 Creating my own minifier, a variation of UglifyJS that would skip functions if
 they had a particular name or naming convention, or might possibly look for
 `step`, and skip all the functions within it.
+
+## Errors
+
+It is the opinion of the programmers that exceptions are for exceptional
+conditions, and that each exception should be handled as it occurs, so we don't
+have a straight-forward way to gather errors. If something might error, catch
+the error immdiately.
+
+However, you might disagree with me. You're wrong, of course, I'm sure you have
+your reasons. Here's what I got for you.
+
+This is were we're going to use `Error` in the beastiary. If you create an
+arrayed response, then you can have the option of passing `Error` to gather up
+errors instead of abending immediately. 
+
+```javascript
+cadence(function (step) {
+  var errors = step([])(Error);
+  errors(new Error(1));
+  errors(new Error(2));
+  step()();
+}, function (errors) {
+  equal(errors.length, 2, "two errors");
+})();
+```
+
+You, know. No. It's so wolly. Where in the API is a `EventEmitter` that pumps
+out errors one after another?
+
+>  Error events are treated as a special case in node. If there is no listener
+for it, then the default action is to print a stack trace and exit the program.
+
+So say [the documentation](http://nodejs.org/api/events.html). So shall it be.
+You can handle the error, I suppose.
+
+```javascript
+cadence(function (step) {
+  var errors = []
+  step(function () {
+    erroneous(step());
+  }, function (error) {
+    if (error.message == "okay") return 1;
+    else throw error;
+  }, function (result) {
+    console.log(result);
+  });
+  console.log(errors);
+}, function (errors) {
+  equal(errors.length, 2, "two errors");
+})();
+```
+
+Bah, I just don't see it, so it is super hard to care. It gets into a confusing
+argument with confused people about [when to use
+exceptions](http://www.drmaciver.com/2009/03/exceptions-for-control-flow-considered-perfectly-acceptable-thanks-very-much/) they  are the high-ceremony components of high-ceremony languages.
+
+I've used them for control flow, to indicate a redirect, which feels like an
+exception; stop what you're doing and do somehting else. They are not meant to
+be gathered.
+
+There are applications that produce errors, and warnings, a parser is a perfect
+example. When you parse a language, you're liable to encounter errors. Detecting
+errors in the parsed language is central to the of the parser. It is not
+exceptional. You should not stop and unwind the stack.
+
