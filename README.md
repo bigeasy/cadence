@@ -164,6 +164,8 @@ Changes for each release.
 
 ### Version 0.0.11
 
+Tue Mar 12 07:50:52 UTC 2013
+
  *  Make default arity of scalars zero. #71. 
 
 ### Version 0.0.10
