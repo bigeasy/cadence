@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(2, function (step, deepEqual) {
+require('proof')(4, function (step, deepEqual) {
   var fs = require('fs'), cadence = require('../..');
 
   cadence(function (step) {
@@ -29,5 +29,33 @@ require('proof')(2, function (step, deepEqual) {
 
   })(step());
 
+  cadence(function (step) {
+
+    [].forEach(step([], function (number) {
+      item(number, step());
+    }, function (number) {
+      return - number;
+    }));
+
+  }, function (items) {
+
+    deepEqual(items, [], 'step arrayed empty');
+
+  })(step());
+
+  cadence(function (step) {
+
+    [ 1, 2, 3 ].forEach(step([], function (number) {
+      if (number % 2) step()(null, number);
+      else step()(null);
+    }));
+
+  }, function (items) {
+
+    deepEqual(items, [ 1, 3 ], 'step arrayed missing');
+
+  })(step());
+
 });
+
 function item (number, callback) { callback(null, number) };
