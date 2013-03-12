@@ -289,10 +289,6 @@ function factory () {
         names.length = index;
       }
 
-      if (step.name == '_') {
-        names.length = 0;
-      }
-
       if (!names.length) return;
 
       arg = 0;
