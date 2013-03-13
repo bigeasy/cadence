@@ -136,6 +136,9 @@ function factory () {
       if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
         var arrayed = !! vargs.shift();
       }
+      if (Error === vargs[0]) {
+        var catchable = !! vargs.shift();
+      }
       if (vargs.length && vargs.every(function (arg) { return typeof arg == "function" })) {
         var cadence = vargs.splice(0, vargs.length);
       }
@@ -151,7 +154,7 @@ function factory () {
         if (arrayed) {
           return createArray(invocations[0], arity, cadence);
         } else {
-          return createScalar(invocations[0], arity, cadence);
+          return createScalar(invocations[0], arity, cadence, catchable);
         }
       }
     }
@@ -182,10 +185,11 @@ function factory () {
       }
     }
 
-    function createScalar (invocation, arity, cadence) {
-      var callback = { results: [], cadence: cadence };
+    function createScalar (invocation, arity, cadence, catchable) {
+      var callback = { results: [], cadence: cadence, catchable: catchable };
       if (arity) callback.arity = arity;
       invocation.callbacks.push(callback);
+      invocation.catchable = invocation.catchable || catchable;
       return createCallback(invocation, callback, 0);
     }
 
@@ -194,7 +198,7 @@ function factory () {
       return function (error) {
         var vargs = __slice.call(arguments, 1);
         if (error) {
-          thrown(invocation, error);
+          thrown(invocation, error, callback);
         } else {
           if (index < 0) callback.results.push(vargs);
           else callback.results[index] = vargs;
@@ -267,10 +271,10 @@ function factory () {
       return proc.name == name || (proc.name && !proc.name.indexOf(name + '__'));
     }
 
-    function thrown (invocation, error) {
+    function thrown (invocation, error, callback) {
       var steps = invocation.arguments[0], next = steps[invocation.index + 1];
-      if (next && /^errors?$/.test(next.parameters[0])) {
-        invocation.context.errors.push(error);
+      if (next && callback.catchable) {
+        callback.errors = [ error ];
       } else {
         if (timer) clearTimeout(timer);
         invocation.abended = true;
@@ -359,7 +363,13 @@ function factory () {
                             index: index, callback: callback });
       invocations[0].arguments = [ steps, index + 1, invocations[0], context, callback ]
 
-      if (steps[index] && /^errors?$/.test(steps[index].parameters[0]) && !context.errors.length) {
+      var caught = [];
+      if (previous.catchable) {
+        var caught = callbacks.filter(function (callback) { return callback.errors && callback.errors.length });
+      }
+
+      if (steps[index] && previous.catchable && !caught.length) {
+        previous.catchable = false;
         invoke(steps, index + 1, previous, context, callback);
       } else {
         // No callbacks means that we use the function return value, if any.
@@ -386,19 +396,24 @@ function factory () {
 
         // Filter out the return value, if there are callbacks left, then
         // `contextualize` will process them.
-        if (callbacks.length) {
-          contextualize(step, callbacks, context, ephemeral);
-        }
-
-        step.parameters.forEach(function (parameter) {
-          if (parameter == "error") {
-            arg = context.errors[0];
-          } else if ((arg = context[parameter]) === void(0)) {
-            if ((arg = ephemeral[parameter]) === void(0)) arg = methods[parameter];
+        if (caught.length) {
+          args = callbacks.filter(function (callback) {
+            return callback.catchable;
+          }).map(function (callback) {
+            return callback.errors.shift();
+          });
+        } else {
+          if (callbacks.length) {
+            contextualize(step, callbacks, context, ephemeral);
           }
-          args.push(arg);
-        });
 
+          step.parameters.forEach(function (parameter) {
+            if ((arg = context[parameter]) === void(0)) {
+              if ((arg = ephemeral[parameter]) === void(0)) arg = methods[parameter];
+            }
+            args.push(arg);
+          });
+        }
         context.errors = [];
 
         hold = async();

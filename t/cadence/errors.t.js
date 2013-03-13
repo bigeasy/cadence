@@ -13,13 +13,13 @@ require('proof')(5, function (equal, ok) {
   });
 
   cadence(function (step) {
-    step()(new Error("handed"));
+    step(Error)(new Error("handed"));
   }, function (error) {
     equal(error.message, "handed", "intercepted passed along");
   })();
 
   cadence(function (step) {
-    step()();
+    step(Error)();
   }, function (error) {
     throw new Error("should not be called");
   }, function () {
@@ -36,10 +36,10 @@ require('proof')(5, function (equal, ok) {
   })();
  */
   cadence(function (step) {
-    step()(null, 1);
+    step(Error)(null, 1);
   }, function (error) {
   }, function (number) {
-    equal(number, 1, "no error");
+    equal(number, 1, "no error with value");
   })();
 
   try {
