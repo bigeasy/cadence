@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(18, function (step, equal, ok) {
+require('proof')(12, function (step, equal, ok) {
   var fs = require('fs')
     , cadence = require('../..')
     ;
@@ -21,16 +21,6 @@ require('proof')(18, function (step, equal, ok) {
     equal(numbers[0], 1, "number one");
     equal(numbers[1], 2, "number two");
     equal(numbers[2], 3, "number three");
-
-  }, function (letters, numbers) {
-
-    equal(letters[0], "a", "letter one still");
-    equal(letters[1], "b", "letter two still");
-    equal(letters[2], "c", "letter three still");
-
-    equal(numbers[0], 1, "number one still");
-    equal(numbers[1], 2, "number two still");
-    equal(numbers[2], 3, "number three still");
 
   })(step());
 
