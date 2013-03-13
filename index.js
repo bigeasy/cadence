@@ -1,12 +1,12 @@
 var __slice = [].slice;
-
+/*
 function die () {
   console.log.apply(console, __slice.call(arguments, 0));
   process.exit(1);
 }
 
 function say () { console.log.apply(console, __slice.call(arguments, 0)) }
-
+*/
 function cadence () {
   var steps = __slice.call(arguments, 0);
 

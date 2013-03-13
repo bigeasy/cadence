@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(9, function (step, deepEqual, equal, ok) {
+require('proof')(13, function (step, deepEqual, equal, ok) {
   var cadence = require('../..');
 
   cadence(function (step) {
@@ -48,8 +48,8 @@ require('proof')(9, function (step, deepEqual, equal, ok) {
         step()(null, number, number + 1);
       }));
     }, function (one, two) {
-      deepEqual(one, [ 1, 2, 3 ], 'arrayed step inferred one');
-      deepEqual(two, [ 2, 3, 4 ], 'arrayed step inferred two');
+      deepEqual(one, [ 1, 2, 3 ], 'arrayed sub-cadence step inferred one');
+      deepEqual(two, [ 2, 3, 4 ], 'arrayed sub-cadence step inferred two');
     });
 
   })(step());
@@ -62,7 +62,36 @@ require('proof')(9, function (step, deepEqual, equal, ok) {
       }));
       step(1)(null, 2);
     }, function (one, two) {
-      deepEqual(one, [ 1, 2, 3 ], 'arrayed step specified one');
+      deepEqual(one, [ 1, 2, 3 ], 'arrayed sub-cadence specified one');
+      equal(two, 2, 'arrayed sub-cadence specified two');
+    });
+
+  })(step());
+
+  cadence(function (step) {
+
+    step(function () {
+      var items = step([]);
+      [ 1, 2, 3 ].forEach(function (number) {
+        items()(null, number, number + 1);
+      });
+    }, function (one, two) {
+      deepEqual(one, [ 1, 2, 3 ], 'arrayed step inferred one');
+      deepEqual(two, [ 2, 3, 4 ], 'arrayed step inferred two');
+    });
+
+  })(step());
+
+  cadence(function (step) {
+
+    step(function () {
+      var items = step(1, []);
+      [ 1, 2, 3 ].forEach(function (number) {
+        items()(null, number, number + 1);
+      });
+      step()(null, 2);
+    }, function (one, two) {
+      deepEqual(one, [ 1, 2, 3 ], 'arrayed step inferred one');
       equal(two, 2, 'arrayed step specified two');
     });
 
