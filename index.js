@@ -8,15 +8,7 @@ function die () {
 function say () { console.log.apply(console, __slice.call(arguments, 0)) }
 */
 function cadence () {
-  var steps = __slice.call(arguments, 0)
-    , callback
-    , called
-    , count
-    , exitCode = 0
-    , methods = { step: async }
-    , key
-    , arg
-    ;
+  var steps = __slice.call(arguments, 0);
 
   function begin (steps, vargs, callback) {
     var invocation = {
@@ -220,7 +212,7 @@ function cadence () {
   // Parallel arrays make the most sense, really. If the paralleled function
   // is better off returning a map, it can be shimmed.
   function contextualize (step, callbacks) {
-    var $, names, name, value, index, vargs = [], arg, callback, arity;
+    var index, vargs = [], arg, callback, arity;
 
     arg = 0;
     while (callbacks.length) {
@@ -252,23 +244,7 @@ function cadence () {
   }
 
   function invoke (steps, index, previous, callback) {
-    var invocation
-      , callbacks = previous.callbacks
-      , arg
-      , args = []
-      , match
-      , parameter, parameters
-      , i, I
-      , calledback
-      , step, key, next
-      , leaked
-      , result
-      , value
-      , names
-      , result
-      , hold
-      , ephemeral = {}
-      ;
+    var callbacks = previous.callbacks, args = [], arg, step, result, hold;
 
     if (previous.thrown) {
       callback(previous.thrown);
@@ -321,7 +297,7 @@ function cadence () {
         });
       } else {
         if (callbacks.length) {
-          args = contextualize(step, callbacks, ephemeral);
+          args = contextualize(step, callbacks);
         } else {
           args = [];
         }
