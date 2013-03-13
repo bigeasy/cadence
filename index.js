@@ -128,10 +128,9 @@ function cadence () {
     invocation.callbacks.push(callback);
     return function () {
       var vargs = __slice.call(arguments);
-      if (callback.built) throw new Error("already zero to many");
+      if (index < 0) throw new Error("zero-to-many already determined");
       if (Array.isArray(vargs[0])) {
-        index = -1;
-        callback.built = true;
+        index = -2;
       }
       return createCallback(invocation, callback, index++);
     }

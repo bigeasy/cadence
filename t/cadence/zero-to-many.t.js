@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(9, function (step, deepEqual, say) {
+require('proof')(10, function (step, equal, deepEqual) {
   var fs = require('fs'), cadence = require('../..');
 
   cadence(function (step) {
@@ -45,6 +45,15 @@ require('proof')(9, function (step, deepEqual, say) {
 
   })(step());
 
+  cadence(function (step) {
+    try {
+      var many = step([]);
+      many([]);
+      many([]);
+    } catch (e) {
+      equal(e.message, 'zero-to-many already determined');
+    }
+  })();
 });
 
 function generate (values, array, done) {
