@@ -264,16 +264,12 @@ function cadence () {
     } else {
       // No callbacks means that we use the function return value, if any.
       if (callbacks.length == 1) {
-        if (callbacks[0].results[0][0] === invoke) {
-          callbacks[0].results[0].shift()
-        }
+        callbacks[0].results[0].shift()
         if (!callbacks[0].results[0].length) {
           callbacks.shift();
         }
       } else {
-        callbacks = callbacks.filter(function (callback) {
-          return !callback.results.length || callback.results[0][0] !== invoke
-        });
+        callbacks.shift();
       }
 
       // Filter out the return value, if there are callbacks left, then
