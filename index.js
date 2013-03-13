@@ -262,15 +262,6 @@ function factory () {
       return step;
     }
 
-    // Test if a program name matches one of our special names. We support
-    // Streamline.js by also accepting a function whose name has been mangled in a
-    // Streamline.js fashion.
-
-    //
-    function named (proc, name) {
-      return proc.name == name || (proc.name && !proc.name.indexOf(name + '__'));
-    }
-
     function thrown (invocation, error, callback) {
       var steps = invocation.arguments[0], next = steps[invocation.index + 1];
       if (next && callback.catchable) {
