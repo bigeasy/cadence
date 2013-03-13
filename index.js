@@ -1,5 +1,3 @@
-"use strict";
-
 var __slice = [].slice;
 /*
 function die () {
