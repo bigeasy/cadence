@@ -1484,6 +1484,17 @@ subsequent error handling function cannot catch exceptions thrown from the
 step function, only called back exceptions. If this is an issue, you can use a
 try/catch block, or you could even put things in a sub-cadence. 
 
+Errors ought to be scalar. We can gather them up for you, but then you have no
+context for reporting them, or handling them. Or maybe we do gather them up for
+you, because what else are we going to do, but then it's up to you to figure out
+what went wrong, you'll complain, and we'll explain that they need to be scalar.
+
+Hard to say. Might go ahead and only support error handling from scalars, since
+an array of errors is something you're going to have to construct yourself, and
+report yourself, because there is no facility for reporting multiple errros from
+an error, result callback signature, and I don't want to be the man to invent
+one. 
+
 ## Inbox
 
 Take note that the default arity of scalars should be zero, but it is one for
