@@ -276,14 +276,6 @@ function cadence () {
         });
       }
 
-      if (steps.length == index) {
-        callback.apply(null, [ null ].concat(callbacks.length == 1 ? callbacks[0].results[0] : []));
-        return;
-      }
-
-      // Get the next step.
-      step = steps[index];
-
       // Filter out the return value, if there are callbacks left, then
       // `contextualize` will process them.
       if (caught.length) {
@@ -299,6 +291,14 @@ function cadence () {
           args = [];
         }
       }
+
+      if (steps.length == index) {
+        callback.apply(null, [ null ].concat(args));
+        return;
+      }
+
+      // Get the next step.
+      step = steps[index];
 
       invocations.unshift({ callbacks: [], count: 0 , called: 0, index: index, callback: callback });
       invocations[0].arguments = [ steps, index + 1, invocations[0], callback ]

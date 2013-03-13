@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(13, function (step, deepEqual, equal, ok) {
+require('proof')(15, function (step, deepEqual, equal, ok) {
   var cadence = require('../..');
 
   cadence(function (step) {
@@ -93,6 +93,22 @@ require('proof')(13, function (step, deepEqual, equal, ok) {
     }, function (one, two) {
       deepEqual(one, [ 1, 2, 3 ], 'arrayed step inferred one');
       equal(two, 2, 'arrayed step specified two');
+    });
+
+  })(step());
+
+  cadence(function (step) {
+
+    step(function () {
+      step(step, 1, function (numbers) {
+        numbers.forEach(step(1, [], function (number) {
+          step()(null, number, number + 1);
+        }));
+      })(null, [ 1, 2, 3 ]);
+      step(step, function (number) { return number + 1 })(null, 2);
+    }, function (one, two) {
+      deepEqual(one, [ 1, 2, 3 ], 'fixed-up step inferred one');
+      equal(two, 3, 'fixed-up step specified two');
     });
 
   })(step());
