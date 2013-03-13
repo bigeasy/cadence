@@ -1,14 +1,14 @@
 "use strict";
 
 var __slice = [].slice;
-
+/*
 function die () {
   console.log.apply(console, __slice.call(arguments, 0));
   process.exit(1);
 }
 
 function say () { console.log.apply(console, __slice.call(arguments, 0)) }
-
+*/
 function extend (object) {
   __slice.call(arguments, 1).forEach(function (append) {
     for (var key in append) object[key] = append[key];
@@ -286,7 +286,7 @@ function factory () {
       var $, names, name, value, index, vargs = [], arg, callback, arity;
 
       names = step.parameters.slice(0);
-      if (~(index = names.indexOf('step')) || ~(index = names.indexOf(options.alias))) {
+      if (~(index = names.indexOf('step'))) {
         names.length = index;
       }
 
@@ -404,9 +404,6 @@ function factory () {
           });
 
         step.parameters.forEach(function (parameter) {
-          if (parameter == options.alias) {
-            parameter = 'step';
-          }
           if (parameter == "error") {
             arg = context.errors[0];
           } else if ((arg = context[parameter]) === void(0)) {
