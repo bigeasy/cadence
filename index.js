@@ -66,12 +66,15 @@ function factory () {
       if (options.timeout) timer = setTimeout(function () { callback(new Error("Timeout")) }, options.timeout);
     }
 
-    // **TODO**: To support renentrancy, you need to make this a stack, shift
-    // the invocation sturcture onto an array of invocations before calling the
-    // step, then shift it off when you're done. I am imagining that this will
-    // permit the immediate invocation of a sub-cadence, which may be necessary
-    // to support notions like recusive descent of a directory tree.
-    var invocation;
+    // To use the same `step` function throughout while supporting reentrancy,
+    // we keep a stack of invocation objects. The stack is reversed; top is 0.
+    // The `step` function is synchronous and will return immediately.
+    // 
+    // It is possible for the user to invoke `step` outside of a step in a
+    // cadence, we can't prevent it, nor really even detect it. Imagine the user
+    // invoking `setTimeout` with a callback that calls `step` five minutes
+    // later, long after the cadence has ended. Mayhem, but what can you do?
+    var invocations = [];
 
     // We give this function to the caller to build control flow. In the
     // debugger, I often want to step into a function that takes a step
@@ -91,15 +94,15 @@ function factory () {
       // The caller as invoked the async function directly as an explicit early
       // return to exit the entire cadence.
       if (vargs.length && (vargs[0] == null || vargs[0] instanceof Error)) {
-        invocation.count = Number.MAX_VALUE;
-        invocation.callback.apply(null, vargs);
+        invocations[0].count = Number.MAX_VALUE;
+        invocations[0].callback.apply(null, vargs);
         return;
       }
 
       // If we're called with a single object argument, we merge the given
       // object into the cadence context.
       if (vargs.length == 1 && typeof vargs[0] == "object" && vargs[0] && !Array.isArray(vargs[0])) {
-        extend(invocation.context, vargs[0]);
+        extend(invocations[0].context, vargs[0]);
         return;
       }
 
@@ -110,7 +113,7 @@ function factory () {
       // Search for the function in the current cadence.
       if (vargs.length == 1 && typeof vargs[0] == "function") {
         original = vargs[0].original || vargs[0];
-        for (i = invocation.arguments[0].length - 1; step = invocation.arguments[0][i]; i--) {
+        for (i = invocations[0].arguments[0].length - 1; step = invocations[0].arguments[0][i]; i--) {
           if (original === step || original === step.original) break;
         }
       }
@@ -119,7 +122,7 @@ function factory () {
       // next step function to execute; then remove the function argument and
       // procede.
       if (~i) {
-        invocation.arguments[1] = i;
+        invocations[0].arguments[1] = i;
         vargs.shift();
       }
 
@@ -142,13 +145,13 @@ function factory () {
 
       //
       if (cadence && !fixup) {
-        return createCadence(invocation, arity, cadence, arrayed);
+        return createCadence(invocations[0], arity, cadence, arrayed);
       } else {
         if (vargs.length) throw new Error("invalid arguments");
         if (arrayed) {
-          return createArray(invocation, arity, cadence);
+          return createArray(invocations[0], arity, cadence);
         } else {
-          return createScalar(invocation, arity, cadence);
+          return createScalar(invocations[0], arity, cadence);
         }
       }
     }
@@ -328,7 +331,8 @@ function factory () {
     }
 
     function invoke (steps, index, context, callbacks, callback) {
-      var arg
+      var invocation
+        , arg
         , args = []
         , match
         , parameter, parameters
@@ -348,9 +352,9 @@ function factory () {
 
       timeout();
 
-      invocation = { callbacks: [], count: 0 , called: 0, context: context,
-                     index: index, callback: callback };
-      invocation.arguments = [ steps, index + 1, context, invocation.callbacks, callback ]
+      invocations.unshift({ callbacks: [], count: 0 , called: 0, context: context,
+                            index: index, callback: callback });
+      invocations[0].arguments = [ steps, index + 1, context, invocations[0].callbacks, callback ]
 
       if (steps[index] && /^errors?$/.test(steps[index].parameters[0]) && !context.errors.length) {
         invoke(steps, index + 1, context, callbacks, callback);
@@ -411,8 +415,10 @@ function factory () {
         try {
           hold = async();
           result = step.apply(null, args);
+          invocations.shift();
           hold.apply(null, [ null, invoke ].concat(result === void(0) ? [] : [ result ]));
         } catch (error) {
+          invocation = invocations.shift();
           thrown(invocation, error);
           invocation.count++;  // Don't trigger, we do it ourselves next.
           hold.apply(null, [ null, invoke ]);
