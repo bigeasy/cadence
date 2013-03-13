@@ -25,7 +25,6 @@ function factory () {
     var vargs = __slice.call(arguments, 0)
       , steps = []
       , firstSteps = []
-      , timer
       , callback
       , called
       , count
@@ -59,12 +58,6 @@ function factory () {
     }
 
     function exceptional (error) { if (error) throw error }
-
-    // Set and reset a thirty second timeout between assertions.
-    function timeout () {
-      if (timer) clearTimeout(timer);
-      if (options.timeout) timer = setTimeout(function () { callback(new Error("Timeout")) }, options.timeout);
-    }
 
     // To use the same `step` function throughout while supporting reentrancy,
     // we keep a stack of invocation objects. The stack is reversed; top is 0.
@@ -267,7 +260,6 @@ function factory () {
       if (next && callback.catchable) {
         callback.errors = [ error ];
       } else {
-        if (timer) clearTimeout(timer);
         invocation.abended = true;
         invocation.callback(error);
       }
@@ -347,8 +339,6 @@ function factory () {
         return;
       }
       if (previous.abended) return;
-
-      timeout();
 
       invocations.unshift({ callbacks: [], count: 0 , called: 0, context: context,
                             index: index, callback: callback });
