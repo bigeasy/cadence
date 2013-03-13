@@ -390,17 +390,6 @@ function factory () {
           contextualize(step, callbacks, context, ephemeral);
         }
 
-        // Give our creator a chance to inspect the step, possibly wrap it.
-        Object.keys(options.wrap || {})
-          .filter(function (name) { return named(step, name) && name })
-          .map(function (name) { return options.wrap[name] })
-          .forEach(function (wrapper) {
-            var parameters = step.parameters, original = step.original || step;
-            step = wrapper(step)
-            step.parameters = parameters;
-            step.original = original;
-          });
-
         step.parameters.forEach(function (parameter) {
           if (parameter == "error") {
             arg = context.errors[0];
