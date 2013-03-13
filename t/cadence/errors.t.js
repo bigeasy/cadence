@@ -8,9 +8,9 @@ require('proof')(5, function (equal, ok) {
 
   cadence(function () {
     throw new Error("thrown");
-  }, function (error) {
+  })(function (error) {
     equal(error.message, "thrown", "intercepted throw");
-  })();
+  });
 
   cadence(function (step) {
     step()(new Error("handed"));

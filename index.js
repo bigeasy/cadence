@@ -1,14 +1,14 @@
 "use strict";
 
 var __slice = [].slice;
-/*
+
 function die () {
   console.log.apply(console, __slice.call(arguments, 0));
   process.exit(1);
 }
 
 function say () { console.log.apply(console, __slice.call(arguments, 0)) }
-*/
+
 function extend (object) {
   __slice.call(arguments, 1).forEach(function (append) {
     for (var key in append) object[key] = append[key];
@@ -33,7 +33,6 @@ function factory () {
       , count
       , exitCode = 0
       , methods = { step: async }
-      , abended
       , key
       , arg
       , context = {}
@@ -58,7 +57,6 @@ function factory () {
       var vargs = __slice.call(arguments, 0), callbacks = [], callback = exceptional;
       if (vargs.length) callback = vargs.pop();
       steps = firstSteps.slice(0);
-      abended = false;
       begin(steps, options.context, vargs, callback);
     }
 
@@ -272,14 +270,12 @@ function factory () {
     }
 
     function thrown (invocation, error) {
-      var steps = invocation.arguments[0]
-        , next = steps[invocation.index + 1]
-        ;
+      var steps = invocation.arguments[0], next = steps[invocation.index + 1];
       if (next && /^errors?$/.test(next.parameters[0])) {
         invocation.context.errors.push(error);
       } else {
         if (timer) clearTimeout(timer);
-        abended = true;
+        invocation.abended = true;
         invocation.callback(error);
       }
     }
@@ -353,7 +349,11 @@ function factory () {
         , ephemeral = {}
         ;
 
-      if (abended) return;
+      if (previous.thrown) {
+        callback(previous.thrown);
+        return;
+      }
+      if (previous.abended) return;
 
       timeout();
 
@@ -417,18 +417,17 @@ function factory () {
 
         context.errors = [];
 
+        hold = async();
         try {
-          hold = async();
           result = step.apply(null, args);
-          invocations.shift();
-          hold.apply(null, [ null, invoke ].concat(result === void(0) ? [] : [ result ]));
         } catch (error) {
-          invocation = invocations.shift();
-          thrown(invocation, error);
-          invocation.count++;  // Don't trigger, we do it ourselves next.
-          hold.apply(null, [ null, invoke ]);
-          invoke.apply(null, invocation.arguments);
+          // We're not a replacement for try/catch, so set up the next step for
+          // failure, ensure that our hold function invokes the next step.
+          invocations[0].thrown = error;
+          invocations[0].called = invocations[0].count - 1;
         }
+        invocations.shift();
+        hold.apply(null, [ null, invoke ].concat(result === void(0) ? [] : [ result ]));
       }
     }
 
