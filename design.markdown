@@ -1499,3 +1499,22 @@ one.
 
 Take note that the default arity of scalars should be zero, but it is one for
 arrays because why would be gather into an array if there is nothing to gather.
+
+What's the difference between a fix-up cadence and a sub-cadence? Can one
+replace the other?
+
+Sub-cadences start immediately, scalars when the function ends, arrayed when
+they are called. Fix-up cadences are run after a callback returns. Sub-cadences
+could be expressed as fix-up cadences, but that would really be the end of the
+magic of Cadence, there's got to be some method to the madness, not just we'll
+call the next function for you.
+
+In all these things, there is something you sell the user, something they've
+been told is bad, that if you're ablet to get them to trust you that you've not
+abused this bad behavior, if you'll navigate it for them, then you almost always
+magically unlock new ways of doing things.
+
+With Cadence, we're looking at a tiny library, fully tested, easy enough for a
+person to read themselves. We're asking people to pay for this overhead between
+calls, the DSL comes from a magic function, which I learned about by creating
+Timezone.
