@@ -1463,6 +1463,27 @@ without having to depend on the name `error` in the function signature, which
 would be, I think, the last use case for named parameters outside of convenience
 or for the sake of magic.
 
+Getting into using this new Cadence and I'm creating funnels. I invoke two or
+more operations in parallel in a step so that the subsequent step can get three
+different parameters. This is making the hidden context look less and less
+useful, valuable.
+
+Problem is, two or more different parallel responses might produce two or more
+errors. Should they all be reported, or just the first one that comes back?
+Maybe one error can be handled, while another one cannot; one has a handler
+registered, the other has not been flagged for error handling.
+
+An exception thrown from a step function is an especially egregious error. We
+caught an exception. That's bad news because our step function is faulty. We
+should still probably wait for everything to finish though, but what if a `step`
+has been created, but it hasn't been given to a callback function, or worse,
+it's been given to a callback function and that function has thrown the
+exception? There's a good chance that this function is never going to complete,
+so we ought to treat a thrown exception as stack unwinding mayhem. The
+subsequent error handling function cannot catch exceptions thrown from the
+step function, only called back exceptions. If this is an issue, you can use a
+try/catch block, or you could even put things in a sub-cadence. 
+
 ## Inbox
 
 Take note that the default arity of scalars should be zero, but it is one for
