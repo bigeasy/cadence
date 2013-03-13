@@ -47,15 +47,19 @@ function factory () {
 
     firstSteps = firstSteps.map(function (step) { return parameterize(step, context) });
 
+    function begin (steps, context, vargs, callback) {
+      var invocation = {
+        callbacks: [{ results: [[invoke].concat(vargs)] }]
+      };
+      invoke(steps, 0, invocation, Object.create(context), callback);
+    }
+
     function execute () {
       var vargs = __slice.call(arguments, 0), callbacks = [], callback = exceptional;
-      if (vargs.length) {
-        callback = vargs.pop();
-        callbacks = [{ results: [vargs] }];
-      }
+      if (vargs.length) callback = vargs.pop();
       steps = firstSteps.slice(0);
       abended = false;
-      invoke(steps, 0, Object.create(options.context), callbacks, callback);
+      begin(steps, options.context, vargs, callback);
     }
 
     function exceptional (error) { if (error) throw error }
@@ -162,7 +166,7 @@ function factory () {
       invocation.callbacks.push(callback);
       return function () {
         var vargs = __slice.call(arguments);
-        runSubCadence(invocation, callback, index++, [{ results: [vargs] }]);
+        runSubCadence(invocation, callback, index++, vargs);
       }
     }
 
@@ -202,7 +206,7 @@ function factory () {
             invocation.count++;
             var subtext = Object.create(invocation.context);
             var steps = callback.cadence.slice(0).map(function (step) { return parameterize(step, subtext) });
-            invoke(steps, 0, subtext, [{ results: [callback.results[index]] }], function (error, result) {
+            begin(steps, invocation.context,  callback.results[index], function (error, result) {
               if (error) {
                 thrown(invocation, error);
               } else {
@@ -233,7 +237,7 @@ function factory () {
       var subtext = Object.create(invocation.context);
       steps = callback.cadence.map(function (step) { return parameterize(step, subtext) });
       invocation.count++;
-      invoke(steps, 0, subtext, vargs, function (error) {
+      begin(steps, subtext, vargs, function (error) {
         var vargs = __slice.call(arguments, 1);
         if (error) {
           thrown(invocation, error);
@@ -330,8 +334,9 @@ function factory () {
       }
     }
 
-    function invoke (steps, index, context, callbacks, callback) {
+    function invoke (steps, index, previous, context, callback) {
       var invocation
+        , callbacks = previous.callbacks
         , arg
         , args = []
         , match
@@ -354,10 +359,10 @@ function factory () {
 
       invocations.unshift({ callbacks: [], count: 0 , called: 0, context: context,
                             index: index, callback: callback });
-      invocations[0].arguments = [ steps, index + 1, context, invocations[0].callbacks, callback ]
+      invocations[0].arguments = [ steps, index + 1, invocations[0], context, callback ]
 
       if (steps[index] && /^errors?$/.test(steps[index].parameters[0]) && !context.errors.length) {
-        invoke(steps, index + 1, context, callbacks, callback);
+        invoke(steps, index + 1, previous, context, callback);
       } else {
         // No callbacks means that we use the function return value, if any.
         if (callbacks.length == 1) {
