@@ -17,13 +17,16 @@ function cadence () {
     invoke(steps, 0, invocation, callback);
   }
 
+  // Execute is the function returned to the user. It represents the constructed
+  // cadence. When the user invokes it with no arguments, a default error
+  // throwing callback is used for the cadence callback. If the user provides
+  // any arguments, the user must also provide a callback.
   function execute () {
-    var vargs = __slice.call(arguments, 0),  callback = exceptional;
+    var vargs = __slice.call(arguments, 0),
+        callback = function (error) { if (error) throw error };
     if (vargs.length) callback = vargs.pop();
     begin(steps, [async].concat(vargs), callback);
   }
-
-  function exceptional (error) { if (error) throw error }
 
   // To use the same `step` function throughout while supporting reentrancy,
   // we keep a stack of invocation objects. The stack is reversed; top is 0.
