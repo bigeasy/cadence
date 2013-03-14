@@ -7,7 +7,7 @@ if [ "$TRAVIS" = "true" ]; then
   sudo apt-get install -q -q bc 2> /dev/null > /dev/null
 fi
 
-t/sizes index.js
+t/sizes index.js | sed 's/^/    /'
 
 echo ""
 

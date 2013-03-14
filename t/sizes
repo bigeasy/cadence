@@ -3,7 +3,7 @@
 dir=`cd ${0%/*} && pwd`
 UGLIFY_JS="${dir%/t}/node_modules/.bin/uglifyjs"
 
-printf "    %-24s %11s %11s %11s %11s\n" File Raw Min Zip Min/Zip
+printf "%-24s %11s %11s %11s %11s\n" File Raw Min Zip Min/Zip
 for file in $@; do
   b_0=`cat $file | wc -c`
   b_1=`cat $file | $UGLIFY_JS | wc -c`
@@ -22,7 +22,7 @@ for file in $@; do
     val=`echo $val / 1024 | bc -l`
     eval k_$field=$val
   done
-  printf "    %-24s" $file
+  printf "%-24s" $file
   for field in 0 1 2 3; do
     eval printf "%6d/%05.2f" \$b_$field \$k_$field
   done
