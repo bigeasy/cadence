@@ -28,7 +28,7 @@ function cadence () {
   // To use the same `step` function throughout while supporting reentrancy,
   // we keep a stack of invocation objects. The stack is reversed; top is 0.
   // The `step` function is synchronous and will return immediately.
-  // 
+  //
   // It is possible for the user to invoke `step` outside of a step in a
   // cadence, we can't prevent it, nor really even detect it. Imagine the user
   // invoking `setTimeout` with a callback that calls `step` five minutes

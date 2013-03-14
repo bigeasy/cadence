@@ -166,7 +166,7 @@ Changes for each release.
 
 Tue Mar 12 07:50:52 UTC 2013
 
- *  Make default arity of scalars zero. #71. 
+ *  Make default arity of scalars zero. #71.
 
 ### Version 0.0.10
 
