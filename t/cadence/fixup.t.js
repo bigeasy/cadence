@@ -6,7 +6,7 @@ require('proof')(2, function (step, deepEqual) {
   cadence(function (step) {
 
     echo(1, step(step, function (number) {
-      return - number;
+      echo(- number, step());
     }));
 
   }, function (items) {
@@ -29,4 +29,4 @@ require('proof')(2, function (step, deepEqual) {
   })(step());
 });
 
-function echo (value, callback) { callback(null, value); }
+function echo (value, callback) { process.nextTick(function () { callback(null, value) }) }
