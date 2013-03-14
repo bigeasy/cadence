@@ -70,4 +70,7 @@ require('proof')(5, function (step, deepEqual) {
 
 });
 
-function item (number, callback) { callback(null, number) };
+function item (value, callback) {
+  process.nextTick(function () { callback(null, value) });
+}
+
