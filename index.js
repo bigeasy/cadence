@@ -68,7 +68,7 @@ function cadence () {
     // Search for the function in the current cadence.
     if (vargs.length == 1 && typeof vargs[0] == "function") {
       original = vargs[0].original || vargs[0];
-      for (i = invocations[0].arguments[0].length - 1; step = invocations[0].arguments[0][i]; i--) {
+      for (i = invocations[0].args[0].length - 1; step = invocations[0].args[0][i]; i--) {
         if (original === step || original === step.original) break;
       }
     }
@@ -77,7 +77,7 @@ function cadence () {
     // next step function to execute; then remove the function argument and
     // procede.
     if (~i) {
-      invocations[0].arguments[1] = i;
+      invocations[0].args[1] = i;
       vargs.shift();
     }
 
@@ -165,7 +165,7 @@ function cadence () {
               callback.results[index] = __slice.call(arguments, 1);
             }
             if (-1 < index && ++invocation.called == invocation.count) {
-              invoke.apply(null, invocation.arguments);
+              invoke.apply(null, invocation.args);
             }
           });
         }
@@ -179,7 +179,7 @@ function cadence () {
         }
       }
       if (index > -1 && ++invocation.called == invocation.count) {
-        invoke.apply(null, invocation.arguments);
+        invoke.apply(null, invocation.args);
       }
     }
   }
@@ -196,13 +196,13 @@ function cadence () {
         callback.results[index] = vargs;
       }
       if (++invocation.called == invocation.count) {
-        invoke.apply(null, invocation.arguments);
+        invoke.apply(null, invocation.args);
       }
     });
   }
 
   function thrown (invocation, error, callback) {
-    var steps = invocation.arguments[0], next = steps[invocation.index + 1];
+    var steps = invocation.args[0], next = steps[invocation.index + 1];
     if (next && callback.catchable) {
       callback.errors = [ error ];
     } else {
@@ -299,7 +299,7 @@ function cadence () {
       step = steps[index];
 
       invocations.unshift({ callbacks: [], count: 0 , called: 0, index: index, callback: callback });
-      invocations[0].arguments = [ steps, index + 1, invocations[0], callback ]
+      invocations[0].args = [ steps, index + 1, invocations[0], callback ]
 
       hold = async();
       try {
