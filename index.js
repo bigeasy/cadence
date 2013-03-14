@@ -81,54 +81,44 @@ function cadence () {
       vargs.shift();
     }
 
+    var callback = { errors: [], results: [] };
+    invocations[0].callbacks.push(callback);
+
     var fixup;
     if (fixup = (vargs[0] === async)) {
       vargs.shift();
     }
-    if (!isNaN(parseFloat(vargs[0])) && isFinite(vargs[0])) {
-      var arity = parseInt(vargs.shift(), 10);
+    if (!isNaN(parseInt(vargs[0], 10))) {
+      callback.arity = +(vargs.shift());
     }
     if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
-      var arrayed = !! vargs.shift();
+      callback.arrayed = !! vargs.shift();
     }
     if (Error === vargs[0]) {
-      var catchable = !! vargs.shift();
+      invocations[0].catchable = callback.catchable = !! vargs.shift();
     }
-    if (vargs.length && vargs.every(function (arg) { return typeof arg == "function" })) {
-      var cadence = vargs.splice(0, vargs.length);
-    }
-
-    // If we have no arguments, or else if every argument is a string, then
-    // we've been asked to build a callback, otherwise, this is a sub-cadence.
-
-    //
-    if (cadence && !fixup) {
-      return createCadence(invocations[0], arity, cadence, arrayed);
-    } else {
-      if (vargs.length) throw new Error("invalid arguments");
-      if (arrayed) {
-        return createArray(invocations[0], arity, cadence);
-      } else {
-        return createScalar(invocations[0], arity, cadence, catchable);
+    callback.cadence = vargs;
+    if (vargs.length) {
+      if (!vargs.every(function (arg) { return typeof arg == "function" })) {
+        throw new Error("invalid arguments");
       }
+      if (!fixup) return createCadence(invocations[0], callback);
     }
+    if (callback.arrayed) return createArray(invocations[0], callback);
+    return createCallback(invocations[0], callback, 0);
   }
 
-  function createCadence (invocation, arity, cadence, arrayed) {
-    var callback = { results: [], run: ! arrayed, cadence: cadence, arrayed: arrayed }, index = 0;
-    if (arity) callback.arity = arity;
-    invocation.callbacks.push(callback);
+  function createCadence (invocation, callback) {
+    var index = 0;
+    callback.run = ! callback.arrayed;
     return function () {
       var vargs = __slice.call(arguments);
       runSubCadence(invocation, callback, index++, vargs);
     }
   }
 
-  function createArray (invocation, arity, cadence) {
-    var callback = { results: [], cadence: cadence }, index = 0;
-    if (arity) callback.arity = arity;
-    callback.arrayed = true;
-    invocation.callbacks.push(callback);
+  function createArray (invocation, callback) {
+    var index = 0;
     return function () {
       var vargs = __slice.call(arguments);
       if (index < 0) throw new Error("zero-to-many already determined");
@@ -137,14 +127,6 @@ function cadence () {
       }
       return createCallback(invocation, callback, index++);
     }
-  }
-
-  function createScalar (invocation, arity, cadence, catchable) {
-    var callback = { results: [], cadence: cadence, catchable: catchable };
-    if (arity) callback.arity = arity;
-    invocation.callbacks.push(callback);
-    invocation.catchable = invocation.catchable || catchable;
-    return createCallback(invocation, callback, 0);
   }
 
   function createCallback (invocation, callback, index) {
@@ -156,7 +138,7 @@ function cadence () {
       } else {
         if (index < 0) callback.results.push(vargs);
         else callback.results[index] = vargs;
-        if (callback.cadence) {
+        if (callback.cadence.length) {
           invocation.count++;
           begin(callback.cadence, callback.results[index], function (error, result) {
             if (error) {
@@ -257,7 +239,7 @@ function cadence () {
 
     var caught = [];
     if (previous.catchable) {
-      var caught = callbacks.filter(function (callback) { return callback.errors && callback.errors.length });
+      var caught = callbacks.filter(function (callback) { return callback.errors.length });
     }
 
     if (steps[index] && previous.catchable && !caught.length) {
