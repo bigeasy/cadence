@@ -55,7 +55,7 @@ function cadence () {
 
     // The caller as invoked the async function directly as an explicit early
     // return to exit the entire cadence.
-    if (vargs.length && (vargs[0] == null || vargs[0] instanceof Error)) {
+    if (vargs[0] === null || vargs[0] instanceof Error) {
       invocations[0].count = Number.MAX_VALUE;
       invocations[0].callback.apply(null, vargs);
       return;
