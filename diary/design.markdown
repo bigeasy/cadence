@@ -1244,6 +1244,62 @@ callback is shifted. Events will have events that do not get called, here might
 be more of a concept of null events, as opposed to definite events versus zero
 to many events.
 
+The notion of giving the user an interceptor is one way to go, but why use an
+interceptor when you can just use functional composition?
+
+Instead of...
+
+```javascript
+var cadence = require('cadence')(function (object, step) {
+  if (object.on && object.stdout && object.stderr) {
+    // Magic.
+  }
+});
+```
+
+Why not?
+
+```javascript
+function stdio (step, program) {
+  program.on('close', step(2));
+  program.stderr.on('data', step([]));
+  program.stdout.on('data', step([]));
+
+  var caught = step(0, [], [])
+  program.on('error', caught);
+  program.stdout.on('error', caught);
+  program.stderr.on('error', caught);
+
+  return program;
+}
+
+cadence(function () {
+
+  step(function () {
+    stdio(step, spwan('chatty', []));
+  }, function (code, signal, stderr, stdout) {
+  });
+
+});
+```
+
+New problem to solve; no way to catch errors that might not occur. We were only
+going to do scalar errors, so now I suppose we will do array errors, but we'll
+only exit on the first one.
+
+Bletch. Everything everywhere is a stream forever. I suppose, before I can
+consider how to capture event emitter problems, I need to find a langauge to say
+that we want to shift the result, or that there will be no error.
+
+```javascript
+ee.on('drain', step(null));
+```
+
+Where `null` means that the error is always null. I keep thinking that I could
+go a path where we want to imply what we're starting variable argument list, and
+the rest of the results should be catenated, but I don't like the idea, because
+it is generalization for a specific case.
+
 ## Reentrancy
 
 Something like this, where `sub` is called and a new state is created. The
