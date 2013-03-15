@@ -1491,7 +1491,7 @@ what went wrong, you'll complain, and we'll explain that they need to be scalar.
 
 Hard to say. Might go ahead and only support error handling from scalars, since
 an array of errors is something you're going to have to construct yourself, and
-report yourself, because there is no facility for reporting multiple errros from
+report yourself, because there is no facility for reporting multiple errors from
 an error, result callback signature, and I don't want to be the man to invent
 one.
 
@@ -1520,9 +1520,9 @@ this way, a plain string on it's own is still available for use down the road.
 If you use `this` in your cadence, then it's up to you to call cadence
 correctly. For a while, I imagine that, with this property assignment feature,
 one might want to always to have a this object, so that you can maintain state
-internally, kind of the the way that the hidden context used to. However, I'm
-not sure how to test for the absence of a real this object between ordinary mode
-and strict mode.
+internally, kind of the way that the hidden context used to. However, I'm not
+sure how to test for the absence of a real this object between ordinary mode and
+strict mode.
 
 However, if it really matters...
 
@@ -1581,8 +1581,51 @@ DataFile.prototype.load = cadence(function (step, name) {
 });
 ```
 
-Rebinding `this` is definately something that I need to consider, so it comes
+Rebinding `this` is definitely something that I need to consider, so it comes
 after an initial release.
+
+## Step Out of Cadence
+
+Always mentioned when whinging about callbacks is the temple of doom, yet
+Cadence has evolved to where it requires you to use step with what was once
+called a sub-cadence. It might be nice to reduce the nesting.
+
+```javascript
+var cadence = require('cadence'), step = cadence();
+
+var delinate = cadence(step, function (name) {
+  fs.readFile(name, 'utf8', step());
+}, function (body) {
+  return body.split(/\n/).slice(0, -1);
+});
+
+delinate(__filename, function (error, lines) {
+  if (error) throw error;
+  console.log(lines);
+});
+```
+
+That's all I got, though. Tell `cadence` that you have `step` and it doesn't
+need to be passed in. Why not just do ignore it though?
+
+```javascript
+var cadence = require('cadence'), step = cadence();
+
+var delinate = cadence(function (step, name) {
+  fs.readFile(name, 'utf8', step());
+}, function (body) {
+  return body.split(/\n/).slice(0, -1);
+});
+
+delinate(__filename, function (error, lines) {
+  if (error) throw error;
+  console.log(lines);
+});
+```
+
+Bad example because there are only two steps. I'm not sure there are good
+examples. I'll have to look in practice, I doubt there are going to be many
+opportunities to skip creating a sub-cadence immediately.
 
 ## Inbox
 
