@@ -1300,6 +1300,22 @@ go a path where we want to imply what we're starting variable argument list, and
 the rest of the results should be catenated, but I don't like the idea, because
 it is generalization for a specific case.
 
+Actually, could  this construct be a way to pass additional information to the
+next function?
+
+```javascript
+cadence(function (step) {
+  step(function () {
+    ee.on('drain', step([null, +(new Date)]));
+  }, function (time) {
+    return time; 
+  });
+});
+```
+
+No good reason to do that, though. You could just as easily add a variable to
+the enclosing scope.
+
 ## Reentrancy
 
 Something like this, where `sub` is called and a new state is created. The
