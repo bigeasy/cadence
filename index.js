@@ -14,7 +14,7 @@ function cadence () {
     var invocation = {
       callbacks: [{ results: [[invoke].concat(vargs)] }]
     };
-    invoke(steps, 0, invocation, callback);
+    invoke.call(this, steps, 0, invocation, callback);
   }
 
   // Execute is the function returned to the user. It represents the constructed
@@ -25,7 +25,7 @@ function cadence () {
     var vargs = __slice.call(arguments, 0),
         callback = function (error) { if (error) throw error };
     if (vargs.length) callback = vargs.pop();
-    begin(steps, [async].concat(vargs), callback);
+    begin.call(this, steps, [async].concat(vargs), callback);
   }
 
   // To use the same `step` function throughout while supporting reentrancy,
@@ -140,14 +140,14 @@ function cadence () {
         else callback.results[index] = vargs;
         if (callback.cadence.length) {
           invocation.count++;
-          begin(callback.cadence, callback.results[index], function (error, result) {
+          begin.call(invocation.self, callback.cadence, callback.results[index], function (error, result) {
             if (error) {
               thrown(invocation, error);
             } else {
               callback.results[index] = __slice.call(arguments, 1);
             }
             if (-1 < index && ++invocation.called == invocation.count) {
-              invoke.apply(null, invocation.args);
+              invoke.apply(invocation.self, invocation.args);
             }
           });
         }
@@ -161,7 +161,7 @@ function cadence () {
         }
       }
       if (index > -1 && ++invocation.called == invocation.count) {
-        invoke.apply(null, invocation.args);
+        invoke.apply(invocation.self, invocation.args);
       }
     }
   }
@@ -170,7 +170,7 @@ function cadence () {
     delete callback.run;
     var steps = callback.cadence;
     invocation.count++;
-    begin(steps, vargs, function (error) {
+    begin.call(invocation.self, steps, vargs, function (error) {
       var vargs = __slice.call(arguments, 1);
       if (error) {
         thrown(invocation, error);
@@ -178,7 +178,7 @@ function cadence () {
         callback.results[index] = vargs;
       }
       if (++invocation.called == invocation.count) {
-        invoke.apply(null, invocation.args);
+        invoke.apply(invocation.self, invocation.args);
       }
     });
   }
@@ -244,7 +244,7 @@ function cadence () {
 
     if (steps[index] && previous.catchable && !caught.length) {
       previous.catchable = false;
-      invoke(steps, index + 1, previous, callback);
+      invoke.call(this, steps, index + 1, previous, callback);
     } else {
       // No callbacks means that we use the function return value, if any.
       if (callbacks.length == 1) {
@@ -280,12 +280,13 @@ function cadence () {
       // Get the next step.
       step = steps[index];
 
-      invocations.unshift({ callbacks: [], count: 0 , called: 0, index: index, callback: callback });
+      invocations.unshift({ callbacks: [], count: 0 , called: 0, index: index,
+                            callback: callback, self: this });
       invocations[0].args = [ steps, index + 1, invocations[0], callback ]
 
       hold = async();
       try {
-        result = step.apply(null, args);
+        result = step.apply(this, args);
       } catch (error) {
         // We're not a replacement for try/catch, so set up the next step for
         // failure, ensure that our hold function invokes the next step.
@@ -293,7 +294,7 @@ function cadence () {
         invocations[0].called = invocations[0].count - 1;
       }
       invocations.shift();
-      hold.apply(null, [ null, invoke ].concat(result === void(0) ? [] : [ result ]));
+      hold.apply(this, [ null, invoke ].concat(result === void(0) ? [] : [ result ]));
     }
   }
 
