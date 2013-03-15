@@ -1495,7 +1495,98 @@ report yourself, because there is no facility for reporting multiple errros from
 an error, result callback signature, and I don't want to be the man to invent
 one.
 
+## Prototypes and This
+
+There is room for expansion to add extended `this` support, where an array
+indicates the properties into which a value should be written.
+
+```javascript
+DataFile.prototype.load = cadence(function (step, name) {
+  step(['lines'], function () {
+    fs.readFile(name, 'utf8', step(step, function (body) {
+      return body.split(/\n/).slice(0, -1);
+    }));
+  }, function () {
+    return this;
+  });
+});
+```
+
+In the above, the array `['lines']` indicates that scalar value should be
+written to the `lines` property of the `this` object. The array represents the
+arity of the return value. The integer arity is also available separately. Done
+this way, a plain string on it's own is still available for use down the road.
+
+If you use `this` in your cadence, then it's up to you to call cadence
+correctly. For a while, I imagine that, with this property assignment feature,
+one might want to always to have a this object, so that you can maintain state
+internally, kind of the the way that the hidden context used to. However, I'm
+not sure how to test for the absence of a real this object between ordinary mode
+and strict mode.
+
+However, if it really matters...
+
+```javascript
+var dataNoComments = cadence(function (step, name) {
+  step(['lines'], function () {
+    fs.readFile(name, 'utf8', step(step, function (body) {
+      return body.split(/\n/).slice(0, -1);
+    }));
+  }, function () {
+    return this.lines.reject(/^\s*#/);
+  });
+});
+
+dataNoComments.call({}, path.join(__dirname + 'data'), function (error, lines) {
+  if (error) throw error;
+  console.log(lines);
+});
+```
+
+Or even...
+
+```javascript
+var dataNoComments = cadence(function (step, name) {
+  step.call({}, ['lines'], function () {
+    fs.readFile(name, 'utf8', step(step, function (body) {
+      return body.split(/\n/).slice(0, -1);
+    }));
+  }, function () {
+    return this.lines.reject(/^\s*#/);
+  });
+});
+
+dataNoComments(path.join(__dirname + 'data'), function (error, lines) {
+  if (error) throw error;
+  console.log(lines);
+});
+```
+
+Here's a way to use the this object so that I can still use objects in the
+future. I'm not actually using objects as of yet, so they can still represent
+something.
+
+I don't believe assigning this is going to be in the initial release. Passing
+`this` consistently will be, but not assigning `this` directly. I'm not sure
+that it is all that much of a verbiage savings.
+
+```javascript
+DataFile.prototype.load = cadence(function (step, name) {
+  step(function () {
+    fs.readFile(name, 'utf8', step());
+  }, function (lines) {
+    this.lines = body.split(/\n/).slice(0, -1);
+    return this;
+  });
+});
+```
+
+Rebinding `this` is definately something that I need to consider, so it comes
+after an initial release.
+
 ## Inbox
+
+Notes on returning the step function. Notes on event handlers, if you have any.
 
 Take note that the default arity of scalars should be zero, but it is one for
 arrays because why would be gather into an array if there is nothing to gather.
@@ -1510,7 +1601,7 @@ magic of Cadence, there's got to be some method to the madness, not just we'll
 call the next function for you.
 
 In all these things, there is something you sell the user, something they've
-been told is bad, that if you're ablet to get them to trust you that you've not
+been told is bad, that if you're able to get them to trust you that you've not
 abused this bad behavior, if you'll navigate it for them, then you almost always
 magically unlock new ways of doing things.
 
