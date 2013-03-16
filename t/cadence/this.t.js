@@ -12,7 +12,7 @@ require('proof')(3, function (step, ok, equal) {
       })(null);
     });
   });
-  
+
   object.method(function (error, result)  {
     ok(result === object, 'this');
     equal(object.value, 1, 'value');
