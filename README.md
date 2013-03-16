@@ -162,6 +162,25 @@ cadence(function (step) {
 
 Changes for each release.
 
+### Version 0.0.12
+
+ * Propagate `` this ``. #84.
+ * Use identity operator in check for early return. #82.
+ * Build `` callback `` object in ``` _async ```.
+ * Rename `arguments` property to `args`.
+ * Move sizes indent from `t/sizes` to `t/test`.
+ * More tests for fix-up cadences.
+ * Remove `if` statement to test for invoke callback. #66.
+ * Fix cadence return values. #76.
+ * Fix arity.
+ * Remove hidden context. #75.
+ * Remove timeouts. #80.
+ * Use `Error` to indicate subsequent error handler. #68.
+ * Remove wrap option. #78.
+ * Remove "use strict".
+ * Ensure reentrancy. #74.
+ * Remove underscore to indicate zero arity. #73.
+
 ### Version 0.0.11
 
 Tue Mar 12 07:50:52 UTC 2013
