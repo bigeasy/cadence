@@ -164,6 +164,8 @@ Changes for each release.
 
 ### Version 0.0.12
 
+Sat Mar 16 05:35:06 UTC 2013
+
  * Propagate `` this ``. #84.
  * Use identity operator in check for early return. #82.
  * Build `` callback `` object in ``` _async ```.
