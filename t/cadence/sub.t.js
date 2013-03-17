@@ -17,6 +17,22 @@ require('proof')(5, function (step, deepEqual) {
 
   cadence(function (step) {
 
+    step(function () {
+      step(function () {
+        step()(new Error('errored'));
+      });
+    }, function () {
+      throw new Error('should not be called');
+    });
+
+  })(function (error) {
+
+    deepEqual(error.message, 'errored', 'error');
+
+  });
+
+  cadence(function (step) {
+
     [ 1, 2, 3 ].forEach(step([], function (number) {
       item(number, step());
     }, function (number) {

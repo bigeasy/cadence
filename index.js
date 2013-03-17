@@ -173,7 +173,7 @@ function cadence () {
     begin.call(invocation.self, steps, vargs, function (error) {
       var vargs = __slice.call(arguments, 1);
       if (error) {
-        thrown(invocation, error);
+        thrown(invocation, error, callback);
       } else {
         callback.results[index] = vargs;
       }
