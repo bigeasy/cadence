@@ -97,6 +97,9 @@ function cadence () {
     if (Error === vargs[0]) {
       invocations[0].catchable = callback.catchable = !! vargs.shift();
     }
+    if (null === vargs[0]) {
+      callback.shifted = ! vargs.shift();
+    }
     callback.cadence = vargs;
     if (vargs.length) {
       if (!vargs.every(function (arg) { return typeof arg == "function" })) {
@@ -131,8 +134,9 @@ function cadence () {
 
   function createCallback (invocation, callback, index) {
     if (-1 < index) invocation.count++;
-    return function (error) {
-      var vargs = __slice.call(arguments, 1);
+    return function () {
+      var vargs = __slice.call(arguments, 0), error;
+      if (!callback.shifted) error = vargs.shift();
       if (error) {
         thrown(invocation, error, callback);
       } else {
