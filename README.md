@@ -164,6 +164,8 @@ Changes for each release.
 
 ### Version 0.0.13
 
+Sun Mar 17 06:24:14 UTC 2013
+
  * Check for error handler on fix-up cadence error. #88.
  * Check for error handler on sub-cadence error. #86.
  * Add contribution guide.
