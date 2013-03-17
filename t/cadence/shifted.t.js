@@ -5,7 +5,7 @@ require('proof')(1, function (step, equal) {
 
   cadence(function (step) {
     step(function () {
-      step(1, null)(1);
+      step(1, Array.prototype.shift)(1);
     }, function (one) {
       equal(one, 1, 'shifted');
     });

@@ -1,12 +1,12 @@
 var __slice = [].slice;
-/*
+
 function die () {
   console.log.apply(console, __slice.call(arguments, 0));
   process.exit(1);
 }
 
 function say () { console.log.apply(console, __slice.call(arguments, 0)) }
-*/
+
 function cadence () {
   var steps = __slice.call(arguments, 0);
 
@@ -97,8 +97,8 @@ function cadence () {
     if (Error === vargs[0]) {
       invocations[0].catchable = callback.catchable = !! vargs.shift();
     }
-    if (null === vargs[0]) {
-      callback.shifted = ! vargs.shift();
+    if (Array.prototype.shift === vargs[0]) {
+      callback.shifted = !! vargs.shift();
     }
     callback.cadence = vargs;
     if (vargs.length) {
