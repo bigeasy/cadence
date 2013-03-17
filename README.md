@@ -162,6 +162,13 @@ cadence(function (step) {
 
 Changes for each release.
 
+### Version 0.0.13
+
+ * Check for error handler on fix-up cadence error. #88.
+ * Check for error handler on sub-cadence error. #86.
+ * Add contribution guide.
+ * Upgrade Proof to 0.0.23.
+
 ### Version 0.0.12
 
 Sat Mar 16 05:35:06 UTC 2013
