@@ -1724,3 +1724,15 @@ With Cadence, we're looking at a tiny library, fully tested, easy enough for a
 person to read themselves. We're asking people to pay for this overhead between
 calls, the DSL comes from a magic function, which I learned about by creating
 Timezone.
+
+Of course, `null` is ambiguous. Need to add arity to indicate a shift instead of
+an early return.
+
+Also, note that there is no way to do fix-up cadecnes for shifted callbacks,
+right? Or if there is, then, well, there isn't, right? But if there was, then
+that would be the way to do shifted callbacks. (Fuzzy, tired, but something that
+allows you to shift with a lot of verbiage can be reduced for events.)
+
+Finally, it may be the case that shifting doesn't count, you have event hanlers,
+or else you have callbacks, so whatever you use to indicate an event indicates
+shifting.
