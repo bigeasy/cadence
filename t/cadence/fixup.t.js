@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(3, function (step, equal, deepEqual) {
+require('proof')(4, function (step, equal, deepEqual) {
   var fs = require('fs'), cadence = require('../..');
 
   cadence(function (step) {
@@ -14,6 +14,28 @@ require('proof')(3, function (step, equal, deepEqual) {
     deepEqual(items, -1, 'fixup cadence');
 
   })(step());
+
+  // This triggers a test of error handling when the fixup cadence errors,
+  // whether the next object in the sub cadence recieves the error.
+  cadence(function (step) {
+
+    step(function () {
+
+      echo(1, step(step, function (number) {
+         step(new Error('errored'));
+      }));
+
+    }, function () {
+
+      throw new Error('should not be called');
+
+    });
+
+  })(function (error) {
+
+    equal(error.message, 'errored', 'inner error');
+
+  });
 
   cadence(function (step) {
 

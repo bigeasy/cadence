@@ -142,7 +142,7 @@ function cadence () {
           invocation.count++;
           begin.call(invocation.self, callback.cadence, callback.results[index], function (error, result) {
             if (error) {
-              thrown(invocation, error);
+              thrown(invocation, error, callback);
             } else {
               callback.results[index] = __slice.call(arguments, 1);
             }
