@@ -1288,7 +1288,7 @@ going to do scalar errors, so now I suppose we will do array errors, but we'll
 only exit on the first one.
 
 Bletch. Everything everywhere is a stream forever. I suppose, before I can
-consider how to capture event emitter problems, I need to find a langauge to say
+consider how to capture event emitter problems, I need to find a language to say
 that we want to shift the result, or that there will be no error.
 
 ```javascript
@@ -1308,7 +1308,7 @@ cadence(function (step) {
   step(function () {
     ee.on('drain', step([null, +(new Date)]));
   }, function (time) {
-    return time; 
+    return time;
   });
 });
 ```
@@ -1728,11 +1728,11 @@ Timezone.
 Of course, `null` is ambiguous. Need to add arity to indicate a shift instead of
 an early return.
 
-Also, note that there is no way to do fix-up cadecnes for shifted callbacks,
+Also, note that there is no way to do fix-up cadences for shifted callbacks,
 right? Or if there is, then, well, there isn't, right? But if there was, then
 that would be the way to do shifted callbacks. (Fuzzy, tired, but something that
 allows you to shift with a lot of verbiage can be reduced for events.)
 
-Finally, it may be the case that shifting doesn't count, you have event hanlers,
-or else you have callbacks, so whatever you use to indicate an event indicates
-shifting.
+Finally, it may be the case that shifting doesn't count, you have event
+handlers, or else you have callbacks, so whatever you use to indicate an event
+indicates shifting.
