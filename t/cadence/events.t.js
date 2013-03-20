@@ -1,21 +1,40 @@
 #!/usr/bin/env node
 
-require('proof')(1, function (equal, ok, step, deepEqual) {
-  return ok(1);
+require('proof')(2, function (equal, ok, step, deepEqual) {
+  var  EventEmitter = require('events').EventEmitter,
+       ee = new EventEmitter();
+       cadence = require('../..');
 
-  var emitter, EventEmitter = require('events').EventEmitter, cadence = require('../..');
 
-  emitter = new EventEmitter();
+  cadence(function (step, ee) {
+    step(function () {
+      var on = step('on');
+      on(ee, 'data', []);
+      on(ee, 'end');
+    }, function (data) {
+      deepEqual(data, [ 1, 2, 3 ], 'events');
+    });
+  })(ee, step());
 
-  cadence(function (emitter, step) {
-    step(emitter).on('data').once('end');
-  }, function (data) {
-    deepEqual(data, [ 1, 2, 3 ], 'on');
-  })(emitter, step());
+  ee.emit('data', 1);
+  ee.emit('data', 2);
+  ee.emit('data', 3);
 
-  emitter.emit('data', 1);
-  emitter.emit('data', 2);
-  emitter.emit('data', 3);
+  ee.emit('end');
 
-  emitter.emit('end');
+  cadence(function (step, ee) {
+    step(function () {
+      var on = step('on', ee);
+      on('data', []);
+      on('end');
+    }, function (data) {
+      deepEqual(data, [ 1, 2, 3 ], 'events bound to specific object');
+    });
+  })(ee, step());
+
+  ee.emit('data', 1);
+  ee.emit('data', 2);
+  ee.emit('data', 3);
+
+  ee.emit('end');
 });

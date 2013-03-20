@@ -7,7 +7,7 @@ require('proof')(1, function (equal) {
 
   cadence(function (step) {
 
-    step('a', 1);
+    step(1, 'a', 1);
 
   })(function (error) {
     equal(error.message, 'invalid arguments');

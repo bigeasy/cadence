@@ -1,12 +1,12 @@
 var __slice = [].slice;
-
+/*
 function die () {
   console.log.apply(console, __slice.call(arguments, 0));
   process.exit(1);
 }
 
 function say () { console.log.apply(console, __slice.call(arguments, 0)) }
-
+*/
 function cadence () {
   var steps = __slice.call(arguments, 0);
 
@@ -51,7 +51,7 @@ function cadence () {
   function async () { return _async.apply(null, arguments) }
 
   function _async() {
-    var vargs = __slice.call(arguments, 0), i = -1, step, original;
+    var vargs = __slice.call(arguments, 0), i = -1;
 
     // The caller as invoked the async function directly as an explicit early
     // return to exit the entire cadence.
@@ -67,10 +67,8 @@ function cadence () {
 
     // Search for the function in the current cadence.
     if (vargs.length == 1 && typeof vargs[0] == "function") {
-      original = vargs[0].original || vargs[0];
-      for (i = invocations[0].args[0].length - 1; step = invocations[0].args[0][i]; i--) {
-        if (original === step || original === step.original) break;
-      }
+      for (i = invocations[0].args[0].length - 1;
+           i > -1 && invocations[0].args[0][i] !== vargs[0]; i--) {}
     }
 
     // If we find the function in the current cadence, we set the index of
@@ -82,11 +80,15 @@ function cadence () {
     }
 
     var callback = { errors: [], results: [] };
-    invocations[0].callbacks.push(callback);
-
     var fixup;
     if (fixup = (vargs[0] === async)) {
       vargs.shift();
+    }
+    if (typeof vargs[0] == "string") {
+      callback.event = vargs.shift();
+    }
+    if (typeof vargs[0] == "object" && !Array.isArray(vargs[0])) {
+      callback.target = vargs.shift();
     }
     if (!isNaN(parseInt(vargs[0], 10))) {
       callback.arity = +(vargs.shift());
@@ -101,6 +103,8 @@ function cadence () {
       callback.shifted = !! vargs.shift();
     }
     callback.cadence = vargs;
+    if (callback.event) return createEvent(invocations[0], callback);
+    invocations[0].callbacks.push(callback);
     if (vargs.length) {
       if (!vargs.every(function (arg) { return typeof arg == "function" })) {
         throw new Error("invalid arguments");
@@ -111,6 +115,7 @@ function cadence () {
     return createCallback(invocations[0], callback, 0);
   }
 
+  // Create a sub-cadence.
   function createCadence (invocation, callback) {
     var index = 0;
     callback.run = ! callback.arrayed;
@@ -120,6 +125,7 @@ function cadence () {
     }
   }
 
+  // Create an an arryed callback.
   function createArray (invocation, callback) {
     var index = 0;
     return function () {
@@ -132,6 +138,32 @@ function cadence () {
     }
   }
 
+  // Create an event callback.
+  function createEvent (invocation, prototype) {
+    return function () {
+      var vargs = __slice.call(arguments),
+          callback = Object.create(prototype, { errors: { value: [] }, results: { value: [] } }),
+          target = callback.target, event, fn;
+      invocations[0].callbacks.push(callback);
+      if (vargs[0] && vargs[0][callback.event]) {
+        target = vargs.shift();
+      }
+      if (typeof vargs[0] == "string") {
+        event = vargs.shift();
+      } else {
+        throw new Error("event name required");
+      }
+      callback.shifted = event != "error";
+      fn = Array.isArray(vargs[0]) ? createArray(invocation, callback)([])
+                                   : createCallback(invocation, callback, 0);
+      if (target) {
+        target[callback.event](event, fn);
+      }
+      return fn;
+    }
+  }
+
+  // Create a scalar callback.
   function createCallback (invocation, callback, index) {
     if (-1 < index) invocation.count++;
     return function () {
@@ -170,6 +202,7 @@ function cadence () {
     }
   }
 
+  // Run a sub-cadence.
   function runSubCadence (invocation, callback, index, vargs) {
     delete callback.run;
     var steps = callback.cadence;
