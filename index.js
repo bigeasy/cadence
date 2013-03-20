@@ -1,12 +1,12 @@
 var __slice = [].slice;
-
+/*
 function die () {
   console.log.apply(console, __slice.call(arguments, 0));
   process.exit(1);
 }
 
 function say () { console.log.apply(console, __slice.call(arguments, 0)) }
-
+*/
 function cadence () {
   var steps = __slice.call(arguments, 0);
 
@@ -51,7 +51,7 @@ function cadence () {
   function async () { return _async.apply(null, arguments) }
 
   function _async() {
-    var vargs = __slice.call(arguments, 0), i = -1, step, original;
+    var vargs = __slice.call(arguments, 0), i = -1;
 
     // The caller as invoked the async function directly as an explicit early
     // return to exit the entire cadence.
@@ -67,10 +67,8 @@ function cadence () {
 
     // Search for the function in the current cadence.
     if (vargs.length == 1 && typeof vargs[0] == "function") {
-      original = vargs[0].original || vargs[0];
-      for (i = invocations[0].args[0].length - 1; step = invocations[0].args[0][i]; i--) {
-        if (original === step || original === step.original) break;
-      }
+      for (i = invocations[0].args[0].length - 1;
+           i > -1 && invocations[0].args[0][i] !== vargs[0]; i--) {}
     }
 
     // If we find the function in the current cadence, we set the index of
