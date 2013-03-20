@@ -80,11 +80,15 @@ function cadence () {
     }
 
     var callback = { errors: [], results: [] };
-    invocations[0].callbacks.push(callback);
-
     var fixup;
     if (fixup = (vargs[0] === async)) {
       vargs.shift();
+    }
+    if (typeof vargs[0] == "string") {
+      callback.event = vargs.shift();
+    }
+    if (typeof vargs[0] == "object" && !Array.isArray(vargs[0])) {
+      callback.target = vargs.shift();
     }
     if (!isNaN(parseInt(vargs[0], 10))) {
       callback.arity = +(vargs.shift());
@@ -99,6 +103,8 @@ function cadence () {
       callback.shifted = !! vargs.shift();
     }
     callback.cadence = vargs;
+    if (callback.event) return createEvent(invocations[0], callback);
+    invocations[0].callbacks.push(callback);
     if (vargs.length) {
       if (!vargs.every(function (arg) { return typeof arg == "function" })) {
         throw new Error("invalid arguments");
@@ -129,6 +135,31 @@ function cadence () {
         index = -2;
       }
       return createCallback(invocation, callback, index++);
+    }
+  }
+
+  // Create an event callback.
+  function createEvent (invocation, prototype) {
+    return function () {
+      var vargs = __slice.call(arguments),
+          callback = Object.create(prototype, { errors: { value: [] }, results: { value: [] } }),
+          target = callback.target, event, fn;
+      invocations[0].callbacks.push(callback);
+      if (vargs[0] && vargs[0][callback.event]) {
+        target = vargs.shift();
+      }
+      if (typeof vargs[0] == "string") {
+        event = vargs.shift();
+      } else {
+        throw new Error("event name required");
+      }
+      callback.shifted = event != "error";
+      fn = Array.isArray(vargs[0]) ? createArray(invocation, callback)([])
+                                   : createCallback(invocation, callback, 0);
+      if (target) {
+        target[callback.event](event, fn);
+      }
+      return fn;
     }
   }
 
