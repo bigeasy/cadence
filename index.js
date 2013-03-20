@@ -109,6 +109,7 @@ function cadence () {
     return createCallback(invocations[0], callback, 0);
   }
 
+  // Create a sub-cadence.
   function createCadence (invocation, callback) {
     var index = 0;
     callback.run = ! callback.arrayed;
@@ -118,6 +119,7 @@ function cadence () {
     }
   }
 
+  // Create an an arryed callback.
   function createArray (invocation, callback) {
     var index = 0;
     return function () {
@@ -130,6 +132,7 @@ function cadence () {
     }
   }
 
+  // Create a scalar callback.
   function createCallback (invocation, callback, index) {
     if (-1 < index) invocation.count++;
     return function () {
@@ -168,6 +171,7 @@ function cadence () {
     }
   }
 
+  // Run a sub-cadence.
   function runSubCadence (invocation, callback, index, vargs) {
     delete callback.run;
     var steps = callback.cadence;
