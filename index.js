@@ -96,6 +96,10 @@ function cadence () {
     if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
       callback.arrayed = !! vargs.shift();
     }
+    var zeroToMany;
+    if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
+      zeroToMany = !! vargs.shift();
+    }
     if (Error === vargs[0]) {
       invocations[0].catchable = callback.catchable = !! vargs.shift();
     }
@@ -111,7 +115,9 @@ function cadence () {
       }
       if (!fixup) return createCadence(invocations[0], callback);
     }
-    if (callback.arrayed) return createArray(invocations[0], callback);
+    if (callback.arrayed)
+      if (zeroToMany) return createCallback(invocations[0], callback, -1);
+      else return createArray(invocations[0], callback);
     return createCallback(invocations[0], callback, 0);
   }
 
@@ -130,10 +136,6 @@ function cadence () {
     var index = 0;
     return function () {
       var vargs = __slice.call(arguments);
-      if (index < 0) throw new Error("zero-to-many already determined");
-      if (Array.isArray(vargs[0])) {
-        index = -2;
-      }
       return createCallback(invocation, callback, index++);
     }
   }
@@ -167,7 +169,7 @@ function cadence () {
       }
       callback.shifted = event != "error";
       fn = callback.arrayed
-          ? createArray(invocation, callback)([])
+          ? createCallback(invocation, callback, -1)
           : createCallback(invocation, callback, 0);
       while (targets.length) {
         targets.shift()[callback.event](event, fn);
