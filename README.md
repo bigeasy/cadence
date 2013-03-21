@@ -162,6 +162,13 @@ cadence(function (step) {
 
 Changes for each release.
 
+### Version 0.0.15
+
+ * Handle errors from sub-cadences. #79.
+ * Specify zero-to-many in `step` constructor, not in arry constructor. #81.
+ * Tidy `.gitignore`.
+ * Set arity and specify arity of event handlers. #91.
+
 ### Version 0.0.14
 
 Thu Mar 21 05:16:29 UTC 2013
