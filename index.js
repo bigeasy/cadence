@@ -156,8 +156,17 @@ function cadence () {
       } else {
         throw new Error("event name required");
       }
+      if (Array.isArray(vargs[0])) {
+        callback.arrayed = !! vargs.shift();
+      } else if (event == "error") {
+        callback.arrayed = true;
+        callback.arity = 0;
+      }
+      if (!isNaN(+(vargs[0]))) {
+        callback.arity = +(vargs.shift());
+      }
       callback.shifted = event != "error";
-      fn = Array.isArray(vargs[0]) || event == "error"
+      fn = callback.arrayed
           ? createArray(invocation, callback)([])
           : createCallback(invocation, callback, 0);
       while (targets.length) {

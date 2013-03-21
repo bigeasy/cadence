@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(4, function (equal, ok, step, deepEqual) {
+require('proof')(8, function (equal, ok, step, deepEqual) {
   var  EventEmitter = require('events').EventEmitter,
        ee = new EventEmitter();
        cadence = require('../..');
@@ -58,6 +58,32 @@ require('proof')(4, function (equal, ok, step, deepEqual) {
       equal(end, 'ended', 'errors ignored');
     });
   })([ ee, new EventEmitter, new EventEmitter ], step());
+
+  ee.emit('end', 'ended');
+
+  cadence(function (step, ee) {
+    step(function () {
+      var on = step('on', ee);
+      on('data', []);
+      on('end');
+    }, function (data, ended) {
+      deepEqual(data, [], 'arrayed event with no values');
+      equal(ended, 'ended', 'arrayed event with no values ended');
+    });
+  })(ee, step());
+
+  ee.emit('end', 'ended');
+
+  cadence(function (step, ee) {
+    step(function () {
+      var on = step('on', ee);
+      on('data', [], 2);
+      on('end');
+    }, function (first, second, ended) {
+      deepEqual(second, [], 'arrayed event with specific arity');
+      equal(ended, 'ended', 'arrayed event with specific arity ended');
+    });
+  })(ee, step());
 
   ee.emit('end', 'ended');
 });
