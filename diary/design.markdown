@@ -1720,6 +1720,37 @@ Bad example because there are only two steps. I'm not sure there are good
 examples. I'll have to look in practice, I doubt there are going to be many
 opportunities to skip creating a sub-cadence immediately.
 
+## Extraneous Callbacks
+
+Not sure what to do about extraneous callbacks, callbacks that occur after the
+step has finished. One would think that the right thing to do would be to throw
+an exception, but what if one callback has errored, while others are still
+outstanding?
+
+Let's say your reading a file and querying a database, but the network to the
+database is down? The database returns with an error, essentially ending the
+step, but the file is still pending. The user has established that the next step
+needs both the query results and the file contents. They're only getting half
+that. The database error ruins the step.
+
+The user might handle the error in the callback given to the whole cadence,
+handle it by displaying an error page, but now the file returns and we through a
+process terminating exception.
+
+The filpside is that the file might also error. Only the database error is
+reported, so the file read fails silently. The administrator reconnects the
+network, and now file system problems appear. Why couldn't the administrator
+know about all the problems before setting out to fix things? Why must these
+reports come in one after another?
+
+I'll assume that if the developer wants step by step error reporting, that they
+will perform these actions step by step. The problem is this: there is only a
+scalar conduit for errors, where actions that create errors may be occuring in
+parallel. I've decided that I don't want to create an error array, since I won't
+know when to stop listening for errors, that it will be a first unhandled error
+is the return value of the cadence, then cadence will hang around and swallow
+your callbacks for you, which is nice enough, isn't it?
+
 ## Inbox
 
 Notes on returning the step function. Notes on event handlers, if you have any.
