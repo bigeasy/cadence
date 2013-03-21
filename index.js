@@ -143,10 +143,13 @@ function cadence () {
     return function () {
       var vargs = __slice.call(arguments),
           callback = Object.create(prototype, { errors: { value: [] }, results: { value: [] } }),
-          target = callback.target, event, fn;
+          targets = [], event, fn;
       invocations[0].callbacks.push(callback);
-      if (vargs[0] && vargs[0][callback.event]) {
-        target = vargs.shift();
+      while (vargs[0] && vargs[0][callback.event]) {
+        targets.push(vargs.shift());
+      }
+      if (!targets.length && callback.target) {
+        targets.push(callback.target);
       }
       if (typeof vargs[0] == "string") {
         event = vargs.shift();
@@ -154,10 +157,11 @@ function cadence () {
         throw new Error("event name required");
       }
       callback.shifted = event != "error";
-      fn = Array.isArray(vargs[0]) ? createArray(invocation, callback)([])
-                                   : createCallback(invocation, callback, 0);
-      if (target) {
-        target[callback.event](event, fn);
+      fn = Array.isArray(vargs[0]) || event == "error"
+          ? createArray(invocation, callback)([])
+          : createCallback(invocation, callback, 0);
+      while (targets.length) {
+        targets.shift()[callback.event](event, fn);
       }
       return fn;
     }
