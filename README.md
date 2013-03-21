@@ -162,6 +162,12 @@ cadence(function (step) {
 
 Changes for each release.
 
+### Version 0.0.14
+
+ * Handle error events. #89. #83.
+ * Use strings to indicate an event handler. #63. #50.
+ * Shift arguments for callbacks with no error message. #85.
+
 ### Version 0.0.13
 
 Sun Mar 17 06:24:14 UTC 2013
