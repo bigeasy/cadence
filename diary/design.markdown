@@ -1316,6 +1316,27 @@ cadence(function (step) {
 No good reason to do that, though. You could just as easily add a variable to
 the enclosing scope.
 
+Addendum...
+
+For events, I'm wondering if there isn't a way of externalizing the function?
+
+```javascript
+cadence(function (step, ee) {
+  var event = step(Array.prototype.shift); // It can be verbose!
+  step(function () {
+    ee.on('exit', event());
+    ee.stdout.on('data', event([]));
+    ee.stderr.on('data', event([]));
+    event('on', 'error', [])(ee, ee.stdout, ee.stderr);
+  }, function (code, signal, stdout, stderr) {
+    return !signal && code == 0;
+  });
+});
+```
+
+That doesn't look as bad. The special event function wraps the call to `step`
+and can be used anywhere. Like `step` it is a constructor function.
+
 ## Reentrancy
 
 Something like this, where `sub` is called and a new state is created. The
