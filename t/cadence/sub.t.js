@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(6, function (step, deepEqual) {
+require('proof')(7, function (step, deepEqual) {
   var fs = require('fs'), cadence = require('../..');
 
   cadence(function (step) {
@@ -30,6 +30,18 @@ require('proof')(6, function (step, deepEqual) {
     deepEqual(error.message, 'errored', 'error');
 
   });
+
+  cadence(function (step) {
+
+    step(function () {
+      step(Error, function () {
+        step()(new Error('errored'));
+      });
+    }, function (error) {
+      deepEqual(error.message, 'errored', 'error caught');
+    });
+
+  })(step());
 
   cadence(function (step) {
 
