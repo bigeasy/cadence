@@ -1,4 +1,4 @@
-# Cadence [![Build Status](https://secure.travis-ci.org/bigeasy/cadence.png?branch=master)](http://travis-ci.org/bigeasy/cadence)
+# Cadence [![Build Status](https://secure.travis-ci.org/bigeasy/cadence.png?branch=master)](http://travis-ci.org/bigeasy/cadence) [![NPM version](https://badge.fury.io/js/Percolator.png)](http://badge.fury.io/js/Percolator)
 
 A Swiss Army asynchronous control flow function for JavaScript.
 
