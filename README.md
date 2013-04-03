@@ -100,7 +100,7 @@ deleteIf(__filename, empty, function (error) { if (error) throw error });
 
 We test to see if the error is `ENOENT`. If not, we have a real problem, so we
 throw the error. The throw is caught and forwarded to the callback that invoked
-the cadenece function.
+the cadence function.
 
 If the error is `ENOENT`, we exit early by calling the step function directly as
 a if it were itself an error/result callback, passing `null` to indicate no
