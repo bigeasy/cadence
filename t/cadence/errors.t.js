@@ -8,36 +8,45 @@ require('proof')(5, function (equal, ok) {
 
   cadence(function () {
     throw new Error("thrown");
-  }, function (error) {
+  })(function (error) {
     equal(error.message, "thrown", "intercepted throw");
-  })();
+  });
 
-  cadence(function (async) {
-    async()(new Error("handed"));
+  cadence(function (step) {
+    step(Error)(new Error("handed"));
   }, function (error) {
     equal(error.message, "handed", "intercepted passed along");
   })();
 
-  cadence(function (async) {
-    async()();
+  cadence(function (step) {
+    step(Error)();
   }, function (error) {
     throw new Error("should not be called");
   }, function () {
     ok(true, "no error");
   })();
-
-  cadence(function (async) {
-    async()(new Error(1));
-    async()(new Error(2));
-    async()();
+/*
+    **TODO**: Rethink.
+  cadence(function (step) {
+    step()(new Error(1));
+    step()(new Error(2));
+    step()();
   }, function (errors) {
     equal(errors.length, 2, "two errors");
   })();
-  
-  cadence(function (async) {
-    async()(null, 1);
+ */
+  cadence(function (step) {
+    step(Error)(null, 1);
   }, function (error) {
   }, function (number) {
-    equal(number, 1, "no error");
+    equal(number, 1, "no error with value");
   })();
+
+  try {
+    cadence(function () {
+      throw new Error('exceptional');
+    })();
+  } catch (e) {
+    equal(e.message, 'exceptional', 'default error handler');
+  }
 });

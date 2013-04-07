@@ -13,9 +13,9 @@ require('proof')(2, function (equal) {
     equal(error.message, "thrown", "handled throw");
   });
 
-  cadence(function (async) {
+  cadence(function (step) {
 
-    async()(new Error("handed"));
+    step()(new Error("handed"));
 
   })(function (error) {
     equal(error.message, "handed", "unhandled error");

@@ -1,18 +1,18 @@
 { "name": "cadence"
 , "description": "A Swiss Army asynchronous control flow function for JavaScript."
 , "author": "Alan Gutierrez <alan@prettyrobots.com>"
-, "version": "0.0.6"
-, "keywords": [ "async", "asynchronous", "control", "flow" ]
+, "version": "0.0.15"
+, "keywords": [ "async", "asynchronous", "control", "flow", "loop", "micro-js", "step", "callback"  ]
 , "licenses": [
   { "type": "MIT"
   , "url": "http://github.com/bigeasy/cadence/raw/master/LICENSE"
   }]
 , "homepage": "http://bigeasy.github.com/cadence"
 , "repository": "git://github.com/bigeasy/cadence.git"
-, "scripts" : { "test": "proof platform win32 && proof */*/*.t || t/test" }
+, "scripts" : { "test": "proof platform win32 && proof */*/*.t.js || t/test" }
 , "devDependencies":
-  { "proof": "0.0.14"
-  , "uglify-js": ">=0"
+  { "proof": "0.0.25"
+  , "uglify-js": "~1.3"
   }
 , "dependencies": {}
 }

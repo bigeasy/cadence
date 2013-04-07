@@ -1,45 +1,65 @@
-# Cadence [![Build Status](https://secure.travis-ci.org/bigeasy/cadence.png?branch=master)](http://travis-ci.org/bigeasy/cadence)
+# Cadence [![Build Status](https://secure.travis-ci.org/bigeasy/cadence.png?branch=master)](http://travis-ci.org/bigeasy/cadence) [![NPM version](https://badge.fury.io/js/cadence.png)](http://badge.fury.io/js/cadence)
 
-A Swiss Army asynchronous control flow function for JavaScript.
+A Swiss Army asynchronous control flow function builder for JavaScript.
+
+Cadence is a function builder. It simplifies the writing of asynchronous
+functions of that accept and  error/result callback using a domain specific
+language of sorts.
 
 ```javascript
+// Use Cadence.
 var cadence = require('cadence'), fs = require('fs');
 
-cadence(function (async) {
+// Create an asynchronous function.
+var cat = cadence(function (step) {
+  step(function () {
 
-  fs.readFile(__filename, 'utf8', async());
+    fs.readFile(__filename, 'utf8', step());
 
-}, function (body) {
+  }, function (body) {
 
-  console.log(body);
+    console.log(body);
 
-})();
+  });
+})
+
+// Use it in your program.
+cat(function (error) { if (error) throw error });
 ```
 
-Cadence takes a series of functions and runs them in serial. We call the series
-of functions a ***cadence***. We call an individual function in a cadence a
-***step***.
+You create a function by passing a function to `cadence` that creates cadences.
 
-Cadence is a function generator that creates an asynchronous function that
-accepts a conventional Node.js error, results callback function. You can then
-use the generated function anywhere in your code.
+We call the series of functions a ***cadence***. We call an individual function
+in a cadence a ***step***. We use the `step` function to define cadences and
+create the callbacks that will take us from one step to another.
+
+The functions in a cadences are run in serial. A step inside a cadence can
+contain a sub-cadence. We can run multiple sub-cadences in parallel. With this,
+you've got your serial and your parallel, and you mix or match to create the
+asynchronous program you want to run.
+
+### Accepting Arguments
+
+Here's an example of a function built by Cadence that accepts arguments.
 
 ```javascript
-var cadance = require('cadence')
-  , fs = require('fs')
-  ;
+// Use Cadence.
+var cadance = require('cadence'), fs = require('fs');
 
-var deleteIf = cadence(function (async, file, condition) {
-  fs.stat(file, async());
-}, function (async, stat) {
-  if (condition(stat)) fs.unlink(async());
+// Delete a file if the condition is true.
+var deleteIf = cadence(function (step, file, condition) {
+  step(function () {
+    fs.stat(file, step());
+  }, function (step, stat) {
+    if (condition(stat)) fs.unlink(step());
+  });
 });
 
+// Test to see if a file is empty.
 function empty (stat) { return stat.size == 0 }
 
-deleteIf(__filename, empty, function (error) {
-  if (error) console.log(error);
-});
+// Delete a file if it is empty.
+deleteIf(__filename, empty, function (error) { if (error) throw error });
 ```
 
 In the above example we create a function that will asynchronously stat a file,
@@ -47,38 +67,44 @@ then if a test function passes, it will asynchronously delete the file. We
 assign our cadence to a variable named `deleteIf`. We can now call `deleteIf`
 providing a standard issue Node.js error reporting callback.
 
+### Catching Asynchronous Errors
+
 Let's extend our `deleteIf` function. Let's say that if the file doesn't exist,
-we ignore the error raised when we stat the file. If we add a step function that
-takes `error` as it's first argument, it is called only if an error has occured
-in the previous step.
+we ignore the error raised when we stat the file. If we pass `Error` to our
+`step` constructor, the next function in an error handler function. The error
+handler function will be called with the `error` as the first argument if an
+error is returned. If there is no error, the error handler function is skipped.
 
 ```javascript
-var cadance = require('cadence')
-  , fs = require('fs')
-  ;
+// Use Cadence.
+var cadance = require('cadence'), fs = require('fs');
 
-var deleteIf = cadence(function (async, file, condition) {
-  fs.stat(file, async());
-}, function (error) {
-  if (error.code != "ENOENT") throw error;
-}, function (async, stat) {
-  if (stat && condition(stat)) fs.unlink(async());
+// Delete a file if it exists and the condition is true.
+var deleteIf = cadence(function (step, file, condition) {
+  step(function () {
+    fs.stat(file, step(Error));
+  }, function (error) {
+    if (error.code != "ENOENT") throw error;
+    else step(null);
+  }, function (step, stat) {
+    if (stat && condition(stat)) fs.unlink(step());
+  });
 });
 
+// Test to see if a file is empty.
 function empty (stat) { return stat.size == 0 }
 
-deleteIf(__filename, empty, function (error) {
-  if (error) console.log(error);
-});
+// Delete a file if it exists and is empty.
+deleteIf(__filename, empty, function (error) { if (error) throw error });
 ```
 
 We test to see if the error is `ENOENT`. If not, we have a real problem, so we
-throw the error. The cadence stops and the callback is called with error. The
-error is `ENOENT`, we move onto the next step.
+throw the error. The throw is caught and forwarded to the callback that invoked
+the cadence function.
 
-If there is no error, the error handling step is not called, so we do not have
-to check to see if `error` is null. We do need to see if `stat` is null,
-however.
+If the error is `ENOENT`, we exit early by calling the step function directly as
+a if it were itself an error/result callback, passing `null` to indicate no
+error.
 
 ## Working with `EventEmitter`s
 
@@ -89,11 +115,11 @@ Here is a unit test for working with `EventEmitter` illustrating the
 var cadence = require('cadence'), event = require('event')
   , emitter = new event.EventEmitter();
 
-cadence(function (emitter, async) {
-  async(function () {
-    async(emitter).once('end');
+cadence(function (emitter, step) {
+  step(function () {
+    step(emitter).once('end');
   }, function (end) {
-    assert.equal(end, 'done'); 
+    assert.equal(end, 'done');
   });
 })(emitter);
 
@@ -112,11 +138,11 @@ in the cadence.
 var cadence = require('cadence'), event = require('event')
   , emitter = new event.EventEmitter();
 
-cadence(function (emitter, async) {
-  async(function () {
-    async(emitter).once('end');
+cadence(function (emitter, step) {
+  step(function () {
+    step(emitter).once('end');
   }, function (data) {
-    assert.deepEqual(data, [ 1, 2, 3 ]); 
+    assert.deepEqual(data, [ 1, 2, 3 ]);
   });
 })(emitter);
 
@@ -139,11 +165,11 @@ into a log file for each host.
 ```javascript
 var cadence = require('cadence'), fs = require('fs');
 
-cadence(function (async) {
-  async(function () {
+cadence(function (step) {
+  step(function () {
     var readable = fs.readableStream(__dirname + '/logins.txt');
     readable.setEncoding('utf8');
-    async(readable).on('data').once('end');
+    step(readable).on('data').once('end');
   }, function (data) {
     var hosts = {};
     data.join('').split(/\n/).foreach(function (line) {
@@ -153,7 +179,7 @@ cadence(function (async) {
     for (var host in hosts) {
       var writable = fs.writableStream(__dirname + '/' + host + '.log');
       writable.end(hosts[host].join('\n') + '\n');
-      async(writable).once('drain');
+      step(writable).once('drain');
     }
   });
 })();
@@ -163,22 +189,103 @@ cadence(function (async) {
 
 Changes for each release.
 
+### Version 0.0.15
+
+Thu Mar 21 08:33:24 UTC 2013
+
+ * Handle errors from sub-cadences. #79.
+ * Specify zero-to-many in `step` constructor, not in arry constructor. #81.
+ * Tidy `.gitignore`.
+ * Set arity and specify arity of event handlers. #91.
+
+### Version 0.0.14
+
+Thu Mar 21 05:16:29 UTC 2013
+
+ * Handle error events. #89. #83.
+ * Use strings to indicate an event handler. #63. #50.
+ * Shift arguments for callbacks with no error message. #85.
+
+### Version 0.0.13
+
+Sun Mar 17 06:24:14 UTC 2013
+
+ * Check for error handler on fix-up cadence error. #88.
+ * Check for error handler on sub-cadence error. #86.
+ * Add contribution guide.
+ * Upgrade Proof to 0.0.23.
+
+### Version 0.0.12
+
+Sat Mar 16 05:35:06 UTC 2013
+
+ * Propagate `` this ``. #84.
+ * Use identity operator in check for early return. #82.
+ * Build `` callback `` object in ``` _async ```.
+ * Rename `arguments` property to `args`.
+ * Move sizes indent from `t/sizes` to `t/test`.
+ * More tests for fix-up cadences.
+ * Remove `if` statement to test for invoke callback. #66.
+ * Fix cadence return values. #76.
+ * Fix arity.
+ * Remove hidden context. #75.
+ * Remove timeouts. #80.
+ * Use `Error` to indicate subsequent error handler. #68.
+ * Remove wrap option. #78.
+ * Remove "use strict".
+ * Ensure reentrancy. #74.
+ * Remove underscore to indicate zero arity. #73.
+
+### Version 0.0.11
+
+Tue Mar 12 07:50:52 UTC 2013
+
+ *  Make default arity of scalars zero. #71.
+
+### Version 0.0.10
+
+Tue Mar 12 05:57:10 UTC 2013
+
+ * Drop support for parameter inferred plain callbacks. #70.
+ * Implement zero-to-many callback functions. #62.
+ * Spell check and tidy prose. #69. #65.
+ * Implement arrayed sub-cadences. #64.
+ * Implement fix-up cadences. #61.
+ * Fix snuggled parameters. #60.
+ * Created a design document in `design.markdown`.
+
+### Version 0.0.9
+
+Released: Sat Mar  9 04:06:57 UTC 2013
+
+ * New logic to specify order of parameters to subsequent function. #58.
+
+### Version 0.0.8
+
+Released: Mon Mar  4 06:56:26 UTC 2013
+
+ * Rename `async` function to `step`. #55.
+ * Exception when `step` arguments are invalid. #56.
+
 ### Version 0.0.7
 
-Released: Pending
+Released: Wed Feb 27 00:33:51 UTC 2013
 
+ * Step over to stop out of `async`. #47.
+ * Add `.js` suffix to test file names. #54.
+ * Update `t/sizes` and `t/test` to work with a POSIX shell.
  * Return `cadence` function directly instead of factory function. #49.
  * Moved `build` directory contents to `t`. #51.
  * Rename inner `cadence` function to `async`. #52.
  * Consume events from event emitters. #48.
- * An `_` underbar as a step function name means to disable argument inference.
-   #46. #25
+ * An `` _ `` underbar as a step function name means to disable argument
+   inference. #46. #25
 
 ### Version 0.0.6
 
-Relased: Fri Jul 13 16:27:39 UTC 2012
+Released: Fri Jul 13 16:27:39 UTC 2012
 
- * Flatten aguments to inner `cadence` unless first arg is null. #44.
+ * Flatten arguments to inner `cadence` unless first arg is null. #44.
 
 ### Version 0.0.5
 
@@ -218,7 +325,7 @@ Released: Sun Jul  8 04:28:52 UTC 2012
  * Return values to application. #14.
  * Early exit. #30.
  * Plain old callbacks. #29.
- * Immediate context assignment within step function. #28. 
+ * Immediate context assignment within step function. #28.
  * Application specified base context. #27.
  * Application specified alias for `cadence`. #16.
  * Error-only error handling step functions. #26.
@@ -242,4 +349,3 @@ Released: Tue Jul  3 19:17:38 UTC 2012
 
  * Build on Travis CI. #5.
  * Extract Cadence from Proof. #6.
->>>>>>> master
