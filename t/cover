@@ -2,7 +2,6 @@
 
 set -e
 
-npm install istanbul coveralls
 count=1;
 for file in $(find t -name \*.t.js); do
   node_modules/.bin/istanbul cover -x 't/**' $file > /dev/null 2>&1
