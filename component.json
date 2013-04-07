@@ -1,0 +1,10 @@
+{
+  "name": "cadence",
+  "version": "0.0.15",
+  "main": "index.js",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "components"
+  ]
+}
