@@ -32,7 +32,9 @@ if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
 
   t/cover
 
+  echo "submitting"
   node_modules/.bin/coveralls coverage/lcov.info
+  echo "submitted"
 fi
 
 echo ""
