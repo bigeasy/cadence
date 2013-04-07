@@ -9,6 +9,8 @@ for file in $(find t -name \*.t.js); do
   count=$(expr $count + 1)
 done
 
+cp convertLcovToCoveralls.js node_modules/coveralls/lib
+
 node_modules/.bin/istanbul report --root coverage --dir coverage  --format lcovonly  
 
 exit 0
