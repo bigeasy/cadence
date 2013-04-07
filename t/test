@@ -30,17 +30,9 @@ if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
 
   (proof run t/*/*.t.js | tee .proof.out | proof progress) || (proof errors < .proof.out) || exit 1
 
-  ulimit -n 4092
+  t/cover
 
-  rm -rf coverage
-
-  npm install istanbul node-coveralls
-  count=1;
-  for file in $(find t -name \*.t.js); do
-    node_modules/.bin/istanbul cover -x 't/**' $file
-    mv coverage/coverage.json coverage/coverage$count.json
-    count=$(expr $count + 1)
-  done
+  node_modules/.bin/coveralls < coverage/lcov.info
 fi
 
 echo ""
