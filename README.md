@@ -1,4 +1,4 @@
-# Cadence [![Build Status](https://secure.travis-ci.org/bigeasy/cadence.png?branch=master)](http://travis-ci.org/bigeasy/cadence) [![NPM version](https://badge.fury.io/js/cadence.png)](http://badge.fury.io/js/cadence)
+# Cadence [![Build Status](https://secure.travis-ci.org/bigeasy/cadence.png?branch=master)](http://travis-ci.org/bigeasy/cadence) [![Coverage Status](https://coveralls.io/repos/bigeasy/cadence/badge.png?branch=master)](https://coveralls.io/r/bigeasy/cadence) [![NPM version](https://badge.fury.io/js/cadence.png)](http://badge.fury.io/js/cadence)
 
 A Swiss Army asynchronous control flow function builder for JavaScript.
 
@@ -106,24 +106,35 @@ If the error is `ENOENT`, we exit early by calling the step function directly as
 a if it were itself an error/result callback, passing `null` to indicate no
 error.
 
-## Working with `EventEmitter`s
+## Working with Events and `` EventEmittter ``
 
+There are times when our API doesn't want us to give it a Node.js style
+`error, result` callback. When working with DOM events or jQuery in the browser
+or `` EventEmitter `` we are generally going to need two types of callbacks, an
+event handling callback that accepts the result, plus an error handling callback
+that handles an error, but only if there is an error.
+
+When we want to handle events like this, we need create an event 
 Here is a unit test for working with `EventEmitter` illustrating the
 `once` handler.
 
 ```javascript
-var cadence = require('cadence'), event = require('event')
-  , emitter = new event.EventEmitter();
+var event = require('event'),
+    assert = require('assert'),
+    cadence = require('cadence'),
+    ee = new event.EventEmitter();
 
-cadence(function (emitter, step) {
+cadence(function (step, ee) {
+  var event = step([].shift);
   step(function () {
-    step(emitter).once('end');
+    ee.on('end', event());
+    ee.on('error', event([], 0));
   }, function (end) {
     assert.equal(end, 'done');
   });
-})(emitter);
+})(ee);
 
-emitter.emit('end', 'done');
+ee.emit('end', 'done');
 ```
 
 When you invoke `once` an inverse future is created that collects the
@@ -135,8 +146,9 @@ Unlike the `once` handler, the `on` handler does not block the next step
 in the cadence.
 
 ```javascript
-var cadence = require('cadence'), event = require('event')
-  , emitter = new event.EventEmitter();
+var cadence = require('cadence'),
+    event = require('event'),
+    emitter = new event.EventEmitter();
 
 cadence(function (emitter, step) {
   step(function () {
