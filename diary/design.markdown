@@ -1751,6 +1751,83 @@ know when to stop listening for errors, that it will be a first unhandled error
 is the return value of the cadence, then cadence will hang around and swallow
 your callbacks for you, which is nice enough, isn't it?
 
+## Events or Shift?
+
+There is a strong desire to avoid method chaining. I've thought that I could add
+a `shift` method to the function, which would be like a bind method, and not
+terribly un-javascript like. It would do one thing only, shift that expected
+error off of the function signature. It could be called `shift`, or it could be
+called `event`.
+
+Is the signature of the callback a separate part of the declaration? If so, if
+we are using this means to shift the error, shouldn't we also use it to define
+the arity of the function?
+
+```javascript
+cadence(function (step, ee) {
+  step(function () {
+    ee.on('end', step()(1, 1));
+    // or..
+    ee.on('end', step()(-1, 1));
+  });
+});
+```
+
+We go back to being sneaky, because we know that the first argument is going to
+be an `Error` always, and if anyone is returning a number, then they are silly.
+
+They might be returning a string, though, that isn't quite a number. We can
+simply do `typeof error` and it must be `"number"`.
+
+But, then, are we defining arity, or are we shifting, or both? If we are
+shifting then we always have to say; `(-1)`. That first option is going to be
+ambiguous. When we're not working with Node.js, we're going to call that a lot.
+
+Are we going to be not working with Node.js often? Getting this out into the
+world, I'm going to have to see what it is like to write copious even handling
+code with Cadence.
+
+My concern is that if someone uses domains, they have to know the difference
+between system calls that swollow the error, and other callbacks that do not.
+
+Domains actually make Node.js worse. It is too bad that we couldn't stick with
+the one true pattern, the `(error, result)` callback. Not excited about domains,
+nor about streams, actually. Oh, no. I'm wrong. It doesn't shift the callback,
+it simply catches any exception thrown in the event loop.
+
+What is the state of exception handling in Cadence? Can it catch an exception
+thrown too soon?
+
+Getting back to it, I don't believe that `step()(-1)` is going be something that
+people will be happy to type, it might be easier to have `step` assign the error
+handler, which still makes sense, because I don't need a general purpose shift.
+
+```javascript
+cadence(function (step, ee) {
+  step(function () {
+    step('on', 'end', ee);
+    // versus...
+    ee.on('end', step()(-1));
+    // versus...
+    ee.on('end', step().shift());
+  });
+});
+```
+
+Then domains can make the error handling nausea go away.
+
+## Domains
+
+Thus, I'm not going to like Domains, but I need to support them to bring people
+to Cadence, which, if it is Domain friendly.
+
+Does Cadence look for a Domain object? That would make it particular to Node.js.
+
+## Exception Handling
+
+Probably need to go over all the places where exceptions can occur. The question
+is; does Cadence catch exceptions thrown by callbacks? Should it?
+
 ## Inbox
 
 Notes on returning the step function. Notes on event handlers, if you have any.
