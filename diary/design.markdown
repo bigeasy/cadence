@@ -1788,3 +1788,5 @@ allows you to shift with a lot of verbiage can be reduced for events.)
 Finally, it may be the case that shifting doesn't count, you have event
 handlers, or else you have callbacks, so whatever you use to indicate an event
 indicates shifting.
+
+Oh, cute; I was calling the return value from `step` an "inverse future."
