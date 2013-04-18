@@ -2,7 +2,7 @@
 
 require('proof')(9, function (equal, ok, step, deepEqual) {
   var  EventEmitter = require('events').EventEmitter,
-       ee = new EventEmitter();
+       ee = new EventEmitter(),
        cadence = require('../..');
 
   cadence(function (step, ee) {
