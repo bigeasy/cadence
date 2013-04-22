@@ -395,7 +395,7 @@ cadence(function (path, since, step) {
 
     });;
 
-})(".", +(new Date()) - 1000 * 60 * 10);
+})(".", +(new Date) - 1000 * 60 * 10);
 ```
 
 The problem with the above is this; what happens if `step()` is not called? In
