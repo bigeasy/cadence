@@ -1816,6 +1816,55 @@ cadence(function (step, ee) {
 
 Then domains can make the error handling nausea go away.
 
+---
+
+Now that I have a better understanding of Domains, I see that they exist to
+handle the problem of uncaught errors, and that most event systems are going to
+have some form of default error handler, so why fight it? Why try to duplicate
+that behavior for a single case?
+
+The problem that I'm trying to solve is the child process problem; creating a
+child process means assigning three error handlers, one for the process itself,
+then one each for stdout and stderr. Domains are supposed to make this problem
+go away. Domains are the solution provided by Node.js for the problem of a
+default error handler in an event system.
+
+My clever incantation, where I assign single error handler to three different
+objects, it obscures too much of what is going on, the method is now a string,
+the event is also a string, the method name comes before the object, or else the
+object comes before all the strings, `'error'` is special, etc..
+
+I'm leaning toward this...
+
+```javascript
+cadence(function (step, ee) {
+  ee.on('error', step.event([]));
+  var d = new Domain;
+  d.run(function () {
+    step(function () {
+      ee.on('data', step.event([]));
+      ee.on('end', step.event());
+    }, function (data) {
+      console.log(data);
+      ee.on('other', step.event());
+      ee.on('error', step.event([], Error));
+    }, function (error) {
+      if (error.message != 'never mind') step(error);
+    }, function (other) {
+      console.log(other);
+    });
+  });
+  d.on('error', step.event([]));
+});
+```
+
+An event is a special thing, breaking the callback pattern. It should not be
+specified using a sigil from the beastiary, but instead should have it's own
+name. Implementation uses step, but wrappers the result in some way.
+
+The `error, result` pattern is a pattern, but event indicates that we're leaving
+that pattern, performing a different sort of programming.
+
 ## Domains
 
 Thus, I'm not going to like Domains, but I need to support them to bring people
