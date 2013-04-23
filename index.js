@@ -169,8 +169,8 @@ function cadence () {
       }
       callback.shifted = event != "error";
       fn = callback.arrayed
-          ? createCallback(invocation, callback, -1)
-          : createCallback(invocation, callback, 0);
+          ? createCallback(invocations[0], callback, -1)
+          : createCallback(invocations[0], callback, 0);
       while (targets.length) {
         targets.shift()[callback.event](event, fn);
       }

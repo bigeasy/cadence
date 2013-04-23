@@ -6,8 +6,8 @@ require('proof')(9, function (equal, ok, step, deepEqual) {
        cadence = require('../..');
 
   cadence(function (step, ee) {
+    var on = step('on');
     step(function () {
-      var on = step('on');
       on(ee, 'data', []);
       on(ee, 'end');
     }, function (data) {
