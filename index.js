@@ -84,12 +84,6 @@ function cadence () {
     if (fixup = (vargs[0] === async)) {
       vargs.shift();
     }
-    if (typeof vargs[0] == "string") {
-      callback.event = vargs.shift();
-    }
-    if (typeof vargs[0] == "object" && !Array.isArray(vargs[0])) {
-      callback.target = vargs.shift();
-    }
     if (!isNaN(parseInt(vargs[0], 10))) {
       callback.arity = +(vargs.shift());
     }
@@ -107,7 +101,6 @@ function cadence () {
       callback.shifted = !! vargs.shift();
     }
     callback.cadence = vargs;
-    if (callback.event) return createEvent(invocations[0], callback);
     invocations[0].callbacks.push(callback);
     if (vargs.length) {
       if (!vargs.every(function (arg) { return typeof arg == "function" })) {
@@ -120,6 +113,15 @@ function cadence () {
       else return createArray(invocations[0], callback);
     return createCallback(invocations[0], callback, 0);
   }
+
+  async.event = function () {
+    var callback = async.apply(null, arguments);
+    return function () {
+      return callback.apply(null, [ null ].concat(__slice.call(arguments)));
+    }
+  }
+
+  async.error = function () { return async.apply(null, [0, []].concat(__slice.call(arguments))) }
 
   // Create a sub-cadence.
   function createCadence (invocation, callback) {
@@ -137,44 +139,6 @@ function cadence () {
     return function () {
       var vargs = __slice.call(arguments);
       return createCallback(invocation, callback, index++);
-    }
-  }
-
-  // Create an event callback.
-  function createEvent (invocation, prototype) {
-    return function () {
-      var vargs = __slice.call(arguments),
-          callback = Object.create(prototype, { errors: { value: [] }, results: { value: [] } }),
-          targets = [], event, fn;
-      invocations[0].callbacks.push(callback);
-      while (vargs[0] && vargs[0][callback.event]) {
-        targets.push(vargs.shift());
-      }
-      if (!targets.length && callback.target) {
-        targets.push(callback.target);
-      }
-      if (typeof vargs[0] == "string") {
-        event = vargs.shift();
-      } else {
-        throw new Error("event name required");
-      }
-      if (Array.isArray(vargs[0])) {
-        callback.arrayed = !! vargs.shift();
-      } else if (event == "error") {
-        callback.arrayed = true;
-        callback.arity = 0;
-      }
-      if (!isNaN(+(vargs[0]))) {
-        callback.arity = +(vargs.shift());
-      }
-      callback.shifted = event != "error";
-      fn = callback.arrayed
-          ? createCallback(invocations[0], callback, -1)
-          : createCallback(invocations[0], callback, 0);
-      while (targets.length) {
-        targets.shift()[callback.event](event, fn);
-      }
-      return fn;
     }
   }
 
