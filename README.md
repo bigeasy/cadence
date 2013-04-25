@@ -171,6 +171,8 @@ Changes for each release.
 
 ### Version 0.0.16
 
+Thu Apr 25 02:48:25 UTC 2013
+
  * Measure test coverage using Istanbul and report test coverage using
    Coveralls. #94. #95.
  * Rework event building into the `step.event` and `step.error` functions #99.
