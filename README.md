@@ -169,6 +169,16 @@ This is a horrible example. Try again.
 
 Changes for each release.
 
+### Version 0.0.16
+
+ * Measure test coverage using Istanbul and report test coverage using
+   Coveralls. #94. #95.
+ * Rework event building into the `step.event` and `step.error` functions #99.
+ * Fix global variable namespace leak.
+ * Test with Node.js 0.10.
+ * Add support for Bower. #93.
+ * `README.md` editing. #92.
+
 ### Version 0.0.15
 
 Thu Mar 21 08:33:24 UTC 2013
