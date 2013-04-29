@@ -1916,3 +1916,16 @@ handlers, or else you have callbacks, so whatever you use to indicate an event
 indicates shifting.
 
 Oh, cute; I was calling the return value from `step` an "inverse future."
+
+## Zero to Many
+
+I creates support for zero-to-many calls of a callback, but implemented it
+differently for events than for error callbacks. The zero-to-many calls is
+really an event thing, because with standard callbacks you are invoking a
+function and you are demanding a return. Making the behavior consistent is
+inappropriate.
+
+I'm seeing that generally, I want zero-to-many for events, there is no
+reasonable case for looping through an array of items and assigning a callback,
+because event emitters are streamy things. They are not going to be pinned to a
+particular invocation the way that a callback pins to a particular invocation.
