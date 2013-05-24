@@ -1745,7 +1745,7 @@ reports come in one after another?
 
 I'll assume that if the developer wants step by step error reporting, that they
 will perform these actions step by step. The problem is this: there is only a
-scalar conduit for errors, where actions that create errors may be occuring in
+scalar conduit for errors, where actions that create errors may be occurring in
 parallel. I've decided that I don't want to create an error array, since I won't
 know when to stop listening for errors, that it will be a first unhandled error
 is the return value of the cadence, then cadence will hang around and swallow
@@ -1788,7 +1788,7 @@ world, I'm going to have to see what it is like to write copious even handling
 code with Cadence.
 
 My concern is that if someone uses domains, they have to know the difference
-between system calls that swollow the error, and other callbacks that do not.
+between system calls that swallow the error, and other callbacks that do not.
 
 Domains actually make Node.js worse. It is too bad that we couldn't stick with
 the one true pattern, the `(error, result)` callback. Not excited about domains,
