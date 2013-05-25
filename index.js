@@ -63,7 +63,7 @@ function cadence () {
 
     // If our first argument is a function, we check to see if it is a jump
     // instruction. If the function is a member of the current cadence, we
-    // will inovke that function with the results of this step.
+    // will invoke that function with the results of this step.
 
     // Search for the function in the current cadence.
     if (vargs.length == 1 && typeof vargs[0] == "function") {
@@ -73,7 +73,7 @@ function cadence () {
 
     // If we find the function in the current cadence, we set the index of
     // next step function to execute; then remove the function argument and
-    // procede.
+    // proceed.
     if (~i) {
       invocations[0].args[1] = i;
       vargs.shift();
@@ -133,7 +133,7 @@ function cadence () {
     }
   }
 
-  // Create an an arryed callback.
+  // Create an arrayed callback.
   function createArray (invocation, callback) {
     var index = 0;
     return function () {
