@@ -1929,3 +1929,28 @@ I'm seeing that generally, I want zero-to-many for events, there is no
 reasonable case for looping through an array of items and assigning a callback,
 because event emitters are streamy things. They are not going to be pinned to a
 particular invocation the way that a callback pins to a particular invocation.
+
+## Initial Invocation
+
+Cadence will provide you with a callback for conviencence invocations, however
+it won't provide you with one when you pass in parameters.
+
+```javascript
+// this works
+cadence(function (step) {
+  // stuff...
+})();
+
+// this doesn't
+cadence(function (step, count) {
+  // stuff...
+})(3);
+```
+
+## Questions
+
+From the above are the following questions...
+
+ * Do you want to provide a default invocation of cadence?
+ * What is the correct behavior of the default invocation?
+ * What became of your changes for events?
