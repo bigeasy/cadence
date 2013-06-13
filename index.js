@@ -89,10 +89,7 @@ function cadence () {
     }
     if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
       callback.arrayed = !! vargs.shift();
-    }
-    var zeroToMany;
-    if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
-      zeroToMany = !! vargs.shift();
+      var zeroToMany = this.event;
     }
     if (Error === vargs[0]) {
       invocations[0].catchable = callback.catchable = !! vargs.shift();
@@ -115,13 +112,15 @@ function cadence () {
   }
 
   async.event = function () {
-    var callback = async.apply(null, arguments);
+    var callback = createHandler.apply({ event: true }, arguments);
     return function () {
       return callback.apply(null, [ null ].concat(__slice.call(arguments)));
     }
   }
 
-  async.error = function () { return async.apply(null, [0, []].concat(__slice.call(arguments))) }
+  async.error = function () {
+    return createHandler.apply({ event: true }, [0, []].concat(__slice.call(arguments)))
+  }
 
   // Create a sub-cadence.
   function createCadence (invocation, callback) {
