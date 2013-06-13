@@ -49,6 +49,8 @@ From the above are the following questions...
  * Do you want to provide a default error handler for a cadence? (No.)
  * What is the correct behavior of the default invocation?
  * What became of your changes for events? (Found 'em!)
+ * Can I jump to a place in a parent?
+ * Can I have fixups in callback invocations?
 
 ## A Bunch of Unrecorded Decisions
 
@@ -1963,3 +1965,30 @@ What happens when I use default invocation, forget to provide a callback to a
 function that is a member of class? This is a nice addition to Cadence when I
 use it to write a one off script, but it doesn't work too well when Cadence is
 being used to build libraries.
+
+### Jumping the Parent
+
+This might be done quite easily by putting a marker in the invocation. Can make
+the point to people that the functions given to Cadence are to particate in
+Cadnece, and Cadence will attach some notes to them. Can simply attach indexes
+too, instead of exposing the full set of internals.
+
+However, the behavior is going to be suggestive instead of absolute. You're not
+going to be able to fork a bunch of different paths?
+
+Remember that the invocation stack is not a call stack. The elements in the
+invocation stack may be two completely different cadence functions running in
+parallel. You could build a stack if you like.
+
+How about we make `step(next)` not return a callback? It simply changes the
+control flow of the current execution. It can look back through a call stack and
+change the index, but we'd need to keep a callstack, which wouldn't be all that
+expensive. There is no way to do it with annotation, it would have to be search.
+
+Actually, you can put it in a variable. Timeouts would be great, though.
+
+This might make more sense because it sets a property of the current function,
+changing the control flow of the current function, which is different, I mean
+you could have other callbacks as well, you might be gathering results in an
+array, etc. Maybe you do want `step.jump`, to show that it is separate from
+creating a callback of some sort. I can try that for a few iterations.
