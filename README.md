@@ -171,6 +171,8 @@ Changes for each release.
 
 ### Version 0.0.17
 
+Thu Jun 13 23:40:08 UTC 2013
+
  * Fix arrayed event handlers. #100.
 
 ### Version 0.0.16
