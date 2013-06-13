@@ -48,9 +48,9 @@ function cadence () {
   // async function.
 
   //
-  function async () { return _async.apply(null, arguments) }
+  function async () { return createHandler.apply(null, arguments) }
 
-  function _async() {
+  function createHandler () {
     var vargs = __slice.call(arguments, 0), i = -1;
 
     // The caller as invoked the async function directly as an explicit early
