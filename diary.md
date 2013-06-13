@@ -42,6 +42,14 @@ improvement, but that could simply be an assumption that comes from frustration,
 one that could be entirely ungrounded. If there is room for improvement, I'm not
 confident that I'll find that room or know what to do once I'm in it.
 
+## Concerns Needing Decisions
+
+From the above are the following questions...
+
+ * Do you want to provide a default error handler for a cadence? (No.)
+ * What is the correct behavior of the default invocation?
+ * What became of your changes for events? (Found 'em!)
+
 ## A Bunch of Unrecorded Decisions
 
 It is not my intention at the time of this commit to back fill the decisions
@@ -1930,6 +1938,10 @@ reasonable case for looping through an array of items and assigning a callback,
 because event emitters are streamy things. They are not going to be pinned to a
 particular invocation the way that a callback pins to a particular invocation.
 
+Hah. Coming back to this after having broken Cadence, to see that this logic is
+the correct logic, that there is no zero-to-many for callbacks, they are always
+callbacks and they should always be called once.
+
 ## Initial Invocation
 
 Cadence will provide you with a callback for conviencence invocations, however
@@ -1947,10 +1959,7 @@ cadence(function (step, count) {
 })(3);
 ```
 
-## Questions
-
-From the above are the following questions...
-
- * Do you want to provide a default invocation of cadence?
- * What is the correct behavior of the default invocation?
- * What became of your changes for events?
+What happens when I use default invocation, forget to provide a callback to a
+function that is a member of class? This is a nice addition to Cadence when I
+use it to write a one off script, but it doesn't work too well when Cadence is
+being used to build libraries.
