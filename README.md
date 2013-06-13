@@ -169,6 +169,10 @@ This is a horrible example. Try again.
 
 Changes for each release.
 
+### Version 0.0.17
+
+ * Fix arrayed event handlers. #100.
+
 ### Version 0.0.16
 
 Thu Apr 25 02:48:25 UTC 2013
