@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(5, function (equal, ok, step, deepEqual) {
+require('proof')(7, function (equal, ok, step, deepEqual) {
   var  EventEmitter = require('events').EventEmitter,
        cadence = require('../..'), ee;
 
