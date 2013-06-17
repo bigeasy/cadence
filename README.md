@@ -171,6 +171,8 @@ Changes for each release.
 
 ### Version 0.0.18
 
+Mon Jun 17 17:43:13 UTC 2013
+
  * Create a named function to jump within the cadence. #102.
 
 ### Version 0.0.17
