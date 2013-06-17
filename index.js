@@ -61,24 +61,6 @@ function cadence () {
       return;
     }
 
-    // If our first argument is a function, we check to see if it is a jump
-    // instruction. If the function is a member of the current cadence, we
-    // will invoke that function with the results of this step.
-
-    // Search for the function in the current cadence.
-    if (vargs.length == 1 && typeof vargs[0] == "function") {
-      for (i = invocations[0].args[0].length - 1;
-           i > -1 && invocations[0].args[0][i] !== vargs[0]; i--) {}
-    }
-
-    // If we find the function in the current cadence, we set the index of
-    // next step function to execute; then remove the function argument and
-    // proceed.
-    if (~i) {
-      invocations[0].args[1] = i;
-      vargs.shift();
-    }
-
     var callback = { errors: [], results: [] };
     var fixup;
     if (fixup = (vargs[0] === async)) {
@@ -120,6 +102,22 @@ function cadence () {
 
   async.error = function () {
     return createHandler.apply({ event: true }, [0, []].concat(__slice.call(arguments)))
+  }
+
+  async.jump = function (label) {
+    // If our first argument is a function, we check to see if it is a jump
+    // instruction. If the function is a member of the current cadence, we
+    // will invoke that function with the results of this step.
+
+    // Search for the function in the current cadence. If we find the function
+    // in the current cadence, we set the index of next step function to
+    // execute; then remove the function argument and proceed.
+    for (var i = 0, I = invocations[0].args[0].length; i < I; i++) {
+      if (invocations[0].args[0][i] === label) {
+        invocations[0].args[1] = i;
+        return;
+      }
+    }
   }
 
   // Create a sub-cadence.

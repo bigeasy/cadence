@@ -10,10 +10,11 @@ require('proof')(1, function (equal) {
     }, inc = function (count) {
       step()(null, count + 1);
     }, function (count) {
-      if (count != 10) step(inc)(null, count);
-      else return count;
+      if (count != 10) step.jump(inc);
+      return count;
     });
   })(function (error, result) {
+    if (error) throw error;
     equal(result, 10, "jump");
   });
 });
