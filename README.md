@@ -169,6 +169,10 @@ This is a horrible example. Try again.
 
 Changes for each release.
 
+### Version 0.0.18
+
+ * Create a named function to jump within the cadence. #102.
+
 ### Version 0.0.17
 
 Thu Jun 13 23:40:08 UTC 2013
