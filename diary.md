@@ -1598,6 +1598,43 @@ report yourself, because there is no facility for reporting multiple errors from
 an error, result callback signature, and I don't want to be the man to invent
 one.
 
+### Errors Gathered, Why Not?
+
+New thoughts, now that we're getting close do done on this library.
+
+Currently, exception handling is handled by a `thrown` method. It would be
+better to pass it on to a subsequent call to invoke, so then this becomes
+parameters to the invoke function and the errors are handled there.
+
+It doesn't make sense to have an array of errors, really. We need to abend on
+the first exception, allowing any parallel invocations to fail silently.
+
+Although, we might want the opportunity to gather up errors, so if we're coming
+off of a funnel, but then how do we know it is a funnel? There is no way to
+know, so if you want to handle each exception, creating a list, then do it with
+the context that a sub-cadence will give you.
+
+This is the final thoughts on the matter. We can put this in the documentation.
+
+An exception jumps the stack and loses all context. If you need to catch, you
+need to catch, and we can't make that any easier.
+
+Maybe there are times when you do want the error first, so that you don't have
+to write a separate function, becuase it's not all that exceptional after all?
+
+```javascript
+cadence(function (step, files) {
+  var stats = []
+  files.forEach(step([], function (file) {
+    fs.stat(file, step(Error));
+  }, function (error, stat) {
+    return { error: error, stat: stat };
+  }));
+});
+```
+
+This might be a better way of handling expected errors.
+
 ## Prototypes and This
 
 There is room for expansion to add extended `this` support, where an array
