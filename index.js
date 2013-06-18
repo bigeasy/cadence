@@ -10,8 +10,9 @@ function say () { console.log.apply(console, __slice.call(arguments, 0)) }
 function cadence () {
   var steps = __slice.call(arguments, 0);
 
-  function begin (steps, vargs, callback) {
+  function begin (caller, steps, vargs, callback) {
     var invocation = {
+      caller: caller,
       callbacks: [{ results: [[invoke].concat(vargs)] }]
     };
     invoke.call(this, steps, 0, invocation, callback);
@@ -25,7 +26,7 @@ function cadence () {
     var vargs = __slice.call(arguments, 0),
         callback = function (error) { if (error) throw error };
     if (vargs.length) callback = vargs.pop();
-    begin.call(this, steps, [async].concat(vargs), callback);
+    begin.call(this, null, steps, [async].concat(vargs), callback);
   }
 
   // To use the same `step` function throughout while supporting reentrancy,
@@ -112,11 +113,15 @@ function cadence () {
     // Search for the function in the current cadence. If we find the function
     // in the current cadence, we set the index of next step function to
     // execute; then remove the function argument and proceed.
-    for (var i = 0, I = invocations[0].args[0].length; i < I; i++) {
-      if (invocations[0].args[0][i] === label) {
-        invocations[0].args[1] = i;
-        return;
+    var invocation = invocations[0];
+    while (invocation) {
+      for (var i = 0, I = invocation.args[0].length; i < I; i++) {
+        if (invocation.args[0][i] === label) {
+          invocation.args[1] = i;
+          return;
+        }
       }
+      invocation = invocation.caller;
     }
   }
 
@@ -152,7 +157,7 @@ function cadence () {
         else callback.results[index] = vargs;
         if (callback.cadence.length) {
           invocation.count++;
-          begin.call(invocation.self, callback.cadence, callback.results[index], function (error, result) {
+          begin.call(invocation.self, invocation, callback.cadence, callback.results[index], function (error, result) {
             if (error) {
               thrown(invocation, error, callback);
             } else {
@@ -183,7 +188,7 @@ function cadence () {
     delete callback.run;
     var steps = callback.cadence;
     invocation.count++;
-    begin.call(invocation.self, steps, vargs, function (error) {
+    begin.call(invocation.self, invocation, steps, vargs, function (error) {
       var vargs = __slice.call(arguments, 1);
       if (error) {
         thrown(invocation, error, callback);
@@ -294,7 +299,7 @@ function cadence () {
       step = steps[index];
 
       invocations.unshift({ callbacks: [], count: 0 , called: 0, index: index,
-                            callback: callback, self: this });
+                            callback: callback, self: this, caller: previous.caller });
       invocations[0].args = [ steps, index + 1, invocations[0], callback ]
 
       hold = async();
