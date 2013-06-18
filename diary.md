@@ -1620,7 +1620,7 @@ An exception jumps the stack and loses all context. If you need to catch, you
 need to catch, and we can't make that any easier.
 
 Maybe there are times when you do want the error first, so that you don't have
-to write a separate function, becuase it's not all that exceptional after all?
+to write a separate function, because it's not all that exceptional after all?
 
 ```javascript
 cadence(function (step, files) {
@@ -1983,8 +1983,8 @@ callbacks and they should always be called once.
 
 ## Initial Invocation
 
-Cadence will provide you with a callback for conviencence invocations, however
-it won't provide you with one when you pass in parameters.
+Cadence will provide you with a callback for convenience invocations, however it
+won't provide you with one when you pass in parameters.
 
 ```javascript
 // this works
@@ -2006,8 +2006,8 @@ being used to build libraries.
 ### Jumping the Parent
 
 This might be done quite easily by putting a marker in the invocation. Can make
-the point to people that the functions given to Cadence are to particate in
-Cadnece, and Cadence will attach some notes to them. Can simply attach indexes
+the point to people that the functions given to Cadence are to participate in
+Cadence, and Cadence will attach some notes to them. Can simply attach indexes
 too, instead of exposing the full set of internals.
 
 However, the behavior is going to be suggestive instead of absolute. You're not
@@ -2019,7 +2019,7 @@ parallel. You could build a stack if you like.
 
 How about we make `step(next)` not return a callback? It simply changes the
 control flow of the current execution. It can look back through a call stack and
-change the index, but we'd need to keep a callstack, which wouldn't be all that
+change the index, but we'd need to keep a call stack, which wouldn't be all that
 expensive. There is no way to do it with annotation, it would have to be search.
 
 Actually, you can put it in a variable. Timeouts would be great, though.
