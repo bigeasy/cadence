@@ -157,7 +157,8 @@ function cadence () {
         else callback.results[index] = vargs;
         if (callback.cadence.length) {
           invocation.count++;
-          begin.call(invocation.self, invocation, callback.cadence, callback.results[index], function (error, result) {
+          begin.call(invocation.self, invocation,
+              callback.cadence, callback.results[index], function (error, result) {
             if (error) {
               thrown(invocation, error, callback);
             } else {
@@ -172,7 +173,8 @@ function cadence () {
         // the callbacks for parallel cadences now, the next increment of
         // the called counter, which may be the last.
         if (vargs[0] == invoke) {
-          invocation.callbacks.filter(function (callback) { return callback.run }).forEach(function (callback) {
+          invocation.callbacks.filter(function (callback) { return callback.run })
+                              .forEach(function (callback) {
             runSubCadence(invocation, callback, 0, []);
           });
         }
