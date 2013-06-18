@@ -173,6 +173,10 @@ Here is where you would discuss `step.jump` and the function index.
 
 Changes for each release.
 
+### Version 0.0.19
+
+ * Change function index of calling cadence from sub-cadence. #104.
+
 ### Version 0.0.18
 
 Mon Jun 17 17:43:13 UTC 2013
