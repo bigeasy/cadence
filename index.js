@@ -172,7 +172,7 @@ function cadence () {
         // Indicates that the function has completed, so we need create
         // the callbacks for parallel cadences now, the next increment of
         // the called counter, which may be the last.
-        if (vargs[0] == invoke) {
+        if (vargs[0] === invoke) {
           invocation.callbacks.filter(function (callback) { return callback.run })
                               .forEach(function (callback) {
             runSubCadence(invocation, callback, 0, []);
