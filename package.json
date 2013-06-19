@@ -11,7 +11,7 @@
 , "repository": "git://github.com/bigeasy/cadence.git"
 , "scripts" : { "test": "proof platform win32 && proof */*/*.t.js || t/test" }
 , "devDependencies":
-  { "proof": "0.0.28"
+  { "proof": "0.0.30"
   , "uglify-js": "~1.3"
   }
 , "dependencies": {}
