@@ -175,6 +175,8 @@ Changes for each release.
 
 ### Version 0.0.19
 
+Tue Jun 18 22:03:00 UTC 2013
+
  * Change function index of calling cadence from sub-cadence. #104.
 
 ### Version 0.0.18
