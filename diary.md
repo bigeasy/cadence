@@ -1924,6 +1924,75 @@ Does Cadence look for a Domain object? That would make it particular to Node.js.
 Probably need to go over all the places where exceptions can occur. The question
 is; does Cadence catch exceptions thrown by callbacks? Should it?
 
+What it shouldn't do is what it does now. It returns multiple errors for a
+callback. It needs to either return the first error encountered, or else it
+needs to return it's own error that contians a list of caught errors.
+
+Currently, I'm favoring the first one, because exceptions are exceptions. They
+are exceptional, they are not supposed to happen. If the file system is full, or
+of the network is down, you probably only need a sample of the mess of errors
+that would be raised in this condition.
+
+Also, a listing of errors is somewhat arbitrary. In a step where a number of
+things are happening, we don't really know or care which one of them failed, do
+we? How does the world really work?
+
+My examples keep coming back to the file system, going to though a directory
+listing in parallel. It may break at some point, say that a file is read
+protected, but the directory listings are occuring in parallel, there may be
+many such files. How do we report them? Wait, why do we report them? What can we
+do with a detailed report of exceptional conditions? Worse, imagine that we've
+called our cadence function recursively, now we might have a tree of exceptional
+conditions.
+
+That tree would require an `Error` that wraps other errors, you wouldn't be able
+to piggy back, because a Cadence might call a Cadence, who gets to ride
+piggyback? How is that structuered? Imagine that this builder is called by both
+a an abending `fs` function and an abending Cadence function. Maybe `fs` comes
+first, or maybe it is the Cadence function. Different logic is require for
+either.
+
+```javascript
+function gotMeAnError (instance, error) {
+  if (!instance.firstError) {
+    instance.firstError = error;
+    error.$errors = [ error ];
+  }
+}
+```
+
+There might be a convoluted data structure to build in the first error, but the
+simple way to gather up errors is to do this.
+
+```javascript
+function gotMeAnError (instance, error) {
+  if (!instance.error) {
+    instance.error = new Error("something bad happend"); 
+    instance.error.errors = [ error ];
+  } else {
+    instance.error.errors.push(error);
+  }
+}
+```
+
+Obvious, but it means that any excpetion thrown by a function built with Cadence
+requires some sort of unwrappering, even if it is serial.
+
+Errors feel like a chink in the armor.
+
+The next thought that if you want to gather up exceptions in a parallel
+execution, then that is more than exception handling. You're looking to do more
+than handle exceptions, you're really gathering up some diagnostics. That is
+part of the work of your function, so explicitly handle those exceptions in your
+cadence using `Error`.
+
+Sounds good, but then I imagine that that function would look like, `Error`
+everywhere, so then I go back to thinking about gathering a tree of errors.
+
+Except that in my use of Cadence, I've never really wanted to gather up a bunch
+of errors into an error ball.
+
+
 ## Inbox
 
 Notes on returning the step function. Notes on event handlers, if you have any.
@@ -2029,3 +2098,6 @@ changing the control flow of the current function, which is different, I mean
 you could have other callbacks as well, you might be gathering results in an
 array, etc. Maybe you do want `step.jump`, to show that it is separate from
 creating a callback of some sort. I can try that for a few iterations.
+
+Also, add the ability to return from a jump, which makes it easier to break out
+of it with a one liner.
