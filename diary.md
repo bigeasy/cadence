@@ -1992,8 +1992,34 @@ everywhere, so then I go back to thinking about gathering a tree of errors.
 Except that in my use of Cadence, I've never really wanted to gather up a bunch
 of errors into an error ball.
 
+Anothing thing about the error ball; parallelism, it shouldn't matter much. I
+find that I read in parallel, but I funnel into a step to do something drastic,
+to make a change. That commit doesn't take place until a parallel read has
+completed. I'm not seeing where I need more than the first error. If I do need
+all the errors, then I need to perform the operation in serial, not in parallel.
+
+Oh! Oh! Oh!
+
+How about this: `[Error]` and errors are going to be gathered? How about them
+apples? You like? Or what if you are doing someting in parallel, that means you
+get the parallel exception? Um, but `[Error]` that means it gets wrapped and
+propagated that way, or it means that an error handler will get all errors in an
+array? `[Error, "unable to shave yak"]`. Okay, something, something, but abend
+on first error is what we do first, and it ought to stop other cadences, right? 
+Sub-cadences and parallel cadences, or does it wait for them to finish? Or does
+it let them soldier on in obscurity? You can have a root array `canceled` and
+set its length to 1 to indicated that it has been canceled; `canceled[0]`.
+
 It is an example of where there error first callback breaks down, in fact, it is
 an example of all the complexities of concurrent programming.
+
+**Naw**, the more I look at the error handling example, the more I like the
+structure of it. Adding a error-first callback to the cadence makes it look not
+that much different from a plain old callback. The nice thing about the skipped
+error function is that each step can do one thing. The next step is to either
+deal with the *exception* or else it is to continue along it's merry way.
+
+The signifier `}, function (error) {` can *mean* something, dag-gummit!
 
 ## Error Handling
 
