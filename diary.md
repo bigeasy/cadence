@@ -1992,6 +1992,24 @@ everywhere, so then I go back to thinking about gathering a tree of errors.
 Except that in my use of Cadence, I've never really wanted to gather up a bunch
 of errors into an error ball.
 
+It is an example of where there error first callback breaks down, in fact, it is
+an example of all the complexities of concurrent programming.
+
+## Error Handling
+
+I'd decided to have a separate function that was called for an error, but
+skipped if there was no error. Now I'm leaning toward making it so that `Error`
+means that the next step is a standard error handling function, expecting an
+error-first callback.
+
+Does this mean that some other sort of callback handler might be used with
+Cadence?
+
+It may be easier to document, so say, simply, sometimes you do want a chance to
+inspect an error, for an exception of some sort that is acceptble. In that case
+you can pass `Error` when defining your callback with `step` and your next step
+can be an error-first callback. If you decide you do want to stop on the error,
+just throw it.
 
 ## Inbox
 
