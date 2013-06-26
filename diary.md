@@ -1497,9 +1497,63 @@ Creating my own minifier, a variation of UglifyJS that would skip functions if
 they had a particular name or naming convention, or might possibly look for
 `step`, and skip all the functions within it.
 
-## Errors
+**Decision**: Hidden context goes, minification stays. Use variables for named
+functions. Airty is determined by the preceding step, not the function signature
+of the step.
 
-It is the opinion of the programmers that exceptions are for exceptional
+## Error Handling
+
+What follows are some general questions on error handling, thereafter followed
+by my programmers-journal/tear-soaked-diary about error handling.
+
+### What do Node.js Veterans Expect from an Error-First Callback?
+
+The best thing to do is to ask the Node.js community, how do you handle
+parallelism within an error-first callback function? What is the current
+convention and is it correct?
+
+I'm sure there are people use
+[`require('async').parallel`](http://nodejsreactions.tumblr.com/post/53765515453/require-async-parallel)
+where the result of an error is to return the first error, but let the remaining
+parallel functions run to completion. If they create an error the error is lost.
+
+This is the issue I'm trying to resolve, how do you report parallel errors in
+callbacks?
+
+Here is what I believe to be true and universally agreed upon: The error-first
+callback convention expects to be called once and only once by the function to
+which it is given. If there are two errors it will be unconventional, and most
+surprising, for the callback to be called once for each error.
+
+Also universally agreed upon, and almost not worth mentioning, is that `error`
+is an `Error` object an not an array of `Error` objects or any similar thing.
+
+When you are running operations in parallel, you could have multiple errors.
+Perhaps you're `readFile`ing the files in a directory listing, but you don't
+have permission. In this case, getting the first instance back will probably
+give you enough information to solve the problem. However, if in parallel you're
+establishing a database connection and reading a file, and the network is down
+and the file is missing, you're only going to get a partial picture of what is
+wrong.
+
+Thus, let's put a summary here. When running in parallel within a callback: 
+
+ * do you return just the first `Error` or all the `Error`s?
+ * how you do you group all the `Error`, as a property of an umberella `Error`?
+ * when a parallel operation fails, do you make a best effort to terminate the
+   other operations, or do you let them run to completion?
+
+One could create an umberella `Error` object and have a `parallelErrors`
+property that is an array member but, another belief of mine is that people are
+going to `if&nbsp;(error)&nbsp;throw&nbsp;error` and they expect that error to
+have a meaningful message. If you have a library like `async` doing your
+parallelism, you're going to have to also provide an error message to the
+`parallel` call to add to the umberella `Error`, otherwise the best it can
+summise is `"something&nbsp;bad&nbsp;happened"`.
+
+### Original Ramblings Here
+
+It is the opinion of this programmer that exceptions are for exceptional
 conditions, and that each exception should be handled as it occurs, so we don't
 have a straight-forward way to gather errors. If something might error, catch
 the error immediately.
@@ -1635,7 +1689,10 @@ cadence(function (step, files) {
 
 This might be a better way of handling expected errors.
 
-## Exception Handling
+### Exception Handling
+
+*Note*: This was appended to the end of the document late in the project and
+moved back up here with the rest of the error stuff.
 
 Probably need to go over all the places where exceptions can occur. The question
 is; does Cadence catch exceptions thrown by callbacks? Should it?
@@ -1740,7 +1797,7 @@ deal with the *exception* or else it is to continue along it's merry way.
 
 The signifier `}, function (error) {` can *mean* something, dag-gummit!
 
-## Error Handling
+### Error Handling
 
 I'd decided to have a separate function that was called for an error, but
 skipped if there was no error. Now I'm leaning toward making it so that `Error`
