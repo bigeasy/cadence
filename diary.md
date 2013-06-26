@@ -1635,6 +1635,127 @@ cadence(function (step, files) {
 
 This might be a better way of handling expected errors.
 
+## Exception Handling
+
+Probably need to go over all the places where exceptions can occur. The question
+is; does Cadence catch exceptions thrown by callbacks? Should it?
+
+What it shouldn't do is what it does now. It returns multiple errors for a
+callback. It needs to either return the first error encountered, or else it
+needs to return it's own error that contians a list of caught errors.
+
+Currently, I'm favoring the first one, because exceptions are exceptions. They
+are exceptional, they are not supposed to happen. If the file system is full, or
+of the network is down, you probably only need a sample of the mess of errors
+that would be raised in this condition.
+
+Also, a listing of errors is somewhat arbitrary. In a step where a number of
+things are happening, we don't really know or care which one of them failed, do
+we? How does the world really work?
+
+My examples keep coming back to the file system, going to though a directory
+listing in parallel. It may break at some point, say that a file is read
+protected, but the directory listings are occuring in parallel, there may be
+many such files. How do we report them? Wait, why do we report them? What can we
+do with a detailed report of exceptional conditions? Worse, imagine that we've
+called our cadence function recursively, now we might have a tree of exceptional
+conditions.
+
+That tree would require an `Error` that wraps other errors, you wouldn't be able
+to piggy back, because a Cadence might call a Cadence, who gets to ride
+piggyback? How is that structuered? Imagine that this builder is called by both
+a an abending `fs` function and an abending Cadence function. Maybe `fs` comes
+first, or maybe it is the Cadence function. Different logic is require for
+either.
+
+```javascript
+function gotMeAnError (instance, error) {
+  if (!instance.firstError) {
+    instance.firstError = error;
+    error.$errors = [ error ];
+  }
+}
+```
+
+There might be a convoluted data structure to build in the first error, but the
+simple way to gather up errors is to do this.
+
+```javascript
+function gotMeAnError (instance, error) {
+  if (!instance.error) {
+    instance.error = new Error("something bad happend"); 
+    instance.error.errors = [ error ];
+  } else {
+    instance.error.errors.push(error);
+  }
+}
+```
+
+Obvious, but it means that any excpetion thrown by a function built with Cadence
+requires some sort of unwrappering, even if it is serial.
+
+Errors feel like a chink in the armor.
+
+The next thought that if you want to gather up exceptions in a parallel
+execution, then that is more than exception handling. You're looking to do more
+than handle exceptions, you're really gathering up some diagnostics. That is
+part of the work of your function, so explicitly handle those exceptions in your
+cadence using `Error`.
+
+Sounds good, but then I imagine that that function would look like, `Error`
+everywhere, so then I go back to thinking about gathering a tree of errors.
+
+Except that in my use of Cadence, I've never really wanted to gather up a bunch
+of errors into an error ball.
+
+Anothing thing about the error ball; parallelism, it shouldn't matter much. I
+find that I read in parallel, but I funnel into a step to do something drastic,
+to make a change. That commit doesn't take place until a parallel read has
+completed. I'm not seeing where I need more than the first error. If I do need
+all the errors, then I need to perform the operation in serial, not in parallel.
+
+Oh! Oh! Oh!
+
+How about this: `[Error]` and errors are going to be gathered? How about them
+apples? You like? Or what if you are doing someting in parallel, that means you
+get the parallel exception? Um, but `[Error]` that means it gets wrapped and
+propagated that way, or it means that an error handler will get all errors in an
+array? `[Error, "unable to shave yak"]`. Okay, something, something, but abend
+on first error is what we do first, and it ought to stop other cadences, right? 
+Sub-cadences and parallel cadences, or does it wait for them to finish? Or does
+it let them soldier on in obscurity? You can have a root array `canceled` and
+set its length to 1 to indicated that it has been canceled; `canceled[0]`.
+
+I can't tell if that matters, to cancel them or to let them run to completion.
+There's going to be a case where I'll have file handles open at some point.
+
+It is an example of where there error first callback breaks down, in fact, it is
+an example of all the complexities of concurrent programming.
+
+**Naw**, the more I look at the error handling example, the more I like the
+structure of it. Adding a error-first callback to the cadence makes it look not
+that much different from a plain old callback. The nice thing about the skipped
+error function is that each step can do one thing. The next step is to either
+deal with the *exception* or else it is to continue along it's merry way.
+
+The signifier `}, function (error) {` can *mean* something, dag-gummit!
+
+## Error Handling
+
+I'd decided to have a separate function that was called for an error, but
+skipped if there was no error. Now I'm leaning toward making it so that `Error`
+means that the next step is a standard error handling function, expecting an
+error-first callback.
+
+Does this mean that some other sort of callback handler might be used with
+Cadence?
+
+It may be easier to document, so say, simply, sometimes you do want a chance to
+inspect an error, for an exception of some sort that is acceptble. In that case
+you can pass `Error` when defining your callback with `step` and your next step
+can be an error-first callback. If you decide you do want to stop on the error,
+just throw it.
+
 ## Prototypes and This
 
 There is room for expansion to add extended `this` support, where an array
@@ -1918,124 +2039,6 @@ Thus, I'm not going to like Domains, but I need to support them to bring people
 to Cadence, which, if it is Domain friendly.
 
 Does Cadence look for a Domain object? That would make it particular to Node.js.
-
-## Exception Handling
-
-Probably need to go over all the places where exceptions can occur. The question
-is; does Cadence catch exceptions thrown by callbacks? Should it?
-
-What it shouldn't do is what it does now. It returns multiple errors for a
-callback. It needs to either return the first error encountered, or else it
-needs to return it's own error that contians a list of caught errors.
-
-Currently, I'm favoring the first one, because exceptions are exceptions. They
-are exceptional, they are not supposed to happen. If the file system is full, or
-of the network is down, you probably only need a sample of the mess of errors
-that would be raised in this condition.
-
-Also, a listing of errors is somewhat arbitrary. In a step where a number of
-things are happening, we don't really know or care which one of them failed, do
-we? How does the world really work?
-
-My examples keep coming back to the file system, going to though a directory
-listing in parallel. It may break at some point, say that a file is read
-protected, but the directory listings are occuring in parallel, there may be
-many such files. How do we report them? Wait, why do we report them? What can we
-do with a detailed report of exceptional conditions? Worse, imagine that we've
-called our cadence function recursively, now we might have a tree of exceptional
-conditions.
-
-That tree would require an `Error` that wraps other errors, you wouldn't be able
-to piggy back, because a Cadence might call a Cadence, who gets to ride
-piggyback? How is that structuered? Imagine that this builder is called by both
-a an abending `fs` function and an abending Cadence function. Maybe `fs` comes
-first, or maybe it is the Cadence function. Different logic is require for
-either.
-
-```javascript
-function gotMeAnError (instance, error) {
-  if (!instance.firstError) {
-    instance.firstError = error;
-    error.$errors = [ error ];
-  }
-}
-```
-
-There might be a convoluted data structure to build in the first error, but the
-simple way to gather up errors is to do this.
-
-```javascript
-function gotMeAnError (instance, error) {
-  if (!instance.error) {
-    instance.error = new Error("something bad happend"); 
-    instance.error.errors = [ error ];
-  } else {
-    instance.error.errors.push(error);
-  }
-}
-```
-
-Obvious, but it means that any excpetion thrown by a function built with Cadence
-requires some sort of unwrappering, even if it is serial.
-
-Errors feel like a chink in the armor.
-
-The next thought that if you want to gather up exceptions in a parallel
-execution, then that is more than exception handling. You're looking to do more
-than handle exceptions, you're really gathering up some diagnostics. That is
-part of the work of your function, so explicitly handle those exceptions in your
-cadence using `Error`.
-
-Sounds good, but then I imagine that that function would look like, `Error`
-everywhere, so then I go back to thinking about gathering a tree of errors.
-
-Except that in my use of Cadence, I've never really wanted to gather up a bunch
-of errors into an error ball.
-
-Anothing thing about the error ball; parallelism, it shouldn't matter much. I
-find that I read in parallel, but I funnel into a step to do something drastic,
-to make a change. That commit doesn't take place until a parallel read has
-completed. I'm not seeing where I need more than the first error. If I do need
-all the errors, then I need to perform the operation in serial, not in parallel.
-
-Oh! Oh! Oh!
-
-How about this: `[Error]` and errors are going to be gathered? How about them
-apples? You like? Or what if you are doing someting in parallel, that means you
-get the parallel exception? Um, but `[Error]` that means it gets wrapped and
-propagated that way, or it means that an error handler will get all errors in an
-array? `[Error, "unable to shave yak"]`. Okay, something, something, but abend
-on first error is what we do first, and it ought to stop other cadences, right? 
-Sub-cadences and parallel cadences, or does it wait for them to finish? Or does
-it let them soldier on in obscurity? You can have a root array `canceled` and
-set its length to 1 to indicated that it has been canceled; `canceled[0]`.
-
-It is an example of where there error first callback breaks down, in fact, it is
-an example of all the complexities of concurrent programming.
-
-**Naw**, the more I look at the error handling example, the more I like the
-structure of it. Adding a error-first callback to the cadence makes it look not
-that much different from a plain old callback. The nice thing about the skipped
-error function is that each step can do one thing. The next step is to either
-deal with the *exception* or else it is to continue along it's merry way.
-
-The signifier `}, function (error) {` can *mean* something, dag-gummit!
-
-## Error Handling
-
-I'd decided to have a separate function that was called for an error, but
-skipped if there was no error. Now I'm leaning toward making it so that `Error`
-means that the next step is a standard error handling function, expecting an
-error-first callback.
-
-Does this mean that some other sort of callback handler might be used with
-Cadence?
-
-It may be easier to document, so say, simply, sometimes you do want a chance to
-inspect an error, for an exception of some sort that is acceptble. In that case
-you can pass `Error` when defining your callback with `step` and your next step
-can be an error-first callback. If you decide you do want to stop on the error,
-just throw it.
 
 ## Inbox
 
