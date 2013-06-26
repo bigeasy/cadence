@@ -1550,11 +1550,11 @@ Thus, let's put a summary here. When running in parallel within a callback:
 The caller is expecting an `Error`, not an array of errors. One could create an
 umbrella `Error` object and have a `parallelErrors` property that is an array
 member but, another belief of mine is that people are going to
-`if&nbsp;(error)&nbsp;throw&nbsp;error` and they expect that error to have a
+`if`&nbsp;`(error)`&nbsp;`throw`&nbsp;`error` and they expect that error to have a
 meaningful message. If you have a library like `async` doing your parallelism,
 you're going to have to also provide an error message to the `parallel` call to
 add to the umbrella `Error`, otherwise the best it can surmise is
-`"something&nbsp;bad&nbsp;happened"`.
+`"something`&nbsp;`bad`&nbsp;`happened"`.
 
 Furthermore, getting back an exception of this sort requires navigating the tree
 structure that it would create, this `Error` is really a collection of `Error`s
