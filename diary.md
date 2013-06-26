@@ -1512,10 +1512,12 @@ The best thing to do is to ask the Node.js community, how do you handle
 parallelism within an error-first callback function? What is the current
 convention and is it correct?
 
-I'm sure there are people use
+I'm sure there are a lot of people using
 [`require('async').parallel`](http://nodejsreactions.tumblr.com/post/53765515453/require-async-parallel)
-where the result of an error is to return the first error, but let the remaining
-parallel functions run to completion. If they create an error the error is lost.
+and are happy with its behavior; where the result of any error in any parallel
+operation is to return the first error, but let the remaining parallel functions
+run to completion without calling the callback. If any of the remaining
+operations create an error the error is lost.
 
 This is the issue I'm trying to resolve, how do you report parallel errors in
 callbacks?
@@ -1526,30 +1528,152 @@ which it is given. If there are two errors it will be unconventional, and most
 surprising, for the callback to be called once for each error.
 
 Also universally agreed upon, and almost not worth mentioning, is that `error`
-is an `Error` object an not an array of `Error` objects or any similar thing.
+is an `Error` object an not an array of `Error` objects or any other such
+nonsense.
 
 When you are running operations in parallel, you could have multiple errors.
 Perhaps you're `readFile`ing the files in a directory listing, but you don't
-have permission. In this case, getting the first instance back will probably
-give you enough information to solve the problem. However, if in parallel you're
-establishing a database connection and reading a file, and the network is down
-and the file is missing, you're only going to get a partial picture of what is
-wrong.
+have permission to read those files. In this case, getting the first instance
+back will probably give you enough information to solve the problem. *However*,
+if, in parallel, you're establishing a database connection and reading a file,
+and the network is down and the file is missing, you're only going to get a
+partial picture of what is wrong.
 
-Thus, let's put a summary here. When running in parallel within a callback: 
+Thus, let's put a summary here. When running in parallel within a callback:
 
  * do you return just the first `Error` or all the `Error`s?
- * how you do you group all the `Error`, as a property of an umberella `Error`?
+ * how you do you group all the `Error`s, as a property of an umbrella `Error`?
+ * how do you know which of your parallel operations raised the `Error`?
  * when a parallel operation fails, do you make a best effort to terminate the
    other operations, or do you let them run to completion?
 
-One could create an umberella `Error` object and have a `parallelErrors`
-property that is an array member but, another belief of mine is that people are
-going to `if&nbsp;(error)&nbsp;throw&nbsp;error` and they expect that error to
-have a meaningful message. If you have a library like `async` doing your
-parallelism, you're going to have to also provide an error message to the
-`parallel` call to add to the umberella `Error`, otherwise the best it can
-summise is `"something&nbsp;bad&nbsp;happened"`.
+The caller is expecting an `Error`, not an array of errors. One could create an
+umbrella `Error` object and have a `parallelErrors` property that is an array
+member but, another belief of mine is that people are going to
+`if&nbsp;(error)&nbsp;throw&nbsp;error` and they expect that error to have a
+meaningful message. If you have a library like `async` doing your parallelism,
+you're going to have to also provide an error message to the `parallel` call to
+add to the umbrella `Error`, otherwise the best it can surmise is
+`"something&nbsp;bad&nbsp;happened"`.
+
+Furthermore, getting back an exception of this sort requires navigating the tree
+structure that it would create, this `Error` is really a collection of `Error`s
+so let's loop through that, and, oh, look, one of `Error`s is also an umbrella
+`Error` so let's recurse.
+
+Finally, gathering up `Error`s from parallel operations adds the question of
+how to match the `Error` with the operation, if that is something that is at all
+necessary. `Error` objects usually have a little bit of context, plus their
+stack trace. If you're propagating an `Error`, not handling it within the
+parallel operation that raised it, it's usually for the sake of logging, not to
+use the `Error` to answer all your questions.
+
+I'm sure you'll say that this is why we have `EventEmitter`, which probably
+suggests that reporting only the first error makes the most sense, but
+`async.parallel` exists, so what else does one have to consider when they use
+it. What of those swallowed `Error`s?
+
+### End Transmission
+
+You can stop reading now. This is what are some things that occur to me.
+
+Cadence will make serial callback operations parallel, so I have the additional
+question of whether or not those should run to completion.
+
+Any step can easily run parallel operations, all you need to do is create more
+than one step function, so this is a problem that is everywhere in Cadence. It
+becomes unpleasant to say that an error handler in Cadence will infer
+parallelism, because then we're talking about arrays of errors everywhere we go.
+
+Thus, I can say that Cadence **encourages parallelism**, which is why this is
+such a problem for me. Without the parallelism, these operations would take
+place in serial. If it were serial, if you weren't using Cadence, you'd only get
+the failed database connection, because you wouldn't get to the point where the
+file is opened.
+
+Okay, but now you have an open file but an error has occurred. Does Cadence need
+some sort of a `finally` construct? (`step` could return a cleanup cadence, add
+to a sub-cadence, in scope, gets called last.)
+
+Hmm... Arrays of errors and encouraged parallelism. Internal to Cadence, errors
+are arrays of errors.
+
+```javascript
+cadence(function () {
+  var db, fd;
+  step(function () {
+    step(function () {
+      // ... a cadence that opens a database and a file handle ...
+    });
+  }, function (errors, result) {
+    step(function () {
+      if (db) db.close(step());
+    }, function () {
+      if (fd) fs.close(fd, step());
+    }, function () {
+      if (errors) throw errors[0];
+      return result;
+    });
+  });
+});
+```
+
+Or, better still, using a funnel.
+
+```javascript
+cadence(function () {
+  step(function () {
+    db.open(step(Error));
+    fs.open('config.json', step(Error));
+  }, function (errors, db, fd) {
+    // This?
+    step(errors, function () {
+    }, function () {
+      // here we shut down...
+    });
+    // Or this?
+    if (errors) step()(errors, db, fd, null); // prepetuate?
+    else step(function () {
+      // ...do stuff with handles...
+    });
+  }, function (errors, db, fd, result) {
+    step(function () {
+      if (db) db.close(step());
+    }, function () {
+      if (fd) fs.close(fd, step());
+    }, function () {
+      if (errors) throw errors[0];
+      return result;
+    });
+  });
+});
+```
+
+What about a janitor?
+
+```javascript
+cadence(function () {
+  step(function () {
+    db.open(step(Error));
+    fs.open('config.json', step(Error));
+  }, function (errors, db, fd) {
+    step.cleanup(function () {
+      if (db) db.close(step());
+      if (fd) fs.close(fd, step());
+    });
+    if (errors) throw errors[0];
+    step(function () {
+      // ... do what you want, the jantor is invoked when all the steps
+      // in the step that created it finish.
+    });
+  });
+```
+
+Here the error handling callback gets errors *and* results. The errors are in an
+array, because we encourage parallelism, so we want to expose all of the
+parallelism to you, so you can decide how to expose it to your callers. Maybe
+you do want a tree of errors, or maybe you have an event emitter somewhere that
+you can feed errors to.
 
 ### Original Ramblings Here
 
@@ -1740,7 +1864,7 @@ simple way to gather up errors is to do this.
 ```javascript
 function gotMeAnError (instance, error) {
   if (!instance.error) {
-    instance.error = new Error("something bad happend"); 
+    instance.error = new Error("something bad happend");
     instance.error.errors = [ error ];
   } else {
     instance.error.errors.push(error);
@@ -1778,7 +1902,7 @@ apples? You like? Or what if you are doing someting in parallel, that means you
 get the parallel exception? Um, but `[Error]` that means it gets wrapped and
 propagated that way, or it means that an error handler will get all errors in an
 array? `[Error, "unable to shave yak"]`. Okay, something, something, but abend
-on first error is what we do first, and it ought to stop other cadences, right? 
+on first error is what we do first, and it ought to stop other cadences, right?
 Sub-cadences and parallel cadences, or does it wait for them to finish? Or does
 it let them soldier on in obscurity? You can have a root array `canceled` and
 set its length to 1 to indicated that it has been canceled; `canceled[0]`.
