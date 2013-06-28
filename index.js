@@ -77,9 +77,6 @@ function cadence () {
     if (Error === vargs[0]) {
       invocations[0].catchable = callback.catchable = !! vargs.shift();
     }
-    if (Array.prototype.shift === vargs[0]) {
-      callback.shifted = !! vargs.shift();
-    }
     callback.cadence = vargs;
     invocations[0].callbacks.push(callback);
     if (vargs.length) {
@@ -149,7 +146,7 @@ function cadence () {
     if (-1 < index) invocation.count++;
     return function () {
       var vargs = __slice.call(arguments, 0), error;
-      if (!callback.shifted) error = vargs.shift();
+      error = vargs.shift();
       if (error) {
         thrown(invocation, error, callback);
       } else {
