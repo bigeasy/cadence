@@ -1,5 +1,5 @@
 { "name": "cadence"
-, "description": "A Swiss Army asynchronous control flow function for JavaScript."
+, "description": "A Swiss Army asynchronous control flow function for highly-parallel control flows."
 , "author": "Alan Gutierrez <alan@prettyrobots.com>"
 , "version": "0.0.19"
 , "keywords": [ "async", "asynchronous", "control", "flow", "loop", "micro-js", "step", "callback"  ]

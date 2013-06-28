@@ -12,17 +12,18 @@ require('proof')(5, function (equal, ok) {
     equal(error.message, "thrown", "intercepted throw");
   });
 
-  cadence(function (step) {
-    step(Error)(new Error("handed"));
-  }, function (error) {
-    equal(error.message, "handed", "intercepted passed along");
-  })();
+  cadence([function (step) {
+    step()(new Error("handled"));
+  }, function (errors) {
+    console.log(errors,'here');
+    equal(errors[0].message, "handled", "intercepted passed along");
+  }])();
 
-  cadence(function (step) {
-    step(Error)();
+  cadence([function (step) {
+    step()();
   }, function (error) {
     throw new Error("should not be called");
-  }, function () {
+  }], function () {
     ok(true, "no error");
   })();
 /*
@@ -35,10 +36,10 @@ require('proof')(5, function (equal, ok) {
     equal(errors.length, 2, "two errors");
   })();
  */
-  cadence(function (step) {
-    step(Error)(null, 1);
+  cadence([function (step) {
+    step()(null, 1);
   }, function (error) {
-  }, function (number) {
+  }], function (number) {
     equal(number, 1, "no error with value");
   })();
 

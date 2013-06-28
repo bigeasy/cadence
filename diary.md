@@ -1710,7 +1710,7 @@ cadence(function () {
   step([function () {
     // ... try,
   }, function (errors) {
-    // ... catch 
+    // ... catch
     throw errors;
   }]);
 });
@@ -1738,6 +1738,9 @@ to the catch block. Also, you can cancel, but cancelation doesn't mean that we
 don't run finalizers.
 
 This is a garden of pure ideology. Increase in minified size doesn't matter.
+
+For conditional catches, it first tries the code, if there is no code, it tries
+the message, to be specific, specify two.
 
 ### Original Ramblings Here
 
@@ -2393,3 +2396,8 @@ creating a callback of some sort. I can try that for a few iterations.
 
 Also, add the ability to return from a jump, which makes it easier to break out
 of it with a one liner.
+
+## Was Is
+
+It was supposed to be about control flow, jumping, but it's become to be all
+about parallelism.
