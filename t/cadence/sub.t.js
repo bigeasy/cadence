@@ -33,13 +33,14 @@ require('proof')(7, function (step, deepEqual) {
 
   cadence(function (step) {
 
-    step(function () {
-      step(Error, function () {
+    step([function () {
+      step(function () {
         step()(new Error('errored'));
       });
-    }, function (error) {
+    }, function (_, error) {
+      console.log(arguments);
       deepEqual(error.message, 'errored', 'error caught');
-    });
+    }]);
 
   })(step());
 

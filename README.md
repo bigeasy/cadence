@@ -1,6 +1,7 @@
 # Cadence [![Build Status](https://secure.travis-ci.org/bigeasy/cadence.png?branch=master)](http://travis-ci.org/bigeasy/cadence) [![Coverage Status](https://coveralls.io/repos/bigeasy/cadence/badge.png?branch=master)](https://coveralls.io/r/bigeasy/cadence) [![NPM version](https://badge.fury.io/js/cadence.png)](http://badge.fury.io/js/cadence)
 
-A Swiss Army asynchronous control flow function builder for JavaScript.
+A Swiss Army asynchronous control flow function builder for Node.js and
+JavaScript that helps you create highly-parallel control flows.
 
 Cadence is a function builder. It simplifies the writing of asynchronous
 functions of that accept and  error/result callback using a domain specific
@@ -30,13 +31,14 @@ cat(function (error) { if (error) throw error });
 You create a function by passing a function to `cadence` that creates cadences.
 
 We call the series of functions a ***cadence***. We call an individual function
-in a cadence a ***step***. We use the `step` function to define cadences and
-create the callbacks that will take us from one step to another.
+in a cadence a ***step***. We use the `step` function to both define cadences
+and to create the callbacks that will take us from one step to another.
 
-The functions in a cadences are run in serial. A step inside a cadence can
-contain a sub-cadence. We can run multiple sub-cadences in parallel. With this,
-you've got your serial and your parallel, and you mix or match to create the
-asynchronous program you want to run.
+The functions in a cadence are run in **serial**. A step inside a cadence can
+contain callbacks whose return values appear in the next step or sub-cadences.
+The callbacks and sub-cadences in a step are run in **parallel**. You can run
+multiple sub-cadences in parallel. With this, you've got your serial and your
+parallel, and you mix or match to create your asynchronous program.
 
 ### Accepting Arguments
 
@@ -50,7 +52,7 @@ var cadance = require('cadence'), fs = require('fs');
 var deleteIf = cadence(function (step, file, condition) {
   step(function () {
     fs.stat(file, step());
-  }, function (step, stat) {
+  }, function (stat) {
     if (condition(stat)) fs.unlink(step());
   });
 });
@@ -67,13 +69,70 @@ then if a test function passes, it will asynchronously delete the file. We
 assign our cadence to a variable named `deleteIf`. We can now call `deleteIf`
 providing a standard issue Node.js error reporting callback.
 
-### Catching Asynchronous Errors
+### Sub-Cadences
+
+Let's say that we want to get a `stat` object, but include the body of the file
+in the `stat` object. When we get out `stat` object, we can use a sub-cadence to
+complete the `stat` object by reading the body.
+
+```javascript
+var cadance = require('cadence'), fs = require('fs');
+
+// Stat a file and add the file body to the stat.
+var bodyStat = cadence(function (step, file, condition) {
+  step(function () {
+
+    fs.stat(file, step());
+
+  }, function (stat) {
+
+    // We create a sub-cadence here because we want to work with `stat`. The
+    // `stat` object is in scope for all the function in the sub-cadence.
+    step(function () {
+
+      fs.readFile(file, step());
+
+    }, function (body) {
+
+      stat.body = body;
+      return stat; // return value of both the sub-cadence and the step that
+                   // created the cadence. See more below.
+
+    });
+  });
+});
+
+// Delete a file if it is empty.
+statBody(__filename, function (error) {
+  if (error) throw error
+  process.stdout.write('content-length: ' + stat.size + '\n\n');
+  process.stdout.write(stat.body.toString('utf8'));
+});
+```
+
+TK: Take the above example and say; the sub-cadence return is the first argument
+to the next function. Use a stupid assertion `ok(body.length == size)`.
+
+### Catching Errors
+
+Because Cadence courages parallelism, it's error handling mechanism deals with
+arrays of errors, all the errors that could possibly be caught. However, your
+caller is expecting one single error, so the default behavior for cadence is to
+return the first error, then cancel any cadences at their next function.
+
+The cancellation is why we have finalizers, to make sure that you release any
+resources. A finalizer is invoked.
+
+Cadence catches errors using a try/catch pair of functions. The functions are
+grouped in an array. The array brackets that signify the try and catch format
+nicely in to the list of step function that compose a cadence.
 
 Let's extend our `deleteIf` function. Let's say that if the file doesn't exist,
-we ignore the error raised when we stat the file. If we pass `Error` to our
-`step` constructor, the next function in an error handler function. The error
-handler function will be called with the `error` as the first argument if an
-error is returned. If there is no error, the error handler function is skipped.
+we ignore the error raised when we stat the file. To catch the error we wrap our
+call to `stat`. If the file doesn't exist, our catch function is called with the
+`Error`. If it is an `"ENOENT"` error, the file doesn't exist, so we exit the
+cadnece early returning `false`. If it is not an `"ENOENT"` error, then some
+other error occured so we re-throw the error.
 
 ```javascript
 // Use Cadence.
@@ -81,12 +140,13 @@ var cadance = require('cadence'), fs = require('fs');
 
 // Delete a file if it exists and the condition is true.
 var deleteIf = cadence(function (step, file, condition) {
-  step(function () {
-    fs.stat(file, step(Error));
+  step([function () {
+    fs.stat(file, step());
   }, function (error) {
+    // TK: Early return example can be if it is a directory, return early.
     if (error.code != "ENOENT") throw error;
     else step(null);
-  }, function (step, stat) {
+  }], function (stat) {
     if (stat && condition(stat)) fs.unlink(step());
   });
 });
