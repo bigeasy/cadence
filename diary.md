@@ -1675,6 +1675,70 @@ parallelism to you, so you can decide how to expose it to your callers. Maybe
 you do want a tree of errors, or maybe you have an event emitter somewhere that
 you can feed errors to.
 
+Here's how you could build your own tree of error.
+
+```javascript
+cadence(function () {
+  step(Error, function () {
+    // ... huge cadence.
+  });
+}, function (errors) {
+  var error = new Error('much bad happened');
+  error.errors = errors;
+  throw error;
+});
+```
+
+Can we make things look like Objective-C?
+
+```javascript
+cadence(function () {
+  step(Error, function () {
+    // ... huge cadence.
+  });
+}, [Error, function (errors) {
+  var error = new Error('much bad happened');
+  error.errors = errors;
+  throw error;
+}]);
+```
+
+Or even?
+
+```javascript
+cadence(function () {
+  step([function () {
+    // ... try,
+  }, function (errors) {
+    // ... catch 
+    throw errors;
+  }]);
+});
+```
+
+Thus, oh, hey, maybe array-wrapped is also a finalizer?
+
+```javascript
+cadence(function () {
+  step(function () {
+    // Cleanups get caled as long as the step doesn't get an error. Cleanup is
+    // called when the cadence is over.
+    db.open(step([function (db) { db.close(step()) }]));
+    fs.open('config.json', step([function (fd) { fs.close(fd, step()) }]));
+  }, function (db, fd) {
+    step(function () {
+      // ... do what you want, the jantor is invoked when all the steps
+      // in the step that created it finish.
+    });
+  });
+```
+
+These are the answers. Challenge to get the errors to propogate all the way up
+to the catch block. Also, you can cancel, but cancelation doesn't mean that we
+don't run finalizers.
+
+This is a garden of pure ideology. Increase in minified size doesn't matter.
+
 ### Original Ramblings Here
 
 It is the opinion of this programmer that exceptions are for exceptional
