@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(5, function (equal, ok) {
+require('proof')(7, function (equal, ok) {
   var fs = require('fs')
     , cadence = require('../..')
     , errors = []
@@ -15,7 +15,6 @@ require('proof')(5, function (equal, ok) {
   cadence([function (step) {
     step()(new Error("handled"));
   }, function (errors) {
-    console.log(errors,'here');
     equal(errors[0].message, "handled", "intercepted passed along");
   }])();
 
@@ -26,16 +25,16 @@ require('proof')(5, function (equal, ok) {
   }], function () {
     ok(true, "no error");
   })();
-/*
-    **TODO**: Rethink.
-  cadence(function (step) {
-    step()(new Error(1));
-    step()(new Error(2));
+
+  cadence([function (step) {
+    step()(new Error("one"));
+    step()(new Error("two"));
     step()();
-  }, function (errors) {
-    equal(errors.length, 2, "two errors");
-  })();
- */
+  }, function (errors, error) {
+    equal(errors.length, 2, "got all errors")
+    equal(errors[0].message, error.message, "first error is second argument");
+  }])();
+
   cadence([function (step) {
     step()(null, 1);
   }, function (error) {

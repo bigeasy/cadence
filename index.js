@@ -33,9 +33,8 @@ function cadence () {
       var vargs = [null].concat(__slice.call(arguments, 2));
       finalize(finalizers, 0, errors, function (errors) {
         if (errors.length) {
-          if (callback) callback(errors.shift());
-          else throw errors.shift();
-        } else if (callback) {
+          callback(errors.shift());
+        } else {
           callback.apply(null, vargs);
         }
       });
