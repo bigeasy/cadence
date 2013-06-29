@@ -16,7 +16,7 @@ function cadence () {
       caller: caller,
       errors: [],
       finalizers: [],
-      callbacks: [{ results: [[invoke].concat(vargs)] }]
+      __args: vargs
     };
     invoke.call(this, cadence, 0, invocation, callback);
   }
@@ -209,7 +209,7 @@ function cadence () {
               callback.results[index] = __slice.call(arguments, 1);
             }
             if (-1 < index && ++invocation.called == invocation.count) {
-              invoke.apply(invocation.self, invocation.args);
+              argue.apply(invocation.self, invocation.args);
             }
           });
         }
@@ -224,7 +224,7 @@ function cadence () {
         }
       }
       if (index < 0 ? invocation.errors.length : ++invocation.called == invocation.count) {
-        invoke.apply(invocation.self, invocation.args);
+        argue.apply(invocation.self, invocation.args);
       }
     }
   }
@@ -241,7 +241,7 @@ function cadence () {
         callback.results[index] = vargs;
       }
       if (++invocation.called == invocation.count) {
-        invoke.apply(invocation.self, invocation.args);
+        argue.apply(invocation.self, invocation.args);
       }
     });
   }
@@ -293,7 +293,7 @@ function cadence () {
     }
   }
 
-  function invoke (cadence, index, previous, callback) {
+  function argue (cadence, index, previous, callback) {
     var callbacks = previous.callbacks, args = [], arg, step, result, hold;
 
     if (previous.errors.length) {
@@ -301,7 +301,7 @@ function cadence () {
       if (catcher) {
         cadence.catchers[index - 1] = null;
         cadence.steps[index - 1] = catcher;
-        previous.callbacks[0].results = [ [ invoke, previous.errors, previous.errors[0] ] ];
+        previous.__args = [ previous.errors, previous.errors[0] ];
         previous.errors = [];
         previous.callbacks.length = 1;
         invoke(cadence, index - 1, previous, callback);
@@ -311,29 +311,33 @@ function cadence () {
       return;
     }
 
-    if (!previous.__args) {
-      // No callbacks means that we use the function return value, if any.
-      if (callbacks.length == 1) {
-        callbacks[0].results[0].shift()
-        if (!callbacks[0].results[0].length) {
-          callbacks.shift();
-        }
-      } else {
+    // No callbacks means that we use the function return value, if any.
+    if (callbacks.length == 1) {
+      callbacks[0].results[0].shift()
+      if (!callbacks[0].results[0].length) {
         callbacks.shift();
       }
-
-      // Filter out the return value, if there are callbacks left, then
-      // `contextualize` will process them.
-      if (callbacks.length) {
-        args = contextualize(step, callbacks);
-      } else {
-        args = [];
-      }
-      // TODO: Distingish cadence step args from invocation args.
-      previous.__args = args;
     } else {
-      args = previous.__args;
+      callbacks.shift();
     }
+
+    // Filter out the return value, if there are callbacks left, then
+    // `contextualize` will process them.
+    if (callbacks.length) {
+      args = contextualize(step, callbacks);
+    } else {
+      args = [];
+    }
+    // TODO: Distingish cadence step args from invocation args.
+    previous.__args = args;
+
+    invoke.call(this, cadence, index, previous, callback);
+  }
+
+  function invoke (cadence, index, previous, callback) {
+    var callbacks = previous.callbacks, args = [], arg, step, result, hold;
+
+    args = previous.__args;
 
     if (cadence.finalizers[index]) {
       previous.finalizers.push(cadence.finalizers[index]);
