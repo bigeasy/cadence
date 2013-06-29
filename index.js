@@ -78,23 +78,27 @@ function cadence () {
         } else {
           callback.steps.push(step[0]);
           callback.catchers[callback.steps.length - 1] = function (errors, error) {
-            var catcher = step[step.length - 1], caught = true;
-            if (step.length == 4) {
-              caught = errors.some(function (error) {
-                return (typeof step[2] == 'string') ? error[step[1]] == step[2]
-                                                    : step[2].test(error[step[1]]);
-              });
-            } else if (step.length == 3) {
-              caught = errors.some(function (error) {
+            var catcher = step[step.length - 1], uncaught = [], test;
+            errors = errors.filter(function (error) {
+              var caught = true;
+              if (step.length == 4) {
+                caught = (typeof step[2] == 'string') ? error[step[1]] == step[2]
+                                                      : step[2].test(error[step[1]]);
+              } else if (step.length == 3) {
                 var value = error.code || error.message;
-                return (typeof step[1] == 'string') ? value == step[1]
-                                                    : step[1].test(value);
+                caught = (typeof step[1] == 'string') ? value == step[1]
+                                                      : step[1].test(value);
+              }
+              if (!caught) uncaught.push(error);
+              return caught;
+            });
+            if (!uncaught.length) {
+              catcher.call(this, errors, errors[0]);
+            } else {
+              uncaught.concat(errors).forEach(function (error) {
+                async()(error);
               });
             }
-            if (caught) {
-              catcher(errors, error);
-            }
-            return true;
           }
         }
       } else if (typeof step == "function") {

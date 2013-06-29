@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(7, function (equal, ok) {
+require('proof')(13, function (equal, ok) {
   var fs = require('fs')
     , cadence = require('../..')
     , errors = []
@@ -49,4 +49,44 @@ require('proof')(7, function (equal, ok) {
   } catch (e) {
     equal(e.message, 'exceptional', 'default error handler');
   }
+
+  cadence([function (step) {
+    step()(new Error("handled"));
+  }, "handled", function (errors) {
+    equal(errors[0].message, "handled", "condtionally caught equality");
+  }])();
+
+  cadence([function (step) {
+    step()(new Error("handled"));
+  }, /handle/, function (errors) {
+    equal(errors[0].message, "handled", "condtionally caught regex");
+  }])();
+
+  cadence([function (step) {
+    var error = new Error("handled");
+    error.code = "ENOENT"
+    step()(error);
+  }, /ENOENT/, function (errors) {
+    equal(errors[0].message, "handled", "condtionally caught code regex");
+  }])();
+
+  cadence([function (step) {
+    step()(new Error("handled"));
+  }, "message", "handled", function (errors) {
+    equal(errors[0].message, "handled", "condtionally caught named field equality");
+  }])();
+
+  cadence([function (step) {
+    step()(new Error("handled"));
+  }, "message", /handle/, function (errors) {
+    equal(errors[0].message, "handled", "condtionally caught named field regex");
+  }])();
+
+  cadence([function (step) {
+    step()(new Error("handled"));
+  }, "message", "bogus", function (errors) {
+    throw new Error("should not get here");
+  }])(function (error) {
+    equal(error.message, "handled", "condtionally caught failure");
+  });
 });
