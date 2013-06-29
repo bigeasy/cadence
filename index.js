@@ -18,7 +18,7 @@ function cadence () {
       finalizers: [],
       __args: vargs
     };
-    invoke.call(this, cadence, 0, invocation, callback);
+    invoke.call(this, unfold({}, cadence), 0, invocation, callback);
   }
 
   // Execute is the function returned to the user. It represents the constructed
@@ -29,7 +29,7 @@ function cadence () {
     var vargs = __slice.call(arguments, 0),
         callback = function (error) { if (error) throw error };
     if (vargs.length) callback = vargs.pop();
-    begin.call(this, null, unfold({}, steps), [async].concat(vargs), function (errors) {
+    begin.call(this, null, steps, [async].concat(vargs), function (errors) {
       if (errors.length) {
         if (callback) callback(errors.shift());
         else throw errors.shift();
@@ -128,8 +128,9 @@ function cadence () {
       callback.arrayed = !! vargs.shift();
     }
     invocations[0].callbacks.push(callback);
-    unfold(callback, vargs);
-    if (callback.steps.length) {
+    callback.cadence = vargs;
+    unfold({}, vargs); // for the sake of error checking
+    if (callback.cadence.length) {
       if (!fixup) return createCadence(invocations[0], callback);
     }
     if (callback.arrayed)
@@ -199,10 +200,10 @@ function cadence () {
       } else {
         if (index < 0) callback.results.push(vargs);
         else callback.results[index] = vargs;
-        if (callback.steps.length) {
+        if (callback.cadence.length) {
           invocation.count++;
           begin.call(invocation.self, invocation,
-              callback, callback.results[index], function (errors) {
+              callback.cadence, callback.results[index], function (errors) {
             invocation.errors.push.apply(invocation.errors, errors);
             if (!errors.length) {
               callback.results[index] = __slice.call(arguments, 1);
@@ -232,7 +233,7 @@ function cadence () {
   function runSubCadence (invocation, callback, index, vargs) {
     delete callback.run;
     invocation.count++;
-    begin.call(invocation.self, invocation, callback, vargs, function (errors) {
+    begin.call(invocation.self, invocation, callback.cadence, vargs, function (errors) {
       invocation.errors.push.apply(invocation.errors, errors);
       if (!errors.length) {
         callback.results[index] = __slice.call(arguments, 1);
