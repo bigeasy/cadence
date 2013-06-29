@@ -1,7 +1,37 @@
 #!/usr/bin/env node
 
-require('proof')(4, function (step, equal, deepEqual) {
+require('proof')(6, function (step, equal, deepEqual) {
   var fs = require('fs'), cadence = require('../..');
+
+  cadence(function (step) {
+
+    step(function () {
+      (function (callback) {
+        callback(null, 1);
+      })(step(step, function (number) {
+        return number + 1;
+      }));
+    }, function (value) {
+      equal(value, 2, 'fixup direct');
+    });
+
+  })(step());
+
+  cadence(function (step) {
+
+    step(function () {
+      (function (callback) {
+        callback(new Error('errored'), 1);
+      })(step(step, function () {
+        throw new Error('should not be called');
+      }));
+    }, function () {
+      throw new Error('should not be called');
+    });
+
+  })(function (error) {
+    equal(error.message, 'errored', 'fixup short circuit');
+  });
 
   cadence(function (step) {
 

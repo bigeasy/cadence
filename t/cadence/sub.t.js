@@ -33,12 +33,13 @@ require('proof')(7, function (step, deepEqual) {
 
   cadence(function (step) {
 
+    if (!step) throw new Error;
+
     step([function () {
       step(function () {
         step()(new Error('errored'));
       });
     }, function (_, error) {
-      console.log(arguments);
       deepEqual(error.message, 'errored', 'error caught');
     }]);
 

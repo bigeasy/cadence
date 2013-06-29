@@ -2328,6 +2328,8 @@ indicates shifting.
 
 Oh, cute; I was calling the return value from `step` an "inverse future."
 
+How about using the object as a value cache? Or is cache to clever?
+
 ## Zero to Many
 
 I creates support for zero-to-many calls of a callback, but implemented it
