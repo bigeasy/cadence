@@ -219,7 +219,8 @@ function cadence () {
               invocation.finalizers.push.apply(invocation.finalizers, finalizers);
               done();
             } else {
-              finalize(finalizers, 0, errors, done);
+              // TODO: Test that a sub-cadence merges it's finalizer errors.
+              finalize(finalizers, 0, invocation.errors, done);
             }
           });
         }
@@ -244,9 +245,9 @@ function cadence () {
     delete callback.run;
     invocation.count++;
     begin.call(invocation.self, invocation, callback.cadence, vargs, function (errors, finalizers) {
-      invocation.errors.push.apply(invocation.errors, errors);
       callback.results[index] = __slice.call(arguments, 2);
       finalize(finalizers, 0, errors, function () {
+        invocation.errors.push.apply(invocation.errors, errors);
         if (++invocation.called == invocation.count) {
           argue.apply(invocation.self, invocation.args);
         }
@@ -294,7 +295,7 @@ function cadence () {
     } else {
       var finalizer = finalizers[index];
       invoke({ steps: [ finalizer.step ], catchers: [], finalizers: [] }, 0, finalizer.previous, function (e) {
-        if (e) errors.push.apply(errors, e);
+        errors.push.apply(errors, e);
         finalize(finalizers, index + 1, errors, callback);
       });
     }
