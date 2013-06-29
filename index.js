@@ -30,7 +30,7 @@ function cadence () {
         callback = function (error) { if (error) throw error };
     if (vargs.length) callback = vargs.pop();
     begin.call(this, null, unfold({}, steps), [async].concat(vargs), function (errors) {
-      if (errors) {
+      if (errors.length) {
         if (callback) callback(errors.shift());
         else throw errors.shift();
       } else if (callback) {
@@ -110,7 +110,7 @@ function cadence () {
     // The caller as invoked the async function directly as an explicit early
     // return to exit the entire cadence.
     if (vargs[0] === null || vargs[0] instanceof Error) {
-      if (vargs[0]) vargs[0] = [ vargs[0] ];
+      vargs[0] = vargs[0] ? [ vargs[0] ] : [];
       invocations[0].count = Number.MAX_VALUE;
       invocations[0].callback.apply(null, vargs);
       return;
@@ -202,10 +202,9 @@ function cadence () {
         if (callback.steps.length) {
           invocation.count++;
           begin.call(invocation.self, invocation,
-              callback, callback.results[index], function (error) {
-            if (error) {
-              invocation.errors.push.apply(invocation.errors, error);
-            } else {
+              callback, callback.results[index], function (errors) {
+            invocation.errors.push.apply(invocation.errors, errors);
+            if (!errors.length) {
               callback.results[index] = __slice.call(arguments, 1);
             }
             if (-1 < index && ++invocation.called == invocation.count) {
@@ -234,11 +233,9 @@ function cadence () {
     delete callback.run;
     invocation.count++;
     begin.call(invocation.self, invocation, callback, vargs, function (errors) {
-      var vargs = __slice.call(arguments, 1);
-      if (errors) {
-        invocation.errors.push.apply(invocation.errors, errors);
-      } else {
-        callback.results[index] = vargs;
+      invocation.errors.push.apply(invocation.errors, errors);
+      if (!errors.length) {
+        callback.results[index] = __slice.call(arguments, 1);
       }
       if (++invocation.called == invocation.count) {
         argue.apply(invocation.self, invocation.args);
@@ -280,10 +277,9 @@ function cadence () {
     return vargs.map(function (vargs) { return vargs.arrayed ? vargs.values : vargs.values.shift() });
   }
 
-  // TODO: Always an errors array, check length.
   function finalize (finalizers, index, errors, callback) {
     if (index == finalizers.length) {
-      callback(errors.length ? errors : null);
+      callback(errors);
     } else {
       var finalizer = finalizers[index];
       invoke({ steps: [ finalizer.step ], catchers: [], finalizers: [] }, 0, finalizer.previous, function (e) {
