@@ -202,7 +202,7 @@ function cadence () {
         if (callback.steps.length) {
           invocation.count++;
           begin.call(invocation.self, invocation,
-              callback, callback.results[index], function (error, result) {
+              callback, callback.results[index], function (error) {
             if (error) {
               invocation.errors.push.apply(invocation.errors, error);
             } else {
