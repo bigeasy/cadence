@@ -11,9 +11,11 @@ function cadence () {
   var steps = __slice.call(arguments, 0);
 
   function begin (caller, cadence, vargs, callback) {
+    // TODO: We pass this forward, better as a parent?
     var invocation = {
       caller: caller,
       errors: [],
+      finalizers: [],
       callbacks: [{ results: [[invoke].concat(vargs)] }]
     };
     invoke.call(this, cadence, 0, invocation, callback);
@@ -62,13 +64,18 @@ function cadence () {
   function unfold (callback, steps) {
     callback.errors = [];
     callback.catchers = [];
+    callback.steps = [];
+    callback.finalizers = [];
     // TODO: No good way to prevent or preserve callbacks. Step function needs
     // to be in array.
     // TODO: Amend: If it matches and only those that match.
-    callback.steps = steps.map(function (step, index) {
+     steps.forEach(function (step) {
       if (Array.isArray(step)) {
-        if (step.length > 1) {
-          callback.catchers[index] = function (errors, error) {
+        if (step.length == 1) {
+          callback.finalizers[callback.steps.length] = { step: step[0] }
+        } else {
+          callback.steps.push(step[0]);
+          callback.catchers[callback.steps.length - 1] = function (errors, error) {
             var catcher = step[step.length - 1], caught = true;
             if (step.length == 4) {
               caught = errors.some(function (error) {
@@ -87,10 +94,9 @@ function cadence () {
             }
             return true;
           }
-          return step[0];
         }
       } else if (typeof step == "function") {
-        return step;
+        callback.steps.push(step);
       } else {
         throw new Error("invalid arguments");
       }
@@ -247,7 +253,7 @@ function cadence () {
 
     arg = 0;
     while (callbacks.length) {
-      callback = callbacks.shift();
+      var callback = callbacks.shift();
       if (callback.arrayed) {
         callback.results = callback.results.filter(function (vargs) { return vargs.length });
       }
@@ -274,6 +280,19 @@ function cadence () {
     return vargs.map(function (vargs) { return vargs.arrayed ? vargs.values : vargs.values.shift() });
   }
 
+  // TODO: Always an errors array, check length.
+  function finalize (finalizers, index, errors, callback) {
+    if (index == finalizers.length) {
+      callback(errors.length ? errors : null);
+    } else {
+      var finalizer = finalizers[index];
+      invoke({ steps: [ finalizer.step ], catchers: [], finalizers: [] }, 0, finalizer.previous, function (e) {
+        if (e) errors.push.apply(errors, e);
+        finalize(finalizers, index + 1, errors, callback);
+      });
+    }
+  }
+
   function invoke (cadence, index, previous, callback) {
     var callbacks = previous.callbacks, args = [], arg, step, result, hold;
 
@@ -292,26 +311,41 @@ function cadence () {
       return;
     }
 
-    // No callbacks means that we use the function return value, if any.
-    if (callbacks.length == 1) {
-      callbacks[0].results[0].shift()
-      if (!callbacks[0].results[0].length) {
+    if (!previous.__args) {
+      // No callbacks means that we use the function return value, if any.
+      if (callbacks.length == 1) {
+        callbacks[0].results[0].shift()
+        if (!callbacks[0].results[0].length) {
+          callbacks.shift();
+        }
+      } else {
         callbacks.shift();
       }
+
+      // Filter out the return value, if there are callbacks left, then
+      // `contextualize` will process them.
+      if (callbacks.length) {
+        args = contextualize(step, callbacks);
+      } else {
+        args = [];
+      }
+      // TODO: Distingish cadence step args from invocation args.
+      previous.__args = args;
     } else {
-      callbacks.shift();
+      args = previous.__args;
     }
 
-    // Filter out the return value, if there are callbacks left, then
-    // `contextualize` will process them.
-    if (callbacks.length) {
-      args = contextualize(step, callbacks);
-    } else {
-      args = [];
+    if (cadence.finalizers[index]) {
+      previous.finalizers.push(cadence.finalizers[index]);
+      cadence.finalizers[index].previous = previous;
     }
 
     if (cadence.steps.length == index) {
-      callback.apply(null, [ null ].concat(args));
+      var finalizers = previous.finalizers.slice();
+      previous.finalizers.length = 0;
+      finalize(finalizers, 0, [], function (errors) {
+        callback.apply(null, [ errors ].concat(args));
+      });
       return;
     }
 
@@ -320,6 +354,7 @@ function cadence () {
 
     invocations.unshift({ callbacks: [], count: 0 , called: 0, index: index,
                           errors: [],
+                          finalizers: previous.finalizers,
                           callback: callback, self: this, caller: previous.caller });
     invocations[0].args = [ cadence, index + 1, invocations[0], callback ]
 
