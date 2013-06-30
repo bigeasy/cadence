@@ -203,7 +203,8 @@ function cadence () {
     callback.run = ! callback.arrayed;
     return function () {
       var vargs = __slice.call(arguments);
-      runSubCadence(invocation, callback, index++, vargs);
+      createCallback(invocation, callback, index++).apply(this, [null].concat(vargs));
+      //runSubCadence(invocation, callback, index++, vargs);
     }
   }
 
@@ -220,6 +221,7 @@ function cadence () {
   function createCallback (invocation, callback, index) {
     if (-1 < index) invocation.count++;
     return function () {
+      delete callback.run;
       var vargs = __slice.call(arguments, 0), error;
       error = vargs.shift();
       if (error) {
@@ -233,17 +235,20 @@ function cadence () {
               callback.cadence, callback.results[index], function (errors, finalizers) {
             invocation.errors.push.apply(invocation.errors, errors);
             callback.results[index] = __slice.call(arguments, 2);
-            function done () {
-              if (-1 < index && ++invocation.called == invocation.count) {
-                argue.apply(invocation.self, invocation.args);
-              }
-            }
+
+            // So... I don't need a signifier for a fixup?
             if (callback.fixup) {
               invocation.finalizers.push.apply(invocation.finalizers, finalizers);
               done();
             } else {
               // TODO: Test that a sub-cadence merges it's finalizer errors.
               finalize(finalizers, 0, invocation.errors, done);
+            }
+
+            function done () {
+              if (-1 < index && ++invocation.called == invocation.count) {
+                argue.apply(invocation.self, invocation.args);
+              }
             }
           });
         }
@@ -253,7 +258,8 @@ function cadence () {
         if (vargs[0] === invoke) {
           invocation.callbacks.filter(function (callback) { return callback.run })
                               .forEach(function (callback) {
-            runSubCadence(invocation, callback, 0, []);
+            // TODO: How is index zero correct? That can't be right.
+            createCallback(invocation, callback, 0).call(this, null);
           });
         }
       }
@@ -261,21 +267,6 @@ function cadence () {
         argue.apply(invocation.self, invocation.args);
       }
     }
-  }
-
-  // Run a sub-cadence.
-  function runSubCadence (invocation, callback, index, vargs) {
-    delete callback.run;
-    invocation.count++;
-    march.call(invocation.self, invocation, callback.cadence, vargs, function (errors, finalizers) {
-      callback.results[index] = __slice.call(arguments, 2);
-      finalize(finalizers, 0, errors, function () {
-        invocation.errors.push.apply(invocation.errors, errors);
-        if (++invocation.called == invocation.count) {
-          argue.apply(invocation.self, invocation.args);
-        }
-      });
-    });
   }
 
   // Parallel arrays make the most sense, really. If the paralleled function
