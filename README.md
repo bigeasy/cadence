@@ -81,28 +81,6 @@ then if a test function passes, it will asynchronously delete the file. We
 assign our cadence to a variable named `deleteIf`. We can now call `deleteIf`
 providing a standard issue Node.js error reporting callback.
 
-### Cadence Basics
-
-Here are the Cadence basics using an example function named `echo` that simply
-forwards it's value to the callback.
-
-```javascript
-function echo (value, callback) {
-  callback(null, value);
-}
-```
-
-Each callback
-
-```javascript
-cadence(function (step) {
-  step(function () {
-    echo(1, step());
-    echo(2, step());
-  }, function (one, two) {
-  });
-});
-
 ### Sub-Cadences
 
 Let's say that we want to get a `stat` object, but include the body of the file
