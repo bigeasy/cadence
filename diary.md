@@ -2330,6 +2330,8 @@ Oh, cute; I was calling the return value from `step` an "inverse future."
 
 How about using the object as a value cache? Or is cache to clever?
 
+Test that callback argument is actually a function. Or what is correct?
+
 ## Zero to Many
 
 I creates support for zero-to-many calls of a callback, but implemented it
