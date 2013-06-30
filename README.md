@@ -677,6 +677,8 @@ Changes for each release.
 
 ### Version 0.0.20
 
+Sun Jun 30 13:04:05 UTC 2013
+
  * Finalize error handling. #117. #116. #116. #105.
  * Implement conditional catch. #110.
  * Test that first error is returned to outer callback. #114.
