@@ -675,6 +675,17 @@ Here is where you would discuss `step.jump` and the function index.
 
 Changes for each release.
 
+### Version 0.0.20
+
+ * Finalize error handling. #117. #116. #116. #105.
+ * Implement conditional catch. #110.
+ * Test that first error is returned to outer callback. #114.
+ * Implement finalizers. #111.
+ * Test that a fixup is not called with an error. #111.
+ * Implement try and catch functions. #109.
+ * Remove shifted callbacks. #112.
+ * Upgrade to Proof 0.0.30. #106.
+
 ### Version 0.0.19
 
 Tue Jun 18 22:03:00 UTC 2013
