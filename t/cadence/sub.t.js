@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
-require('proof')(7, function (step, deepEqual) {
+require('proof')(8, function (step, deepEqual) {
   var fs = require('fs'), cadence = require('../..');
 
   cadence(function (step) {
 
-    step(function () {
-      return 1;
-    });
+    step(function () { return 1 });
+    step(function () { return 2 });
 
-  })(function (error, result) {
+  })(function (error, one, two) {
 
-    deepEqual(result, 1, "step");
+    deepEqual(one, 1, "step");
+    deepEqual(two, 2, "two step");
 
   });
 
@@ -33,13 +33,15 @@ require('proof')(7, function (step, deepEqual) {
 
   cadence(function (step) {
 
-    step(function () {
-      step(Error, function () {
+    if (!step) throw new Error;
+
+    step([function () {
+      step(function () {
         step()(new Error('errored'));
       });
-    }, function (error) {
+    }, function (_, error) {
       deepEqual(error.message, 'errored', 'error caught');
-    });
+    }]);
 
   })(step());
 

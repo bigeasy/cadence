@@ -1,6 +1,7 @@
-# Cadence [![Build Status](https://secure.travis-ci.org/bigeasy/cadence.png?branch=master)](http://travis-ci.org/bigeasy/cadence) [![Coverage Status](https://coveralls.io/repos/bigeasy/cadence/badge.png?branch=master)](https://coveralls.io/r/bigeasy/cadence) [![NPM version](https://badge.fury.io/js/cadence.png)](http://badge.fury.io/js/cadence)
+# Cadence [![Build Status](https://secure.travis-ci.org/bigeasy/cadence.png?branch=master)](http://travis-ci.org/bigeasy/cadence) [![Coverage Status](https://coveralls.io/repos/bigeasy/cadence/badge.png?branch=master)](https://coveralls.io/r/bigeasy/cadence) [![NPM version](https://badge.fury.io/js/cadence.png)](http://badge.fury.io/js/cadence) ![Tracker](https://www.prettyrobots.com/1x1-pixel.png)
 
-A Swiss Army asynchronous control flow function builder for JavaScript.
+A Swiss Army asynchronous control flow function builder for Node.js and
+JavaScript that helps you create highly-parallel control flows.
 
 Cadence is a function builder. It simplifies the writing of asynchronous
 functions of that accept and  error/result callback using a domain specific
@@ -30,13 +31,26 @@ cat(function (error) { if (error) throw error });
 You create a function by passing a function to `cadence` that creates cadences.
 
 We call the series of functions a ***cadence***. We call an individual function
-in a cadence a ***step***. We use the `step` function to define cadences and
-create the callbacks that will take us from one step to another.
+in a cadence a ***step***. We use the `step` function to both define cadences
+and to create the callbacks that will take us from one step to another.
 
-The functions in a cadences are run in serial. A step inside a cadence can
-contain a sub-cadence. We can run multiple sub-cadences in parallel. With this,
-you've got your serial and your parallel, and you mix or match to create the
-asynchronous program you want to run.
+The functions in a cadence are run in **serial**. A step inside a cadence can
+contain callbacks whose return values appear in the next step or sub-cadences.
+The callbacks and sub-cadences in a step are run in **parallel**. You can run
+multiple sub-cadences in parallel. With this, you've got your serial and your
+parallel, and you mix or match to create your asynchronous program.
+
+Documentation is a work in progress. Here is the current word count.
+
+```console
+  425  1982 12935 README.md
+```
+
+ * Arrayed sub-cadences.
+ * Arity.
+ * Fixup cadences.
+ * Jumping.
+ * Finalizers.
 
 ### Accepting Arguments
 
@@ -50,7 +64,7 @@ var cadance = require('cadence'), fs = require('fs');
 var deleteIf = cadence(function (step, file, condition) {
   step(function () {
     fs.stat(file, step());
-  }, function (step, stat) {
+  }, function (stat) {
     if (condition(stat)) fs.unlink(step());
   });
 });
@@ -67,13 +81,495 @@ then if a test function passes, it will asynchronously delete the file. We
 assign our cadence to a variable named `deleteIf`. We can now call `deleteIf`
 providing a standard issue Node.js error reporting callback.
 
-### Catching Asynchronous Errors
+### Sub-Cadences
+
+Let's say that we want to get a `stat` object, but include the body of the file
+in the `stat` object. When we get out `stat` object, we can use a sub-cadence to
+complete the `stat` object by reading the body.
+
+```javascript
+var cadance = require('cadence'), fs = require('fs');
+
+// Stat a file and add the file body to the stat.
+var bodyStat = cadence(function (step, file, condition) {
+  step(function () {
+
+    fs.stat(file, step());
+
+  }, function (stat) {
+
+    // We create a sub-cadence here because we want to work with `stat`. The
+    // `stat` object is in scope for all the function in the sub-cadence.
+    step(function () {
+
+      fs.readFile(file, step());
+
+    }, function (body) {
+
+      stat.body = body;
+      return stat; // return value of both the sub-cadence and the step that
+                   // created the cadence. See more below.
+
+    });
+  });
+});
+
+// Delete a file if it is empty.
+statBody(__filename, function (error) {
+  if (error) throw error
+  process.stdout.write('content-length: ' + stat.size + '\n\n');
+  process.stdout.write(stat.body.toString('utf8'));
+});
+```
+
+TK: Take the above example and say; the sub-cadence return is the first argument
+to the next function. Use a stupid assertion `ok(body.length == size)`.
+
+### Subsequent Arguments
+
+When you create callbacks in a Cadence step, the results are passed onto the
+subsequent step. The order of the callbacks determines the order of of the
+arguments.
+
+```javascript
+cadence(function () {
+  step(function () {
+
+    var first = step();
+    var second = step();
+
+    second(null, 2);
+    first(null, 1);
+
+  }, function (a, b) {
+
+    equal(a, 1, "first");
+    equal(b, 2, "second");
+
+  });
+});
+```
+
+NOTE: Documentation pro-tip: Create examples sooner than later and then
+reference the examples in your wiring.
+
+In the above example, observe that the declaration order determines argument
+order, not the order of invocation of the callbacks. Even if `second` is called
+back before `first`, the argument to first the subsequent step is invoked with
+results of `first` as the first argument `a`,`second` as the second argument
+`b`.
+
+TK: More words and examples here.
+TK: Example using `fs`.
+TK: Always use an initial sub-cadence in the `README.md` so people don't get to
+thinking that it is something to be avoided.
+TK: In the sub-cadence example, talk about scope and closure.
+TK: Move up a section.
+
+### Catching Errors
+
+Because Cadence encourages parallelism, it's internal error handling mechanism
+deals with arrays of errors because parallel operations can also fail in
+parallel, raising many exceptions in parallel. You know, fun stuff.
+
+Externally however, your caller is expecting one single error, because Cadence
+builds a function that follows the error-first callback standard. Thus, even
+when there are many errors, the default is to return the first error that occurs
+in the cadence.
+
+When an error occurs, Cadence waits for all parallel operations to complete,
+then it raises the error along with any other errors that occured in parallel.
+If you want to catch these errors, create a try/catch function pair by wrapping
+it in an array.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    // Do something stupid.
+    fs.readFile('/etc/shadow', step())
+
+  }, function (errors) {
+
+    // Catch the exception.
+    ok(errors[0].code == 'EACCES', 'caught EACCES');
+    ok(errors.length == 1, 'caught EACCES and only EACCES');
+
+  }]);
+})();
+```
+
+In the above, we catch the `EACCES` that is raised when we attempt to read a
+read-protected file. Note the array that binds the catch function to the step
+that proceeds it.
+
+If no error occurs, the catch function is not invoked. The next function in the
+cadence after the try/catch pair is invoked with the successful result of the
+try function.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    // Read a readable file.
+    fs.readFile('/etc/hosts', 'utf8', step())
+
+  }, function (errors) {
+
+    // This will not be called.
+    proecss.stderr.write('Hosts file is missing!\n');
+
+  }], function (hosts) {
+
+    process.stdout.write(hosts);
+
+  });
+})();
+```
+
+When an error triggers the catch function, the catch function can recover and
+continue the cadence by returning normally.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    // Read file that might be missing.
+    fs.readFile(env.HOME + '/.config', 'utf8', step())
+
+  }, function (errors) {
+
+    // That didn't work, for whatever reason, so try the global.
+    fs.readFile('/etc/config', 'utf8', step())
+
+  }], function (config) {
+
+    process.stdout.write(config);
+
+  });
+})();
+```
+
+Also note that both the try function and error function can use sub-cadences,
+arrayed cadences, fixups; everything that Cadence has to offer.
+
+A catch function also catches thrown exceptions.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    throw new Error('thrown');
+
+  }, function (errors) {
+
+    ok(errors[0].message == 'thrown', 'caught thrown');
+    ok(errors.length == 1, 'caught thrown and only thrown');
+
+  }]);
+})();
+```
+
+Errors are provided in an `errors` array. Why an array? Because with Cadence,
+you're encouraged to do stupid things in parallel.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    // Read two read-protected files.
+    fs.readFile('/etc/shadow', step())
+    fs.readFile('/etc/sudoers', step())
+
+  }, function (errors) {
+
+    ok(errors[0].code == 'EACCES', 'caught EACCES');
+    ok(errors[1].code == 'EACCES', 'caught another EACCES');
+    ok(errors.length == 2, 'caught two EACCES');
+
+  }]);
+})();
+```
+
+Note that, the errors are ordered in the **order in which they were caught**,
+not in the order in which their callbacks were declared.
+
+The second argument to a function callback is the first error in the errors
+array. This is in case you're certain that you'll only ever get a single error,
+and the array subscript into the `errors` array displeases you.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    fs.readFile('/etc/shadow', step())
+
+  }, function (errors, error) {
+
+    ok(error.code == 'EACCES', 'caught EACCES');
+
+  }]);
+})();
+```
+
+There is no third argument.
+
+For the sake of style, when you don't want to reference the errors array, you
+can hide it using `` _ `` or if that is already in you, double `` __ ``.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    fs.readFile('/etc/shadow', step())
+
+  }, function (_, error) {
+
+    ok(error.code == 'EACCES', 'caught EACCES');
+
+  }]);
+})();
+```
+
+### Propagating Errors
+
+You can propagate all of the caught errors by throwing the `errors` array.
+
+Imagine a system where sudo is not installed (as is the case with a base
+FreeBSD.)
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    // Read two read-protected files.
+    fs.readFile('/etc/sudoers', step())
+    fs.readFile('/etc/shadow', step())
+
+  }, function (errors) {
+
+    // Maybe sudo isn't installed and we got `ENOENT`?
+    if (!errors.every(function (error) { return error.code == 'EACCES' })) {
+      throw errors;
+    }
+
+  }]);
+})(function (error) {
+
+  // Only the first exception raised is reported to the caller.
+  if (error) console.log(error);
+
+});
+```
+
+You can also just throw an exception of your chosing.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    // Read two read-protected files.
+    fs.readFile('/etc/sudoers', step())
+    fs.readFile('/etc/shadow', step())
+
+  }, function (errors) {
+
+    // Maybe sudo isn't installed and we got `ENOENT`?
+    if (!errors.every(function (error) { return error.code == 'EACCES' })) {
+      throw new Error('something bad happened');
+    }
+
+  }]);
+})(function (error) {
+
+  ok(error.message, 'something bad happened');
+
+});
+```
+
+When you raise an error in an catch function, it cannot be caught in the current
+Cadence. You can still catch it in a calling cadence.
+
+Here we log any errors before raising them all up to the default handler.
+
+```javascript
+cadence(function () {
+  step([function () {
+    step([function ()
+
+      // Read two read-protected files.
+      fs.readFile('/etc/sudoers', step())
+      fs.readFile('/etc/shadow', step())
+
+    }, function (errors) {
+
+      // Maybe sudo isn't installed and we got `ENOENT`?
+      if (!errors.every(function (error) { return error.code == 'EACCES' })) {
+        throw errors;
+      }
+
+    }]);
+  }, function (errors) {
+
+    errors.forEach(function () { console.log(error) });
+
+    throw errors;
+
+  }]);
+})(function (error) {
+
+  ok(error, 'got a single error');
+
+});
+```
+
+As you can see, Cadence will catch exceptions as well as handle errors passed to
+callbacks.
+
+### Conditional Error Handling
+
+Dealing with an array of errors means you're almost always going to want to
+filter the array to see if contains the error you're expecting, and which error
+that might be. Because this is so common, it's built into Cadence.
+
+To create a try/catch pair that will respond only to certain errors, add a
+condition between the try function and the catch function.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    // Read file that might be missing.
+    fs.readFile(env.HOME + '/.config', 'utf8', step())
+
+  }, 'ENOENT', function () {
+
+    // That didn't work because the file does not exist, try the global.
+    fs.readFile('/etc/config', 'utf8', step())
+
+  }], function (config) {
+
+    process.stdout.write(config);
+
+  });
+})();
+```
+
+In the above example, we only catch an exception if the `code` property is equal
+to `ENOENT`. If there is a different error, say the file exists but  we can't
+read it, that error is not caught by try/catch pair.
+
+The condition is tested against the `code` property if it exists. If it doesn't
+exist then it is tested against the `message` property.
+
+The condition can either be a string literal that is tested for equality the
+property or a regular expression.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    throw new Error('handled');
+
+  }, 'handled', function (_, error) {
+
+    ok(error.message == 'handled', 'handled');
+
+  }]);
+})();
+```
+
+The condition must match all the errors raised.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    fs.readFile('/etc/sudoers', step())
+    fs.readFile('/etc/shadow', step())
+
+  }, /^EACCES$/, function (errors) {
+
+    ok(errors.length == 2, 'handled');
+
+  }]);
+})();
+```
+
+You can test for multiple error codes using a regular expression. Here we test
+for both `EACCES` and `ENOENT`.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    fs.readFile('/etc/sudoers', step())
+    fs.readFile('/etc/shadow', step())
+
+  }, /^(EACCES|ENOENT)$/, function (errors) {
+
+    ok(errors.length == 2, 'handled');
+
+  }]);
+})();
+```
+
+You can also be explicit about the property used to test by adding the name of
+that property between the try function and the condition. Here we expllicity
+state that the `code` property is the property to test.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    fs.readFile('/etc/sudoers', step())
+    fs.readFile('/etc/shadow', step())
+
+  }, 'code', /^(EACCES|ENOENT)$/, function (errors) {
+
+    ok(errors.length == 2, 'handled');
+
+  }]);
+})();
+```
+
+If the condition does not match all the examples raised, then the catch function
+is not invoked, and the errors are propagated.
+
+However, if the errors are not caught and propagated out of Cadence and to the
+caller, then the caller will receive the first exception that did not match the
+conditional.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    step()(null,
+    fs.readFile('/etc/sudoers', step())
+    fs.readFile('/etc/shadow', step())
+
+  }, /^(EACCES|ENOENT)$/, function (errors) {
+
+    ok(errors.length == 2, 'handled');
+
+  }]);
+})();
+```
+
+Why? Because we can only return one exception to the caller, so it is better to
+return the unexpected exception that caused the condition to fail, even if it
+was not the first exception raised by the Cadence. It makes it clear that the
+condition is failing because of additional errors.
+
+TK: Throwing errors resets the concept of unmatched.
+
+#### Error Catching Example
 
 Let's extend our `deleteIf` function. Let's say that if the file doesn't exist,
-we ignore the error raised when we stat the file. If we pass `Error` to our
-`step` constructor, the next function in an error handler function. The error
-handler function will be called with the `error` as the first argument if an
-error is returned. If there is no error, the error handler function is skipped.
+we ignore the error raised when we stat the file. To catch the error we wrap our
+call to `stat` in a try/catch function pair. If the call to `stat` results in
+`ENOENT`, our catch function is called. The catch function simply returns early
+because ther is no file to delete.
 
 ```javascript
 // Use Cadence.
@@ -81,13 +577,19 @@ var cadance = require('cadence'), fs = require('fs');
 
 // Delete a file if it exists and the condition is true.
 var deleteIf = cadence(function (step, file, condition) {
-  step(function () {
-    fs.stat(file, step(Error));
-  }, function (error) {
-    if (error.code != "ENOENT") throw error;
-    else step(null);
-  }, function (step, stat) {
+  step([function () {
+
+    fs.stat(file, step());
+
+  }, /^ENOENT$/, function (error) {
+
+    // TK: Early return example can be if it is a directory, return early.
+    step(null);
+
+  }], function (stat) {
+
     if (stat && condition(stat)) fs.unlink(step());
+
   });
 });
 
@@ -106,70 +608,35 @@ If the error is `ENOENT`, we exit early by calling the step function directly as
 a if it were itself an error/result callback, passing `null` to indicate no
 error.
 
-## Working with Events and `` EventEmittter ``
+## Working with Events.
 
-There are times when our API doesn't want us to give it a Node.js style
-`error, result` callback. When working with DOM events or jQuery in the browser
-or `` EventEmitter `` we are generally going to need two types of callbacks, an
-event handling callback that accepts the result, plus an error handling callback
-that handles an error, but only if there is an error.
+Cadence also works with event emitting objects that do not accept an error as
+the first parameter. These are event mechanisms like the DOM events or the
+events generated by the Node.js `EventEmitter`.
 
-When we want to handle events like this, we need create an event 
-Here is a unit test for working with `EventEmitter` illustrating the
-`once` handler.
+Here is a unit test for working with `EventEmitter` illustrating the use of
+events in Cadence.
 
 ```javascript
-var event = require('event'),
-    assert = require('assert'),
-    cadence = require('cadence'),
-    ee = new event.EventEmitter();
+var cadence = require('cadence'), event = require('event')
+  , ee = new event.EventEmitter();
 
 cadence(function (step, ee) {
-  var event = step([].shift);
   step(function () {
-    ee.on('end', event());
-    ee.on('error', event([], 0));
-  }, function (end) {
-    assert.equal(end, 'done');
-  });
-})(ee);
-
-ee.emit('end', 'done');
-```
-
-When you invoke `once` an inverse future is created that collects the
-emitted event value. Cadence will wait until the `once` value is emitted
-before continuing to the next step. The value will be assigned to the
-cadence context using the event name as a variable name.
-
-Unlike the `once` handler, the `on` handler does not block the next step
-in the cadence.
-
-```javascript
-var cadence = require('cadence'),
-    event = require('event'),
-    emitter = new event.EventEmitter();
-
-cadence(function (emitter, step) {
-  step(function () {
-    step(emitter).once('end');
+    ee.on('data', step.event([]));
+    ee.on('end', step.event());
+    ee.on('error', step.error());
   }, function (data) {
     assert.deepEqual(data, [ 1, 2, 3 ]);
   });
 })(emitter);
 
-emitter.emit('end', 'done');
+ee.emit('data', 1);
+ee.emit('data', 2);
+ee.emit('data', 3);
+
+ee.emit('end');
 ```
-
-When you invoke `on`, the results will be gathered in an array in the
-cadence context, keyed by the name of the event. The callback will
-gather results until the final callback for the step function is
-invoked.
-
-**TODO**: Currently there is no support for events that emit more than
-one argument. You can +1 [this
-issue](https://github.com/bigeasy/cadence/issues/50) if this is blocking
-your project.
 
 Below we use the example of splitting an HTTP server log for many hosts
 into a log file for each host.
@@ -181,7 +648,8 @@ cadence(function (step) {
   step(function () {
     var readable = fs.readableStream(__dirname + '/logins.txt');
     readable.setEncoding('utf8');
-    step(readable).on('data').once('end');
+    readable.on('data', step.event([]));
+    readable.on('end');
   }, function (data) {
     var hosts = {};
     data.join('').split(/\n/).foreach(function (line) {
@@ -191,15 +659,62 @@ cadence(function (step) {
     for (var host in hosts) {
       var writable = fs.writableStream(__dirname + '/' + host + '.log');
       writable.end(hosts[host].join('\n') + '\n');
-      step(writable).once('drain');
+      writable.on('drain', step.event());
     }
   });
 })();
 ```
 
+This is a horrible example. Try again.
+
+## Control Flow
+
+Here is where you would discuss `step.jump` and the function index.
+
 ## Change Log
 
 Changes for each release.
+
+### Version 0.0.20
+
+ * Finalize error handling. #117. #116. #116. #105.
+ * Implement conditional catch. #110.
+ * Test that first error is returned to outer callback. #114.
+ * Implement finalizers. #111.
+ * Test that a fixup is not called with an error. #111.
+ * Implement try and catch functions. #109.
+ * Remove shifted callbacks. #112.
+ * Upgrade to Proof 0.0.30. #106.
+
+### Version 0.0.19
+
+Tue Jun 18 22:03:00 UTC 2013
+
+ * Change function index of calling cadence from sub-cadence. #104.
+
+### Version 0.0.18
+
+Mon Jun 17 17:43:13 UTC 2013
+
+ * Create a named function to jump within the cadence. #102.
+
+### Version 0.0.17
+
+Thu Jun 13 23:40:08 UTC 2013
+
+ * Fix arrayed event handlers. #100.
+
+### Version 0.0.16
+
+Thu Apr 25 02:48:25 UTC 2013
+
+ * Measure test coverage using Istanbul and report test coverage using
+   Coveralls. #94. #95.
+ * Rework event building into the `step.event` and `step.error` functions #99.
+ * Fix global variable namespace leak.
+ * Test with Node.js 0.10.
+ * Add support for Bower. #93.
+ * `README.md` editing. #92.
 
 ### Version 0.0.15
 

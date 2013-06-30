@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(5, function (equal, ok) {
+require('proof')(18, function (equal, ok) {
   var fs = require('fs')
     , cadence = require('../..')
     , errors = []
@@ -12,33 +12,33 @@ require('proof')(5, function (equal, ok) {
     equal(error.message, "thrown", "intercepted throw");
   });
 
-  cadence(function (step) {
-    step(Error)(new Error("handed"));
-  }, function (error) {
-    equal(error.message, "handed", "intercepted passed along");
-  })();
+  cadence([function (step) {
+    step()(new Error("handled"));
+  }, function (errors) {
+    equal(errors[0].message, "handled", "intercepted passed along");
+  }])();
 
-  cadence(function (step) {
-    step(Error)();
+  cadence([function (step) {
+    step()();
   }, function (error) {
     throw new Error("should not be called");
-  }, function () {
+  }], function () {
     ok(true, "no error");
   })();
-/*
-    **TODO**: Rethink.
-  cadence(function (step) {
-    step()(new Error(1));
-    step()(new Error(2));
+
+  cadence([function (step) {
+    step()(new Error("one"));
+    step()(new Error("two"));
     step()();
-  }, function (errors) {
-    equal(errors.length, 2, "two errors");
-  })();
- */
-  cadence(function (step) {
-    step(Error)(null, 1);
+  }, function (errors, error) {
+    equal(errors.length, 2, "got all errors")
+    equal(errors[0].message, error.message, "first error is second argument");
+  }])();
+
+  cadence([function (step) {
+    step()(null, 1);
   }, function (error) {
-  }, function (number) {
+  }], function (number) {
     equal(number, 1, "no error with value");
   })();
 
@@ -49,4 +49,69 @@ require('proof')(5, function (equal, ok) {
   } catch (e) {
     equal(e.message, 'exceptional', 'default error handler');
   }
+
+  cadence([function (step) {
+    step()(new Error("handled"));
+  }, "handled", function (errors) {
+    equal(errors[0].message, "handled", "condtionally caught equality");
+  }])();
+
+  cadence([function (step) {
+    step()(new Error("handled"));
+  }, /handle/, function (errors) {
+    equal(errors[0].message, "handled", "condtionally caught regex");
+  }])();
+
+  cadence([function (step) {
+    var error = new Error("handled");
+    error.code = "ENOENT"
+    step()(error);
+  }, /ENOENT/, function (errors) {
+    equal(errors[0].message, "handled", "condtionally caught code regex");
+  }])();
+
+  cadence([function (step) {
+    step()(new Error("handled"));
+  }, "message", "handled", function (errors) {
+    equal(errors[0].message, "handled", "condtionally caught named field equality");
+  }])();
+
+  cadence([function (step) {
+    step()(new Error("handled"));
+  }, "message", /handle/, function (errors) {
+    equal(errors[0].message, "handled", "condtionally caught named field regex");
+  }])();
+
+  cadence([function (step) {
+    step()(new Error("handled"));
+  }, "message", "bogus", function (errors) {
+    throw new Error("should not get here");
+  }])(function (error) {
+    equal(error.message, "handled", "condtionally caught failure");
+  });
+
+  cadence([function (step) {
+    step()(new Error("handled"));
+    step()(new Error("unhandled"));
+  }, "message", /^(handled)$/, function (errors) {
+    throw new Error("should not get here");
+  }])(function (error) {
+    equal(error.message, "unhandled", "condtionally caught did not catch all");
+  });
+
+  cadence([function (step) {
+    step([function () {
+      step()(new Error("handled"));
+      step()(new Error("unhandled"));
+    }, "message", /^(handled)$/, function (errors) {
+      throw new Error("should not get here");
+    }]);
+  }, function (errors) {
+    equal(errors.length, 2, "got all errors");
+    equal(errors[0].message, "handled", "errors still in order one");
+    equal(errors[1].message, "unhandled", "errors still in order two");
+    throw errors;
+  }])(function (error) {
+    equal(error.message, "handled", "uncaughtedness reset");
+  });
 });

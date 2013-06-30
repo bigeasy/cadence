@@ -1,4 +1,4 @@
-var __slice = [].slice;
+var __slice = [].slice, __push = [].push;
 /*
 function die () {
   console.log.apply(console, __slice.call(arguments, 0));
@@ -10,11 +10,33 @@ function say () { console.log.apply(console, __slice.call(arguments, 0)) }
 function cadence () {
   var steps = __slice.call(arguments, 0);
 
-  function begin (steps, vargs, callback) {
+  // Execute the `steps` as a cadence. The initial arguments of the cadence will
+  // be the given `args`. When the cadence completes, it will inovke the given
+  // `callback` handler.
+  //
+  // `callback` is not a standard error-first callback handler. It is a special
+  // callback sigature internal to Cadence. The first argument to callback is an
+  // array of `errors`. Cadence operations tend to generate more than one
+  // exception when things go wrong, because we do what we can in parallel. The
+  // second argument to `callback` is an array of `finalizers` gathered while
+  // running the cadnece. The remaining arguments are the results of the cadence
+  // in order they were declared in the last step of the cadence.
+  //
+  // TODO: Note in documentation that it is the last evaulated even if it
+  // returns early, also examples of how to return multiples from early return,
+  // return ordinarily, then `step(null)`.
+
+  // 
+  function march (caller, steps, args, callback) {
+    // TODO: We pass this forward, better as a parent?
+    // TODO: Unfold can go in here.
     var invocation = {
-      callbacks: [{ results: [[invoke].concat(vargs)] }]
+      caller: caller,
+      errors: [],
+      finalizers: [],
+      __args: args
     };
-    invoke.call(this, steps, 0, invocation, callback);
+    invoke.call(this, unfold({}, steps), 0, invocation, callback);
   }
 
   // Execute is the function returned to the user. It represents the constructed
@@ -25,7 +47,16 @@ function cadence () {
     var vargs = __slice.call(arguments, 0),
         callback = function (error) { if (error) throw error };
     if (vargs.length) callback = vargs.pop();
-    begin.call(this, steps, [async].concat(vargs), callback);
+    march.call(this, null, steps, [async].concat(vargs), function (errors, finalizers) {
+      var vargs = [null].concat(__slice.call(arguments, 2));
+      finalize(finalizers, 0, errors, function (errors) {
+        if (errors.length) {
+          callback(errors.uncaught || errors.shift());
+        } else {
+          callback.apply(null, vargs);
+        }
+      });
+    });
   }
 
   // To use the same `step` function throughout while supporting reentrancy,
@@ -48,47 +79,72 @@ function cadence () {
   // async function.
 
   //
-  function async () { return _async.apply(null, arguments) }
+  function async () { return createHandler.apply(null, arguments) }
 
-  function _async() {
+  function unfold (callback, steps) {
+    callback.errors = [];
+    callback.catchers = [];
+    callback.steps = [];
+    // TODO: DOCUMENT: Only one finalizer after each step. You cannot have two
+    // consecutive finalizers.
+    callback.finalizers = [];
+    // TODO: No good way to prevent or preserve callbacks. Step function needs
+    // to be in array.
+    // TODO: Amend: If it matches and only those that match.
+     steps.forEach(function (step) {
+      if (Array.isArray(step)) {
+        if (step.length == 1) {
+          callback.finalizers[callback.steps.length] = { step: step[0] }
+        } else {
+          callback.steps.push(step[0]);
+          callback.catchers[callback.steps.length - 1] = function (errors, error) {
+            var catcher = step[step.length - 1], uncaught = [], test;
+            errors.forEach(function (error) {
+              var caught = true;
+              if (step.length == 4) {
+                caught = (typeof step[2] == 'string') ? error[step[1]] == step[2]
+                                                      : step[2].test(error[step[1]]);
+              } else if (step.length == 3) {
+                var value = error.code || error.message;
+                caught = (typeof step[1] == 'string') ? value == step[1]
+                                                      : step[1].test(value);
+              }
+              if (!caught && !errors.uncaught) errors.uncaught = error;
+              return caught;
+            });
+            if (!errors.uncaught) {
+              catcher.call(this, errors, errors[0]);
+            } else {
+              throw errors;
+            }
+          }
+        }
+      } else if (typeof step == "function") {
+        callback.steps.push(step);
+      } else {
+        throw new Error("invalid arguments");
+      }
+    });
+    return callback;
+  }
+
+  function createHandler () {
     var vargs = __slice.call(arguments, 0), i = -1;
 
     // The caller as invoked the async function directly as an explicit early
     // return to exit the entire cadence.
     if (vargs[0] === null || vargs[0] instanceof Error) {
+      vargs[0] = vargs[0] ? [ vargs[0] ] : [];
+      vargs.splice(1, 0, invocations[0].finalizers.splice(0, invocations[0].finalizers.length));
+      console.log(vargs);
       invocations[0].count = Number.MAX_VALUE;
       invocations[0].callback.apply(null, vargs);
       return;
     }
 
-    // If our first argument is a function, we check to see if it is a jump
-    // instruction. If the function is a member of the current cadence, we
-    // will inovke that function with the results of this step.
-
-    // Search for the function in the current cadence.
-    if (vargs.length == 1 && typeof vargs[0] == "function") {
-      for (i = invocations[0].args[0].length - 1;
-           i > -1 && invocations[0].args[0][i] !== vargs[0]; i--) {}
-    }
-
-    // If we find the function in the current cadence, we set the index of
-    // next step function to execute; then remove the function argument and
-    // procede.
-    if (~i) {
-      invocations[0].args[1] = i;
-      vargs.shift();
-    }
-
     var callback = { errors: [], results: [] };
-    var fixup;
-    if (fixup = (vargs[0] === async)) {
+    if (callback.fixup = (vargs[0] === async)) {
       vargs.shift();
-    }
-    if (typeof vargs[0] == "string") {
-      callback.event = vargs.shift();
-    }
-    if (typeof vargs[0] == "object" && !Array.isArray(vargs[0])) {
-      callback.target = vargs.shift();
     }
     if (!isNaN(parseInt(vargs[0], 10))) {
       callback.arity = +(vargs.shift());
@@ -96,29 +152,47 @@ function cadence () {
     if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
       callback.arrayed = !! vargs.shift();
     }
-    var zeroToMany;
-    if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
-      zeroToMany = !! vargs.shift();
-    }
-    if (Error === vargs[0]) {
-      invocations[0].catchable = callback.catchable = !! vargs.shift();
-    }
-    if (Array.prototype.shift === vargs[0]) {
-      callback.shifted = !! vargs.shift();
-    }
-    callback.cadence = vargs;
-    if (callback.event) return createEvent(invocations[0], callback);
     invocations[0].callbacks.push(callback);
-    if (vargs.length) {
-      if (!vargs.every(function (arg) { return typeof arg == "function" })) {
-        throw new Error("invalid arguments");
-      }
-      if (!fixup) return createCadence(invocations[0], callback);
+    callback.cadence = vargs;
+    unfold({}, vargs); // for the sake of error checking
+    if (callback.cadence.length) {
+      if (!callback.fixup) return createCadence(invocations[0], callback);
     }
     if (callback.arrayed)
-      if (zeroToMany) return createCallback(invocations[0], callback, -1);
+      if (this.event) return createCallback(invocations[0], callback, -1);
       else return createArray(invocations[0], callback);
     return createCallback(invocations[0], callback, 0);
+  }
+
+  async.event = function () {
+    var callback = createHandler.apply({ event: true }, arguments);
+    return function () {
+      return callback.apply(null, [ null ].concat(__slice.call(arguments)));
+    }
+  }
+
+  async.error = function () {
+    return createHandler.apply({ event: true }, [0, []].concat(__slice.call(arguments)))
+  }
+
+  async.jump = function (label) {
+    // If our first argument is a function, we check to see if it is a jump
+    // instruction. If the function is a member of the current cadence, we
+    // will invoke that function with the results of this step.
+
+    // Search for the function in the current cadence. If we find the function
+    // in the current cadence, we set the index of next step function to
+    // execute; then remove the function argument and proceed.
+    var invocation = invocations[0];
+    while (invocation) {
+      for (var i = 0, I = invocation.args[0].steps.length; i < I; i++) {
+        if (invocation.args[0].steps[i] === label) {
+          invocation.args[1] = i;
+          return;
+        }
+      }
+      invocation = invocation.caller;
+    }
   }
 
   // Create a sub-cadence.
@@ -127,11 +201,12 @@ function cadence () {
     callback.run = ! callback.arrayed;
     return function () {
       var vargs = __slice.call(arguments);
-      runSubCadence(invocation, callback, index++, vargs);
+      createCallback(invocation, callback, index++).apply(null, [null].concat(vargs));
+      //runSubCadence(invocation, callback, index++, vargs);
     }
   }
 
-  // Create an an arryed callback.
+  // Create an arrayed callback.
   function createArray (invocation, callback) {
     var index = 0;
     return function () {
@@ -140,108 +215,56 @@ function cadence () {
     }
   }
 
-  // Create an event callback.
-  function createEvent (invocation, prototype) {
-    return function () {
-      var vargs = __slice.call(arguments),
-          callback = Object.create(prototype, { errors: { value: [] }, results: { value: [] } }),
-          targets = [], event, fn;
-      invocations[0].callbacks.push(callback);
-      while (vargs[0] && vargs[0][callback.event]) {
-        targets.push(vargs.shift());
-      }
-      if (!targets.length && callback.target) {
-        targets.push(callback.target);
-      }
-      if (typeof vargs[0] == "string") {
-        event = vargs.shift();
-      } else {
-        throw new Error("event name required");
-      }
-      if (Array.isArray(vargs[0])) {
-        callback.arrayed = !! vargs.shift();
-      } else if (event == "error") {
-        callback.arrayed = true;
-        callback.arity = 0;
-      }
-      if (!isNaN(+(vargs[0]))) {
-        callback.arity = +(vargs.shift());
-      }
-      callback.shifted = event != "error";
-      fn = callback.arrayed
-          ? createCallback(invocation, callback, -1)
-          : createCallback(invocation, callback, 0);
-      while (targets.length) {
-        targets.shift()[callback.event](event, fn);
-      }
-      return fn;
-    }
-  }
-
   // Create a scalar callback.
   function createCallback (invocation, callback, index) {
     if (-1 < index) invocation.count++;
     return function () {
       var vargs = __slice.call(arguments, 0), error;
-      if (!callback.shifted) error = vargs.shift();
+      error = vargs.shift();
       if (error) {
-        thrown(invocation, error, callback);
+        invocation.errors.push(error);
       } else {
         if (index < 0) callback.results.push(vargs);
         else callback.results[index] = vargs;
         if (callback.cadence.length) {
           invocation.count++;
-          begin.call(invocation.self, callback.cadence, callback.results[index], function (error, result) {
-            if (error) {
-              thrown(invocation, error, callback);
+          march.call(invocation.self, invocation,
+              callback.cadence, callback.results[index], function (errors, finalizers) {
+            __push.apply(invocation.errors, errors);
+            callback.results[index] = __slice.call(arguments, 2);
+
+            if (callback.fixup) {
+              __push.apply(invocation.finalizers, finalizers);
+              done();
             } else {
-              callback.results[index] = __slice.call(arguments, 1);
+              // TODO: Test that a sub-cadence merges it's finalizer errors.
+              finalize(finalizers, 0, invocation.errors, done);
             }
-            if (-1 < index && ++invocation.called == invocation.count) {
-              invoke.apply(invocation.self, invocation.args);
+
+            function done () {
+              if (-1 < index && ++invocation.called == invocation.count) {
+                argue.apply(invocation.self, invocation.args);
+              }
             }
           });
         }
         // Indicates that the function has completed, so we need create
         // the callbacks for parallel cadences now, the next increment of
         // the called counter, which may be the last.
-        if (vargs[0] == invoke) {
-          invocation.callbacks.filter(function (callback) { return callback.run }).forEach(function (callback) {
-            runSubCadence(invocation, callback, 0, []);
+        if (vargs[0] === invoke) {
+          invocation.callbacks.forEach(function (callback) {
+            if (callback.run) {
+              // A reminder; zero index because the result is not arrayed.
+              createCallback(invocation, callback, 0).apply(null);
+            }
           });
         }
       }
-      if (index > -1 && ++invocation.called == invocation.count) {
-        invoke.apply(invocation.self, invocation.args);
+      if (index < 0 ? invocation.errors.length : ++invocation.called == invocation.count) {
+        argue.apply(invocation.self, invocation.args);
       }
-    }
-  }
-
-  // Run a sub-cadence.
-  function runSubCadence (invocation, callback, index, vargs) {
-    delete callback.run;
-    var steps = callback.cadence;
-    invocation.count++;
-    begin.call(invocation.self, steps, vargs, function (error) {
-      var vargs = __slice.call(arguments, 1);
-      if (error) {
-        thrown(invocation, error, callback);
-      } else {
-        callback.results[index] = vargs;
-      }
-      if (++invocation.called == invocation.count) {
-        invoke.apply(invocation.self, invocation.args);
-      }
-    });
-  }
-
-  function thrown (invocation, error, callback) {
-    var steps = invocation.args[0], next = steps[invocation.index + 1];
-    if (next && callback.catchable) {
-      callback.errors = [ error ];
-    } else {
-      invocation.abended = true;
-      invocation.callback(error);
+      // If this is a sub-cadence, do not auto start it.
+      callback.run = false;
     }
   }
 
@@ -252,7 +275,7 @@ function cadence () {
 
     arg = 0;
     while (callbacks.length) {
-      callback = callbacks.shift();
+      var callback = callbacks.shift();
       if (callback.arrayed) {
         callback.results = callback.results.filter(function (vargs) { return vargs.length });
       }
@@ -279,75 +302,101 @@ function cadence () {
     return vargs.map(function (vargs) { return vargs.arrayed ? vargs.values : vargs.values.shift() });
   }
 
-  function invoke (steps, index, previous, callback) {
+  function finalize (finalizers, index, errors, callback) {
+    if (index == finalizers.length) {
+      callback(errors);
+    } else {
+      var finalizer = finalizers[index];
+      invoke({ steps: [ finalizer.step ], catchers: [], finalizers: [] }, 0, finalizer.previous, function (e) {
+        __push.apply(errors, e);
+        finalize(finalizers, index + 1, errors, callback);
+      });
+    }
+  }
+
+  function argue (cadence, index, previous, callback) {
     var callbacks = previous.callbacks, args = [], arg, step, result, hold;
 
-    if (previous.thrown) {
-      callback(previous.thrown);
+    if (previous.errors.length) {
+      var catcher = cadence.catchers[index - 1];
+      if (catcher) {
+        cadence.catchers[index - 1] = null;
+        cadence.steps[index - 1] = catcher;
+        previous.__args = [ previous.errors, previous.errors[0] ];
+        previous.callbacks.length = 1;
+        invoke(cadence, index - 1, previous, callback);
+      } else {
+      var finalizers = previous.finalizers.splice(0, previous.finalizers.length);
+        callback(previous.errors, finalizers);
+      }
       return;
     }
-    if (previous.abended) return;
 
-
-    var caught = [];
-    if (previous.catchable) {
-      var caught = callbacks.filter(function (callback) { return callback.errors.length });
-    }
-
-    if (steps[index] && previous.catchable && !caught.length) {
-      previous.catchable = false;
-      invoke.call(this, steps, index + 1, previous, callback);
-    } else {
-      // No callbacks means that we use the function return value, if any.
-      if (callbacks.length == 1) {
-        callbacks[0].results[0].shift()
-        if (!callbacks[0].results[0].length) {
-          callbacks.shift();
-        }
-      } else {
+    // No callbacks means that we use the function return value, if any.
+    if (callbacks.length == 1) {
+      callbacks[0].results[0].shift()
+      if (!callbacks[0].results[0].length) {
         callbacks.shift();
       }
-
-      // Filter out the return value, if there are callbacks left, then
-      // `contextualize` will process them.
-      if (caught.length) {
-        args = callbacks.filter(function (callback) {
-          return callback.catchable;
-        }).map(function (callback) {
-          return callback.errors.shift();
-        });
-      } else {
-        if (callbacks.length) {
-          args = contextualize(step, callbacks);
-        } else {
-          args = [];
-        }
-      }
-
-      if (steps.length == index) {
-        callback.apply(null, [ null ].concat(args));
-        return;
-      }
-
-      // Get the next step.
-      step = steps[index];
-
-      invocations.unshift({ callbacks: [], count: 0 , called: 0, index: index,
-                            callback: callback, self: this });
-      invocations[0].args = [ steps, index + 1, invocations[0], callback ]
-
-      hold = async();
-      try {
-        result = step.apply(this, args);
-      } catch (error) {
-        // We're not a replacement for try/catch, so set up the next step for
-        // failure, ensure that our hold function invokes the next step.
-        invocations[0].thrown = error;
-        invocations[0].called = invocations[0].count - 1;
-      }
-      invocations.shift();
-      hold.apply(this, [ null, invoke ].concat(result === void(0) ? [] : [ result ]));
+    } else {
+      callbacks.shift();
     }
+
+    // Filter out the return value, if there are callbacks left, then
+    // `contextualize` will process them.
+    if (callbacks.length) {
+      args = contextualize(step, callbacks);
+    } else {
+      args = [];
+    }
+    // TODO: Distingish cadence step args from invocation args.
+    previous.__args = args;
+
+    invoke.call(this, cadence, index, previous, callback);
+  }
+
+  function invoke (cadence, index, previous, callback) {
+    var callbacks = previous.callbacks, args = [], arg, step, result, hold;
+
+    args = previous.__args;
+
+    // Add the finalizers for the current step. Save the previous invocation
+    // with the step so we can invoke the finalizer with arguments generated by
+    // the previous invocation.
+    if (cadence.finalizers[index]) {
+      previous.finalizers.push(cadence.finalizers[index]);
+      cadence.finalizers[index].previous = previous;
+    }
+
+    if (cadence.steps.length == index) {
+      var finalizers = previous.finalizers.splice(0, previous.finalizers.length);
+      callback.apply(null, [ [], finalizers ].concat(args));
+      return;
+    }
+
+    // Get the next step.
+    step = cadence.steps[index];
+
+    invocations.unshift({ callbacks: [], count: 0 , called: 0, index: index,
+                          errors: [],
+                          finalizers: previous.finalizers,
+                          callback: callback, self: this, caller: previous.caller });
+    invocations[0].args = [ cadence, index + 1, invocations[0], callback ]
+
+    hold = async();
+    try {
+      result = step.apply(this, args);
+    } catch (errors) {
+      if (errors === previous.errors) {
+        invocations[0].errors.uncaught = errors.uncaught;
+      } else {
+        errors = [ errors ];
+      }
+      __push.apply(invocations[0].errors, errors);
+      invocations[0].called = invocations[0].count - 1;
+    }
+    invocations.shift();
+    hold.apply(this, [ null, invoke ].concat(result === void(0) ? [] : [ result ]));
   }
 
   return execute;

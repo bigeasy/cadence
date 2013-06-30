@@ -42,6 +42,16 @@ improvement, but that could simply be an assumption that comes from frustration,
 one that could be entirely ungrounded. If there is room for improvement, I'm not
 confident that I'll find that room or know what to do once I'm in it.
 
+## Concerns Needing Decisions
+
+From the above are the following questions...
+
+ * Do you want to provide a default error handler for a cadence? (No.)
+ * What is the correct behavior of the default invocation?
+ * What became of your changes for events? (Found 'em!)
+ * Can I jump to a place in a parent?
+ * Can I have fixups in callback invocations?
+
 ## A Bunch of Unrecorded Decisions
 
 It is not my intention at the time of this commit to back fill the decisions
@@ -395,7 +405,7 @@ cadence(function (path, since, step) {
 
     });;
 
-})(".", +(new Date()) - 1000 * 60 * 10);
+})(".", +(new Date) - 1000 * 60 * 10);
 ```
 
 The problem with the above is this; what happens if `step()` is not called? In
@@ -1487,9 +1497,254 @@ Creating my own minifier, a variation of UglifyJS that would skip functions if
 they had a particular name or naming convention, or might possibly look for
 `step`, and skip all the functions within it.
 
-## Errors
+**Decision**: Hidden context goes, minification stays. Use variables for named
+functions. Airty is determined by the preceding step, not the function signature
+of the step.
 
-It is the opinion of the programmers that exceptions are for exceptional
+## Error Handling
+
+What follows are some general questions on error handling, thereafter followed
+by my programmers-journal/tear-soaked-diary about error handling.
+
+### What do Node.js Veterans Expect from an Error-First Callback?
+
+The best thing to do is to ask the Node.js community, how do you handle
+parallelism within an error-first callback function? What is the current
+convention and is it correct?
+
+I'm sure there are a lot of people using
+[`require('async').parallel`](http://nodejsreactions.tumblr.com/post/53765515453/require-async-parallel)
+and are happy with its behavior; where the result of any error in any parallel
+operation is to return the first error, but let the remaining parallel functions
+run to completion without calling the callback. If any of the remaining
+operations create an error the error is lost.
+
+This is the issue I'm trying to resolve, how do you report parallel errors in
+callbacks?
+
+Here is what I believe to be true and universally agreed upon: The error-first
+callback convention expects to be called once and only once by the function to
+which it is given. If there are two errors it will be unconventional, and most
+surprising, for the callback to be called once for each error.
+
+Also universally agreed upon, and almost not worth mentioning, is that `error`
+is an `Error` object an not an array of `Error` objects or any other such
+nonsense.
+
+When you are running operations in parallel, you could have multiple errors.
+Perhaps you're `readFile`ing the files in a directory listing, but you don't
+have permission to read those files. In this case, getting the first instance
+back will probably give you enough information to solve the problem. *However*,
+if, in parallel, you're establishing a database connection and reading a file,
+and the network is down and the file is missing, you're only going to get a
+partial picture of what is wrong.
+
+Thus, let's put a summary here. When running in parallel within a callback:
+
+ * do you return just the first `Error` or all the `Error`s?
+ * how you do you group all the `Error`s, as a property of an umbrella `Error`?
+ * how do you know which of your parallel operations raised the `Error`?
+ * when a parallel operation fails, do you make a best effort to terminate the
+   other operations, or do you let them run to completion?
+
+The caller is expecting an `Error`, not an array of errors. One could create an
+umbrella `Error` object and have a `parallelErrors` property that is an array
+member but, another belief of mine is that people are going to
+`if`&nbsp;`(error)`&nbsp;`throw`&nbsp;`error` and they expect that error to have a
+meaningful message. If you have a library like `async` doing your parallelism,
+you're going to have to also provide an error message to the `parallel` call to
+add to the umbrella `Error`, otherwise the best it can surmise is
+`"something`&nbsp;`bad`&nbsp;`happened"`.
+
+Furthermore, getting back an exception of this sort requires navigating the tree
+structure that it would create, this `Error` is really a collection of `Error`s
+so let's loop through that, and, oh, look, one of `Error`s is also an umbrella
+`Error` so let's recurse.
+
+Finally, gathering up `Error`s from parallel operations adds the question of
+how to match the `Error` with the operation, if that is something that is at all
+necessary. `Error` objects usually have a little bit of context, plus their
+stack trace. If you're propagating an `Error`, not handling it within the
+parallel operation that raised it, it's usually for the sake of logging, not to
+use the `Error` to answer all your questions.
+
+I'm sure you'll say that this is why we have `EventEmitter`, which probably
+suggests that reporting only the first error makes the most sense, but
+`async.parallel` exists, so what else does one have to consider when they use
+it. What of those swallowed `Error`s?
+
+### End Transmission
+
+You can stop reading now. This is what are some things that occur to me.
+
+Cadence will make serial callback operations parallel, so I have the additional
+question of whether or not those should run to completion.
+
+Any step can easily run parallel operations, all you need to do is create more
+than one step function, so this is a problem that is everywhere in Cadence. It
+becomes unpleasant to say that an error handler in Cadence will infer
+parallelism, because then we're talking about arrays of errors everywhere we go.
+
+Thus, I can say that Cadence **encourages parallelism**, which is why this is
+such a problem for me. Without the parallelism, these operations would take
+place in serial. If it were serial, if you weren't using Cadence, you'd only get
+the failed database connection, because you wouldn't get to the point where the
+file is opened.
+
+Okay, but now you have an open file but an error has occurred. Does Cadence need
+some sort of a `finally` construct? (`step` could return a cleanup cadence, add
+to a sub-cadence, in scope, gets called last.)
+
+Hmm... Arrays of errors and encouraged parallelism. Internal to Cadence, errors
+are arrays of errors.
+
+```javascript
+cadence(function () {
+  var db, fd;
+  step(function () {
+    step(function () {
+      // ... a cadence that opens a database and a file handle ...
+    });
+  }, function (errors, result) {
+    step(function () {
+      if (db) db.close(step());
+    }, function () {
+      if (fd) fs.close(fd, step());
+    }, function () {
+      if (errors) throw errors[0];
+      return result;
+    });
+  });
+});
+```
+
+Or, better still, using a funnel.
+
+```javascript
+cadence(function () {
+  step(function () {
+    db.open(step(Error));
+    fs.open('config.json', step(Error));
+  }, function (errors, db, fd) {
+    // This?
+    step(errors, function () {
+    }, function () {
+      // here we shut down...
+    });
+    // Or this?
+    if (errors) step()(errors, db, fd, null); // prepetuate?
+    else step(function () {
+      // ...do stuff with handles...
+    });
+  }, function (errors, db, fd, result) {
+    step(function () {
+      if (db) db.close(step());
+    }, function () {
+      if (fd) fs.close(fd, step());
+    }, function () {
+      if (errors) throw errors[0];
+      return result;
+    });
+  });
+});
+```
+
+What about a janitor?
+
+```javascript
+cadence(function () {
+  step(function () {
+    db.open(step(Error));
+    fs.open('config.json', step(Error));
+  }, function (errors, db, fd) {
+    step.cleanup(function () {
+      if (db) db.close(step());
+      if (fd) fs.close(fd, step());
+    });
+    if (errors) throw errors[0];
+    step(function () {
+      // ... do what you want, the jantor is invoked when all the steps
+      // in the step that created it finish.
+    });
+  });
+```
+
+Here the error handling callback gets errors *and* results. The errors are in an
+array, because we encourage parallelism, so we want to expose all of the
+parallelism to you, so you can decide how to expose it to your callers. Maybe
+you do want a tree of errors, or maybe you have an event emitter somewhere that
+you can feed errors to.
+
+Here's how you could build your own tree of error.
+
+```javascript
+cadence(function () {
+  step(Error, function () {
+    // ... huge cadence.
+  });
+}, function (errors) {
+  var error = new Error('much bad happened');
+  error.errors = errors;
+  throw error;
+});
+```
+
+Can we make things look like Objective-C?
+
+```javascript
+cadence(function () {
+  step(Error, function () {
+    // ... huge cadence.
+  });
+}, [Error, function (errors) {
+  var error = new Error('much bad happened');
+  error.errors = errors;
+  throw error;
+}]);
+```
+
+Or even?
+
+```javascript
+cadence(function () {
+  step([function () {
+    // ... try,
+  }, function (errors) {
+    // ... catch
+    throw errors;
+  }]);
+});
+```
+
+Thus, oh, hey, maybe array-wrapped is also a finalizer?
+
+```javascript
+cadence(function () {
+  step(function () {
+    // Cleanups get caled as long as the step doesn't get an error. Cleanup is
+    // called when the cadence is over.
+    db.open(step([function (db) { db.close(step()) }]));
+    fs.open('config.json', step([function (fd) { fs.close(fd, step()) }]));
+  }, function (db, fd) {
+    step(function () {
+      // ... do what you want, the jantor is invoked when all the steps
+      // in the step that created it finish.
+    });
+  });
+```
+
+These are the answers. Challenge to get the errors to propogate all the way up
+to the catch block. Also, you can cancel, but cancelation doesn't mean that we
+don't run finalizers.
+
+This is a garden of pure ideology. Increase in minified size doesn't matter.
+
+For conditional catches, it first tries the code, if there is no code, it tries
+the message, to be specific, specify two.
+
+### Original Ramblings Here
+
+It is the opinion of this programmer that exceptions are for exceptional
 conditions, and that each exception should be handled as it occurs, so we don't
 have a straight-forward way to gather errors. If something might error, catch
 the error immediately.
@@ -1587,6 +1842,167 @@ an array of errors is something you're going to have to construct yourself, and
 report yourself, because there is no facility for reporting multiple errors from
 an error, result callback signature, and I don't want to be the man to invent
 one.
+
+### Errors Gathered, Why Not?
+
+New thoughts, now that we're getting close do done on this library.
+
+Currently, exception handling is handled by a `thrown` method. It would be
+better to pass it on to a subsequent call to invoke, so then this becomes
+parameters to the invoke function and the errors are handled there.
+
+It doesn't make sense to have an array of errors, really. We need to abend on
+the first exception, allowing any parallel invocations to fail silently.
+
+Although, we might want the opportunity to gather up errors, so if we're coming
+off of a funnel, but then how do we know it is a funnel? There is no way to
+know, so if you want to handle each exception, creating a list, then do it with
+the context that a sub-cadence will give you.
+
+This is the final thoughts on the matter. We can put this in the documentation.
+
+An exception jumps the stack and loses all context. If you need to catch, you
+need to catch, and we can't make that any easier.
+
+Maybe there are times when you do want the error first, so that you don't have
+to write a separate function, because it's not all that exceptional after all?
+
+```javascript
+cadence(function (step, files) {
+  var stats = []
+  files.forEach(step([], function (file) {
+    fs.stat(file, step(Error));
+  }, function (error, stat) {
+    return { error: error, stat: stat };
+  }));
+});
+```
+
+This might be a better way of handling expected errors.
+
+### Exception Handling
+
+*Note*: This was appended to the end of the document late in the project and
+moved back up here with the rest of the error stuff.
+
+Probably need to go over all the places where exceptions can occur. The question
+is; does Cadence catch exceptions thrown by callbacks? Should it?
+
+What it shouldn't do is what it does now. It returns multiple errors for a
+callback. It needs to either return the first error encountered, or else it
+needs to return it's own error that contians a list of caught errors.
+
+Currently, I'm favoring the first one, because exceptions are exceptions. They
+are exceptional, they are not supposed to happen. If the file system is full, or
+of the network is down, you probably only need a sample of the mess of errors
+that would be raised in this condition.
+
+Also, a listing of errors is somewhat arbitrary. In a step where a number of
+things are happening, we don't really know or care which one of them failed, do
+we? How does the world really work?
+
+My examples keep coming back to the file system, going to though a directory
+listing in parallel. It may break at some point, say that a file is read
+protected, but the directory listings are occuring in parallel, there may be
+many such files. How do we report them? Wait, why do we report them? What can we
+do with a detailed report of exceptional conditions? Worse, imagine that we've
+called our cadence function recursively, now we might have a tree of exceptional
+conditions.
+
+That tree would require an `Error` that wraps other errors, you wouldn't be able
+to piggy back, because a Cadence might call a Cadence, who gets to ride
+piggyback? How is that structuered? Imagine that this builder is called by both
+a an abending `fs` function and an abending Cadence function. Maybe `fs` comes
+first, or maybe it is the Cadence function. Different logic is require for
+either.
+
+```javascript
+function gotMeAnError (instance, error) {
+  if (!instance.firstError) {
+    instance.firstError = error;
+    error.$errors = [ error ];
+  }
+}
+```
+
+There might be a convoluted data structure to build in the first error, but the
+simple way to gather up errors is to do this.
+
+```javascript
+function gotMeAnError (instance, error) {
+  if (!instance.error) {
+    instance.error = new Error("something bad happend");
+    instance.error.errors = [ error ];
+  } else {
+    instance.error.errors.push(error);
+  }
+}
+```
+
+Obvious, but it means that any excpetion thrown by a function built with Cadence
+requires some sort of unwrappering, even if it is serial.
+
+Errors feel like a chink in the armor.
+
+The next thought that if you want to gather up exceptions in a parallel
+execution, then that is more than exception handling. You're looking to do more
+than handle exceptions, you're really gathering up some diagnostics. That is
+part of the work of your function, so explicitly handle those exceptions in your
+cadence using `Error`.
+
+Sounds good, but then I imagine that that function would look like, `Error`
+everywhere, so then I go back to thinking about gathering a tree of errors.
+
+Except that in my use of Cadence, I've never really wanted to gather up a bunch
+of errors into an error ball.
+
+Anothing thing about the error ball; parallelism, it shouldn't matter much. I
+find that I read in parallel, but I funnel into a step to do something drastic,
+to make a change. That commit doesn't take place until a parallel read has
+completed. I'm not seeing where I need more than the first error. If I do need
+all the errors, then I need to perform the operation in serial, not in parallel.
+
+Oh! Oh! Oh!
+
+How about this: `[Error]` and errors are going to be gathered? How about them
+apples? You like? Or what if you are doing someting in parallel, that means you
+get the parallel exception? Um, but `[Error]` that means it gets wrapped and
+propagated that way, or it means that an error handler will get all errors in an
+array? `[Error, "unable to shave yak"]`. Okay, something, something, but abend
+on first error is what we do first, and it ought to stop other cadences, right?
+Sub-cadences and parallel cadences, or does it wait for them to finish? Or does
+it let them soldier on in obscurity? You can have a root array `canceled` and
+set its length to 1 to indicated that it has been canceled; `canceled[0]`.
+
+I can't tell if that matters, to cancel them or to let them run to completion.
+There's going to be a case where I'll have file handles open at some point.
+
+It is an example of where there error first callback breaks down, in fact, it is
+an example of all the complexities of concurrent programming.
+
+**Naw**, the more I look at the error handling example, the more I like the
+structure of it. Adding a error-first callback to the cadence makes it look not
+that much different from a plain old callback. The nice thing about the skipped
+error function is that each step can do one thing. The next step is to either
+deal with the *exception* or else it is to continue along it's merry way.
+
+The signifier `}, function (error) {` can *mean* something, dag-gummit!
+
+### Error Handling
+
+I'd decided to have a separate function that was called for an error, but
+skipped if there was no error. Now I'm leaning toward making it so that `Error`
+means that the next step is a standard error handling function, expecting an
+error-first callback.
+
+Does this mean that some other sort of callback handler might be used with
+Cadence?
+
+It may be easier to document, so say, simply, sometimes you do want a chance to
+inspect an error, for an exception of some sort that is acceptble. In that case
+you can pass `Error` when defining your callback with `step` and your next step
+can be an error-first callback. If you decide you do want to stop on the error,
+just throw it.
 
 ## Prototypes and This
 
@@ -1745,7 +2161,7 @@ reports come in one after another?
 
 I'll assume that if the developer wants step by step error reporting, that they
 will perform these actions step by step. The problem is this: there is only a
-scalar conduit for errors, where actions that create errors may be occuring in
+scalar conduit for errors, where actions that create errors may be occurring in
 parallel. I've decided that I don't want to create an error array, since I won't
 know when to stop listening for errors, that it will be a first unhandled error
 is the return value of the cadence, then cadence will hang around and swallow
@@ -1788,7 +2204,7 @@ world, I'm going to have to see what it is like to write copious even handling
 code with Cadence.
 
 My concern is that if someone uses domains, they have to know the difference
-between system calls that swollow the error, and other callbacks that do not.
+between system calls that swallow the error, and other callbacks that do not.
 
 Domains actually make Node.js worse. It is too bad that we couldn't stick with
 the one true pattern, the `(error, result)` callback. Not excited about domains,
@@ -1816,17 +2232,61 @@ cadence(function (step, ee) {
 
 Then domains can make the error handling nausea go away.
 
+---
+
+Now that I have a better understanding of Domains, I see that they exist to
+handle the problem of uncaught errors, and that most event systems are going to
+have some form of default error handler, so why fight it? Why try to duplicate
+that behavior for a single case?
+
+The problem that I'm trying to solve is the child process problem; creating a
+child process means assigning three error handlers, one for the process itself,
+then one each for stdout and stderr. Domains are supposed to make this problem
+go away. Domains are the solution provided by Node.js for the problem of a
+default error handler in an event system.
+
+My clever incantation, where I assign single error handler to three different
+objects, it obscures too much of what is going on, the method is now a string,
+the event is also a string, the method name comes before the object, or else the
+object comes before all the strings, `'error'` is special, etc..
+
+I'm leaning toward this...
+
+```javascript
+cadence(function (step, ee) {
+  ee.on('error', step.event([]));
+  var d = new Domain;
+  d.run(function () {
+    step(function () {
+      ee.on('data', step.event([]));
+      ee.on('end', step.event());
+    }, function (data) {
+      console.log(data);
+      ee.on('other', step.event());
+      ee.on('error', step.event([], Error));
+    }, function (error) {
+      if (error.message != 'never mind') step(error);
+    }, function (other) {
+      console.log(other);
+    });
+  });
+  d.on('error', step.event([]));
+});
+```
+
+An event is a special thing, breaking the callback pattern. It should not be
+specified using a sigil from the beastiary, but instead should have it's own
+name. Implementation uses step, but wrappers the result in some way.
+
+The `error, result` pattern is a pattern, but event indicates that we're leaving
+that pattern, performing a different sort of programming.
+
 ## Domains
 
 Thus, I'm not going to like Domains, but I need to support them to bring people
 to Cadence, which, if it is Domain friendly.
 
 Does Cadence look for a Domain object? That would make it particular to Node.js.
-
-## Exception Handling
-
-Probably need to go over all the places where exceptions can occur. The question
-is; does Cadence catch exceptions thrown by callbacks? Should it?
 
 ## Inbox
 
@@ -1867,3 +2327,79 @@ handlers, or else you have callbacks, so whatever you use to indicate an event
 indicates shifting.
 
 Oh, cute; I was calling the return value from `step` an "inverse future."
+
+How about using the object as a value cache? Or is cache to clever?
+
+## Zero to Many
+
+I creates support for zero-to-many calls of a callback, but implemented it
+differently for events than for error callbacks. The zero-to-many calls is
+really an event thing, because with standard callbacks you are invoking a
+function and you are demanding a return. Making the behavior consistent is
+inappropriate.
+
+I'm seeing that generally, I want zero-to-many for events, there is no
+reasonable case for looping through an array of items and assigning a callback,
+because event emitters are streamy things. They are not going to be pinned to a
+particular invocation the way that a callback pins to a particular invocation.
+
+Hah. Coming back to this after having broken Cadence, to see that this logic is
+the correct logic, that there is no zero-to-many for callbacks, they are always
+callbacks and they should always be called once.
+
+## Initial Invocation
+
+Cadence will provide you with a callback for convenience invocations, however it
+won't provide you with one when you pass in parameters.
+
+```javascript
+// this works
+cadence(function (step) {
+  // stuff...
+})();
+
+// this doesn't
+cadence(function (step, count) {
+  // stuff...
+})(3);
+```
+
+What happens when I use default invocation, forget to provide a callback to a
+function that is a member of class? This is a nice addition to Cadence when I
+use it to write a one off script, but it doesn't work too well when Cadence is
+being used to build libraries.
+
+### Jumping the Parent
+
+This might be done quite easily by putting a marker in the invocation. Can make
+the point to people that the functions given to Cadence are to participate in
+Cadence, and Cadence will attach some notes to them. Can simply attach indexes
+too, instead of exposing the full set of internals.
+
+However, the behavior is going to be suggestive instead of absolute. You're not
+going to be able to fork a bunch of different paths?
+
+Remember that the invocation stack is not a call stack. The elements in the
+invocation stack may be two completely different cadence functions running in
+parallel. You could build a stack if you like.
+
+How about we make `step(next)` not return a callback? It simply changes the
+control flow of the current execution. It can look back through a call stack and
+change the index, but we'd need to keep a call stack, which wouldn't be all that
+expensive. There is no way to do it with annotation, it would have to be search.
+
+Actually, you can put it in a variable. Timeouts would be great, though.
+
+This might make more sense because it sets a property of the current function,
+changing the control flow of the current function, which is different, I mean
+you could have other callbacks as well, you might be gathering results in an
+array, etc. Maybe you do want `step.jump`, to show that it is separate from
+creating a callback of some sort. I can try that for a few iterations.
+
+Also, add the ability to return from a jump, which makes it easier to break out
+of it with a one liner.
+
+## Was Is
+
+It was supposed to be about control flow, jumping, but it's become to be all
+about parallelism.
