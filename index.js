@@ -203,7 +203,7 @@ function cadence () {
     callback.run = ! callback.arrayed;
     return function () {
       var vargs = __slice.call(arguments);
-      createCallback(invocation, callback, index++).apply(this, [null].concat(vargs));
+      createCallback(invocation, callback, index++).apply(null, [null].concat(vargs));
       //runSubCadence(invocation, callback, index++, vargs);
     }
   }
@@ -221,7 +221,6 @@ function cadence () {
   function createCallback (invocation, callback, index) {
     if (-1 < index) invocation.count++;
     return function () {
-      delete callback.run;
       var vargs = __slice.call(arguments, 0), error;
       error = vargs.shift();
       if (error) {
@@ -236,7 +235,6 @@ function cadence () {
             invocation.errors.push.apply(invocation.errors, errors);
             callback.results[index] = __slice.call(arguments, 2);
 
-            // So... I don't need a signifier for a fixup?
             if (callback.fixup) {
               invocation.finalizers.push.apply(invocation.finalizers, finalizers);
               done();
@@ -256,16 +254,19 @@ function cadence () {
         // the callbacks for parallel cadences now, the next increment of
         // the called counter, which may be the last.
         if (vargs[0] === invoke) {
-          invocation.callbacks.filter(function (callback) { return callback.run })
-                              .forEach(function (callback) {
-            // TODO: How is index zero correct? That can't be right.
-            createCallback(invocation, callback, 0).call(this, null);
+          invocation.callbacks.forEach(function (callback) {
+            if (callback.run) {
+              // A reminder; zero index because the result is not arrayed.
+              createCallback(invocation, callback, 0).apply(null);
+            }
           });
         }
       }
       if (index < 0 ? invocation.errors.length : ++invocation.called == invocation.count) {
         argue.apply(invocation.self, invocation.args);
       }
+      // If this is a sub-cadence, do not auto start it.
+      callback.run = false;
     }
   }
 
