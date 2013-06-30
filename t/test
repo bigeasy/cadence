@@ -18,7 +18,7 @@ if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
   t/cover
 
   echo "submitting coverage to coveralls.io"
-  cat coverage/lcov.info | node_modules/.bin/coveralls > /dev/null
+  cat coverage/lcov.info | node_modules/.bin/coveralls
 
   echo ""
   echo "minified"
