@@ -331,7 +331,7 @@ cadence(function () {
 })();
 ```
 
-#### Propagating Errors
+### Propagating Errors
 
 You can propagate all of the caught errors by throwing the `errors` array.
 
@@ -426,7 +426,7 @@ cadence(function () {
 As you can see, Cadence will catch exceptions as well as handle errors passed to
 callbacks.
 
-#### Conditional Error Handling
+### Conditional Error Handling
 
 Dealing with an array of errors means you're almost always going to want to
 filter the array to see if contains the error you're expecting, and which error
