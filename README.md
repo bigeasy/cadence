@@ -40,6 +40,18 @@ The callbacks and sub-cadences in a step are run in **parallel**. You can run
 multiple sub-cadences in parallel. With this, you've got your serial and your
 parallel, and you mix or match to create your asynchronous program.
 
+Documentation is a work in progress. Here is the current word count.
+
+```console
+  425  1982 12935 README.md
+```
+
+ * Arrayed sub-cadences.
+ * Arity.
+ * Fixup cadences.
+ * Jumping.
+ * Finalizers.
+
 ### Accepting Arguments
 
 Here's an example of a function built by Cadence that accepts arguments.
@@ -112,6 +124,43 @@ statBody(__filename, function (error) {
 
 TK: Take the above example and say; the sub-cadence return is the first argument
 to the next function. Use a stupid assertion `ok(body.length == size)`.
+
+### Subsequent Arguments
+
+When you create callbacks in a Cadence step, the results are passed onto the
+subsequent step. The order of the callbacks determines the order of of the
+arguments.
+
+```javascript
+cadence(function () {
+  step(function () {
+
+    var first = step();
+    var second = step();
+
+    second(null, 2);
+    first(null, 1);
+
+  }, function (a, b) {
+
+    equal(a, 1, "first");
+    equal(b, 2, "second");
+
+  });
+});
+```
+
+NOTE: Documentation pro-tip: Create examples sooner than later and then
+reference the examples in your wiring.
+
+In the above example, observe that the declaration order determines argument
+order, not the order of invocation of the callbacks. Even if `second` is called
+back before `first`, the argument to first the subsequent step is invoked with
+results of `first` as the first argument `a`,`second` as the second argument
+`b`.
+
+TK: More words and examples here.
+TK: Example using `fs`.
 
 ### Catching Errors
 
