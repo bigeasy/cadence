@@ -136,7 +136,6 @@ function cadence () {
     if (vargs[0] === null || vargs[0] instanceof Error) {
       vargs[0] = vargs[0] ? [ vargs[0] ] : [];
       vargs.splice(1, 0, invocations[0].finalizers.splice(0, invocations[0].finalizers.length));
-      console.log(vargs);
       invocations[0].count = Number.MAX_VALUE;
       invocations[0].callback.apply(null, vargs);
       return;
