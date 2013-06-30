@@ -110,10 +110,8 @@ function cadence () {
                                                       : step[1].test(value);
               }
               if (!caught && !errors.uncaught) errors.uncaught = error;
-             console.log(step, caught, errors.uncaught);
               return caught;
             });
-             console.log(step, errors.uncaught);
             if (!errors.uncaught) {
               catcher.call(this, errors, errors[0]);
             } else {
