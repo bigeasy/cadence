@@ -10,15 +10,33 @@ function say () { console.log.apply(console, __slice.call(arguments, 0)) }
 function cadence () {
   var steps = __slice.call(arguments, 0);
 
-  function begin (caller, cadence, vargs, callback) {
+  // Execute the `steps` as a cadence. The initial arguments of the cadence will
+  // be the given `args`. When the cadence completes, it will inovke the given
+  // `callback` handler.
+  //
+  // `callback` is not a standard error-first callback handler. It is a special
+  // callback sigature internal to Cadence. The first argument to callback is an
+  // array of `errors`. Cadence operations tend to generate more than one
+  // exception when things go wrong, because we do what we can in parallel. The
+  // second argument to `callback` is an array of `finalizers` gathered while
+  // running the cadnece. The remaining arguments are the results of the cadence
+  // in order they were declared in the last step of the cadence.
+  //
+  // TODO: Note in documentation that it is the last evaulated even if it
+  // returns early, also examples of how to return multiples from early return,
+  // return ordinarily, then `step(null)`.
+
+  // 
+  function march (caller, steps, args, callback) {
     // TODO: We pass this forward, better as a parent?
+    // TODO: Unfold can go in here.
     var invocation = {
       caller: caller,
       errors: [],
       finalizers: [],
-      __args: vargs
+      __args: args
     };
-    invoke.call(this, unfold({}, cadence), 0, invocation, callback);
+    invoke.call(this, unfold({}, steps), 0, invocation, callback);
   }
 
   // Execute is the function returned to the user. It represents the constructed
@@ -29,7 +47,7 @@ function cadence () {
     var vargs = __slice.call(arguments, 0),
         callback = function (error) { if (error) throw error };
     if (vargs.length) callback = vargs.pop();
-    begin.call(this, null, steps, [async].concat(vargs), function (errors, finalizers) {
+    march.call(this, null, steps, [async].concat(vargs), function (errors, finalizers) {
       var vargs = [null].concat(__slice.call(arguments, 2));
       finalize(finalizers, 0, errors, function (errors) {
         if (errors.length) {
@@ -211,7 +229,7 @@ function cadence () {
         else callback.results[index] = vargs;
         if (callback.cadence.length) {
           invocation.count++;
-          begin.call(invocation.self, invocation,
+          march.call(invocation.self, invocation,
               callback.cadence, callback.results[index], function (errors, finalizers) {
             invocation.errors.push.apply(invocation.errors, errors);
             callback.results[index] = __slice.call(arguments, 2);
@@ -249,7 +267,7 @@ function cadence () {
   function runSubCadence (invocation, callback, index, vargs) {
     delete callback.run;
     invocation.count++;
-    begin.call(invocation.self, invocation, callback.cadence, vargs, function (errors, finalizers) {
+    march.call(invocation.self, invocation, callback.cadence, vargs, function (errors, finalizers) {
       callback.results[index] = __slice.call(arguments, 2);
       finalize(finalizers, 0, errors, function () {
         invocation.errors.push.apply(invocation.errors, errors);
