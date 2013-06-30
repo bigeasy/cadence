@@ -99,8 +99,7 @@ function cadence () {
           callback.steps.push(step[0]);
           callback.catchers[callback.steps.length - 1] = function (errors, error) {
             var catcher = step[step.length - 1], uncaught = [], test;
-            delete errors.uncaught;
-            var caught = errors.filter(function (error) {
+            errors.forEach(function (error) {
               var caught = true;
               if (step.length == 4) {
                 caught = (typeof step[2] == 'string') ? error[step[1]] == step[2]
@@ -110,9 +109,11 @@ function cadence () {
                 caught = (typeof step[1] == 'string') ? value == step[1]
                                                       : step[1].test(value);
               }
-              if (!caught && !errors.thrown) errors.uncaught = error;
+              if (!caught && !errors.uncaught) errors.uncaught = error;
+             console.log(step, caught, errors.uncaught);
               return caught;
             });
+             console.log(step, errors.uncaught);
             if (!errors.uncaught) {
               catcher.call(this, errors, errors[0]);
             } else {
