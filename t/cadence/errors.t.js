@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(13, function (equal, ok) {
+require('proof')(18, function (equal, ok) {
   var fs = require('fs')
     , cadence = require('../..')
     , errors = []
@@ -88,5 +88,30 @@ require('proof')(13, function (equal, ok) {
     throw new Error("should not get here");
   }])(function (error) {
     equal(error.message, "handled", "condtionally caught failure");
+  });
+
+  cadence([function (step) {
+    step()(new Error("handled"));
+    step()(new Error("unhandled"));
+  }, "message", /^(handled)$/, function (errors) {
+    throw new Error("should not get here");
+  }])(function (error) {
+    equal(error.message, "unhandled", "condtionally caught did not catch all");
+  });
+
+  cadence([function (step) {
+    step([function () {
+      step()(new Error("handled"));
+      step()(new Error("unhandled"));
+    }, "message", /^(handled)$/, function (errors) {
+      throw new Error("should not get here");
+    }]);
+  }, function (errors) {
+    equal(errors.length, 2, "got all errors");
+    equal(errors[0].message, "handled", "errors still in order one");
+    equal(errors[1].message, "unhandled", "errors still in order two");
+    throw errors;
+  }])(function (error) {
+    equal(error.message, "handled", "uncaughtedness reset");
   });
 });

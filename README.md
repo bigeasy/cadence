@@ -81,6 +81,28 @@ then if a test function passes, it will asynchronously delete the file. We
 assign our cadence to a variable named `deleteIf`. We can now call `deleteIf`
 providing a standard issue Node.js error reporting callback.
 
+### Cadence Basics
+
+Here are the Cadence basics using an example function named `echo` that simply
+forwards it's value to the callback.
+
+```javascript
+function echo (value, callback) {
+  callback(null, value);
+}
+```
+
+Each callback
+
+```javascript
+cadence(function (step) {
+  step(function () {
+    echo(1, step());
+    echo(2, step());
+  }, function (one, two) {
+  });
+});
+
 ### Sub-Cadences
 
 Let's say that we want to get a `stat` object, but include the body of the file
@@ -164,27 +186,412 @@ TK: Example using `fs`.
 TK: Always use an initial sub-cadence in the `README.md` so people don't get to
 thinking that it is something to be avoided.
 TK: In the sub-cadence example, talk about scope and closure.
+TK: Move up a section.
 
 ### Catching Errors
 
-Because Cadence courages parallelism, it's error handling mechanism deals with
-arrays of errors, all the errors that could possibly be caught. However, your
-caller is expecting one single error, so the default behavior for cadence is to
-return the first error, then cancel any cadences at their next function.
+Because Cadence encourages parallelism, it's internal error handling mechanism
+deals with arrays of errors because parallel operations can also fail in
+parallel, raising many exceptions in parallel. You know, fun stuff.
 
-The cancellation is why we have finalizers, to make sure that you release any
-resources. A finalizer is invoked.
+Externally however, your caller is expecting one single error, because Cadence
+builds a function that follows the error-first callback standard. Thus, even
+when there are many errors, the default is to return the first error that occurs
+in the cadence.
 
-Cadence catches errors using a try/catch pair of functions. The functions are
-grouped in an array. The array brackets that signify the try and catch format
-nicely in to the list of step function that compose a cadence.
+When an error occurs, Cadence waits for all parallel operations to complete,
+then it raises the error along with any other errors that occured in parallel.
+If you want to catch these errors, create a try/catch function pair by wrapping
+it in an array.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    // Do something stupid.
+    fs.readFile('/etc/shadow', step())
+
+  }, function (errors) {
+
+    // Catch the exception.
+    ok(errors[0].code == 'EACCES', 'caught EACCES');
+    ok(errors.length == 1, 'caught EACCES and only EACCES');
+
+  }]);
+})();
+```
+
+In the above, we catch the `EACCES` that is raised when we attempt to read a
+read-protected file. Note the array that binds the catch function to the step
+that proceeds it.
+
+If no error occurs, the catch function is not invoked. The next function in the
+cadence after the try/catch pair is invoked with the successful result of the
+try function.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    // Read a readable file.
+    fs.readFile('/etc/hosts', 'utf8', step())
+
+  }, function (errors) {
+
+    // This will not be called.
+    proecss.stderr.write('Hosts file is missing!\n');
+
+  }], function (hosts) {
+
+    process.stdout.write(hosts);
+
+  });
+})();
+```
+
+When an error triggers the catch function, the catch function can recover and
+continue the cadence by returning normally.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    // Read file that might be missing.
+    fs.readFile(env.HOME + '/.config', 'utf8', step())
+
+  }, function (errors) {
+
+    // That didn't work, for whatever reason, so try the global.
+    fs.readFile('/etc/config', 'utf8', step())
+
+  }], function (config) {
+
+    process.stdout.write(config);
+
+  });
+})();
+```
+
+Also note that both the try function and error function can use sub-cadences,
+arrayed cadences, fixups; everything that Cadence has to offer.
+
+A catch function also catches thrown exceptions.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    throw new Error('thrown');
+
+  }, function (errors) {
+
+    ok(errors[0].message == 'thrown', 'caught thrown');
+    ok(errors.length == 1, 'caught thrown and only thrown');
+
+  }]);
+})();
+```
+
+Errors are provided in an `errors` array. Why an array? Because with Cadence,
+you're encouraged to do stupid things in parallel.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    // Read two read-protected files.
+    fs.readFile('/etc/shadow', step())
+    fs.readFile('/etc/sudoers', step())
+
+  }, function (errors) {
+
+    ok(errors[0].code == 'EACCES', 'caught EACCES');
+    ok(errors[1].code == 'EACCES', 'caught another EACCES');
+    ok(errors.length == 2, 'caught two EACCES');
+
+  }]);
+})();
+```
+
+Note that, the errors are ordered in the **order in which they were caught**,
+not in the order in which their callbacks were declared.
+
+The second argument to a function callback is the first error in the errors
+array. This is in case you're certain that you'll only ever get a single error,
+and the array subscript into the `errors` array displeases you.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    fs.readFile('/etc/shadow', step())
+
+  }, function (errors, error) {
+
+    ok(error.code == 'EACCES', 'caught EACCES');
+
+  }]);
+})();
+```
+
+There is no third argument.
+
+For the sake of style, when you don't want to reference the errors array, you
+can hide it using `` _ `` or if that is already in you, double `` __ ``.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    fs.readFile('/etc/shadow', step())
+
+  }, function (_, error) {
+
+    ok(error.code == 'EACCES', 'caught EACCES');
+
+  }]);
+})();
+```
+
+#### Propagating Errors
+
+You can propagate all of the caught errors by throwing the `errors` array.
+
+Imagine a system where sudo is not installed (as is the case with a base
+FreeBSD.)
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    // Read two read-protected files.
+    fs.readFile('/etc/sudoers', step())
+    fs.readFile('/etc/shadow', step())
+
+  }, function (errors) {
+
+    // Maybe sudo isn't installed and we got `ENOENT`?
+    if (!errors.every(function (error) { return error.code == 'EACCES' })) {
+      throw errors;
+    }
+
+  }]);
+})(function (error) {
+
+  // Only the first exception raised is reported to the caller.
+  if (error) console.log(error);
+
+});
+```
+
+You can also just throw an exception of your chosing.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    // Read two read-protected files.
+    fs.readFile('/etc/sudoers', step())
+    fs.readFile('/etc/shadow', step())
+
+  }, function (errors) {
+
+    // Maybe sudo isn't installed and we got `ENOENT`?
+    if (!errors.every(function (error) { return error.code == 'EACCES' })) {
+      throw new Error('something bad happened');
+    }
+
+  }]);
+})(function (error) {
+
+  ok(error.message, 'something bad happened');
+
+});
+```
+
+When you raise an error in an catch function, it cannot be caught in the current
+Cadence. You can still catch it in a calling cadence.
+
+Here we log any errors before raising them all up to the default handler.
+
+```javascript
+cadence(function () {
+  step([function () {
+    step([function ()
+
+      // Read two read-protected files.
+      fs.readFile('/etc/sudoers', step())
+      fs.readFile('/etc/shadow', step())
+
+    }, function (errors) {
+
+      // Maybe sudo isn't installed and we got `ENOENT`?
+      if (!errors.every(function (error) { return error.code == 'EACCES' })) {
+        throw errors;
+      }
+
+    }]);
+  }, function (errors) {
+
+    errors.forEach(function () { console.log(error) });
+
+    throw errors;
+
+  }]);
+})(function (error) {
+
+  ok(error, 'got a single error');
+
+});
+```
+
+As you can see, Cadence will catch exceptions as well as handle errors passed to
+callbacks.
+
+#### Conditional Error Handling
+
+Dealing with an array of errors means you're almost always going to want to
+filter the array to see if contains the error you're expecting, and which error
+that might be. Because this is so common, it's built into Cadence.
+
+To create a try/catch pair that will respond only to certain errors, add a
+condition between the try function and the catch function.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    // Read file that might be missing.
+    fs.readFile(env.HOME + '/.config', 'utf8', step())
+
+  }, 'ENOENT', function () {
+
+    // That didn't work because the file does not exist, try the global.
+    fs.readFile('/etc/config', 'utf8', step())
+
+  }], function (config) {
+
+    process.stdout.write(config);
+
+  });
+})();
+```
+
+In the above example, we only catch an exception if the `code` property is equal
+to `ENOENT`. If there is a different error, say the file exists but  we can't
+read it, that error is not caught by try/catch pair.
+
+The condition is tested against the `code` property if it exists. If it doesn't
+exist then it is tested against the `message` property.
+
+The condition can either be a string literal that is tested for equality the
+property or a regular expression.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    throw new Error('handled');
+
+  }, 'handled', function (_, error) {
+
+    ok(error.message == 'handled', 'handled');
+
+  }]);
+})();
+```
+
+The condition must match all the errors raised.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    fs.readFile('/etc/sudoers', step())
+    fs.readFile('/etc/shadow', step())
+
+  }, /^EACCES$/, function (errors) {
+
+    ok(errors.length == 2, 'handled');
+
+  }]);
+})();
+```
+
+You can test for multiple error codes using a regular expression. Here we test
+for both `EACCES` and `ENOENT`.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    fs.readFile('/etc/sudoers', step())
+    fs.readFile('/etc/shadow', step())
+
+  }, /^(EACCES|ENOENT)$/, function (errors) {
+
+    ok(errors.length == 2, 'handled');
+
+  }]);
+})();
+```
+
+You can also be explicit about the property used to test by adding the name of
+that property between the try function and the condition. Here we expllicity
+state that the `code` property is the property to test.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    fs.readFile('/etc/sudoers', step())
+    fs.readFile('/etc/shadow', step())
+
+  }, 'code', /^(EACCES|ENOENT)$/, function (errors) {
+
+    ok(errors.length == 2, 'handled');
+
+  }]);
+})();
+```
+
+If the condition does not match all the examples raised, then the catch function
+is not invoked, and the errors are propagated.
+
+However, if the errors are not caught and propagated out of Cadence and to the
+caller, then the caller will receive the first exception that did not match the
+conditional.
+
+```javascript
+cadence(function () {
+  step([function ()
+
+    step()(null,
+    fs.readFile('/etc/sudoers', step())
+    fs.readFile('/etc/shadow', step())
+
+  }, /^(EACCES|ENOENT)$/, function (errors) {
+
+    ok(errors.length == 2, 'handled');
+
+  }]);
+})();
+```
+
+Why? Because we can only return one exception to the caller, so it is better to
+return the unexpected exception that caused the condition to fail, even if it
+was not the first exception raised by the Cadence. It makes it clear that the
+condition is failing because of additional errors.
+
+TK: Throwing errors resets the concept of unmatched.
+
+#### Error Catching Example
 
 Let's extend our `deleteIf` function. Let's say that if the file doesn't exist,
 we ignore the error raised when we stat the file. To catch the error we wrap our
-call to `stat`. If the file doesn't exist, our catch function is called with the
-`Error`. If it is an `"ENOENT"` error, the file doesn't exist, so we exit the
-cadnece early returning `false`. If it is not an `"ENOENT"` error, then some
-other error occured so we re-throw the error.
+call to `stat` in a try/catch function pair. If the call to `stat` results in
+`ENOENT`, our catch function is called. The catch function simply returns early
+because ther is no file to delete.
 
 ```javascript
 // Use Cadence.
@@ -193,13 +600,18 @@ var cadance = require('cadence'), fs = require('fs');
 // Delete a file if it exists and the condition is true.
 var deleteIf = cadence(function (step, file, condition) {
   step([function () {
+
     fs.stat(file, step());
-  }, function (error) {
+
+  }, /^ENOENT$/, function (error) {
+
     // TK: Early return example can be if it is a directory, return early.
-    if (error.code != "ENOENT") throw error;
-    else step(null);
+    step(null);
+
   }], function (stat) {
+
     if (stat && condition(stat)) fs.unlink(step());
+
   });
 });
 

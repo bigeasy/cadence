@@ -1,4 +1,4 @@
-var __slice = [].slice;
+var __slice = [].slice, __push = [].push;
 /*
 function die () {
   console.log.apply(console, __slice.call(arguments, 0));
@@ -51,7 +51,7 @@ function cadence () {
       var vargs = [null].concat(__slice.call(arguments, 2));
       finalize(finalizers, 0, errors, function (errors) {
         if (errors.length) {
-          callback(errors.shift());
+          callback(errors.uncaught || errors.shift());
         } else {
           callback.apply(null, vargs);
         }
@@ -99,7 +99,8 @@ function cadence () {
           callback.steps.push(step[0]);
           callback.catchers[callback.steps.length - 1] = function (errors, error) {
             var catcher = step[step.length - 1], uncaught = [], test;
-            errors = errors.filter(function (error) {
+            delete errors.uncaught;
+            var caught = errors.filter(function (error) {
               var caught = true;
               if (step.length == 4) {
                 caught = (typeof step[2] == 'string') ? error[step[1]] == step[2]
@@ -109,15 +110,13 @@ function cadence () {
                 caught = (typeof step[1] == 'string') ? value == step[1]
                                                       : step[1].test(value);
               }
-              if (!caught) uncaught.push(error);
+              if (!caught && !errors.thrown) errors.uncaught = error;
               return caught;
             });
-            if (!uncaught.length) {
+            if (!errors.uncaught) {
               catcher.call(this, errors, errors[0]);
             } else {
-              uncaught.concat(errors).forEach(function (error) {
-                async()(error);
-              });
+              throw errors;
             }
           }
         }
@@ -232,11 +231,11 @@ function cadence () {
           invocation.count++;
           march.call(invocation.self, invocation,
               callback.cadence, callback.results[index], function (errors, finalizers) {
-            invocation.errors.push.apply(invocation.errors, errors);
+            __push.apply(invocation.errors, errors);
             callback.results[index] = __slice.call(arguments, 2);
 
             if (callback.fixup) {
-              invocation.finalizers.push.apply(invocation.finalizers, finalizers);
+              __push.apply(invocation.finalizers, finalizers);
               done();
             } else {
               // TODO: Test that a sub-cadence merges it's finalizer errors.
@@ -310,7 +309,7 @@ function cadence () {
     } else {
       var finalizer = finalizers[index];
       invoke({ steps: [ finalizer.step ], catchers: [], finalizers: [] }, 0, finalizer.previous, function (e) {
-        errors.push.apply(errors, e);
+        __push.apply(errors, e);
         finalize(finalizers, index + 1, errors, callback);
       });
     }
@@ -325,7 +324,6 @@ function cadence () {
         cadence.catchers[index - 1] = null;
         cadence.steps[index - 1] = catcher;
         previous.__args = [ previous.errors, previous.errors[0] ];
-        previous.errors = [];
         previous.callbacks.length = 1;
         invoke(cadence, index - 1, previous, callback);
       } else {
@@ -389,10 +387,13 @@ function cadence () {
     hold = async();
     try {
       result = step.apply(this, args);
-    } catch (error) {
-      // We're not a replacement for try/catch, so set up the next step for
-      // failure, ensure that our hold function invokes the next step.
-      invocations[0].errors.push(error);
+    } catch (errors) {
+      if (errors === previous.errors) {
+        invocations[0].errors.uncaught = errors.uncaught;
+      } else {
+        errors = [ errors ];
+      }
+      __push.apply(invocations[0].errors, errors);
       invocations[0].called = invocations[0].count - 1;
     }
     invocations.shift();
