@@ -161,6 +161,9 @@ results of `first` as the first argument `a`,`second` as the second argument
 
 TK: More words and examples here.
 TK: Example using `fs`.
+TK: Always use an initial sub-cadence in the `README.md` so people don't get to
+thinking that it is something to be avoided.
+TK: In the sub-cadence example, talk about scope and closure.
 
 ### Catching Errors
 
