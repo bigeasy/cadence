@@ -2332,6 +2332,217 @@ How about using the object as a value cache? Or is cache to clever?
 
 Test that callback argument is actually a function. Or what is correct?
 
+Yes. Cadence is just begging for a `while` and `until` where `until` is
+evaluated at the end of the cadence. Or! Maybe you put `while` anywhere and it
+breaks the cadence?
+
+```javascript
+cadence(function (step, items) {
+  step(step.while(function () { return  items.length }), function () {
+    var item = items.shift();
+    step(function () {
+      // do something.
+    });
+  })
+});
+```
+
+Or formatted thus...
+
+```javascript
+cadence(function (step, items) {
+  step(step.while(function () {
+    return  items.length
+  }), function () {
+    var item = items.shift();
+    step(function () {
+      // do something.
+    });
+  })
+});
+```
+
+Or...
+
+```javascript
+cadence(function (step, items) {
+  step(step.exit(function () {
+    return !items.length;
+  }), function () {
+    var item = items.shift();
+    step(function () {
+      // do something.
+    });
+  })
+});
+```
+
+How do you return?
+
+```javascript
+cadence(function (step, items) {
+  var transformed = [];
+  step(step.while(function () {
+    if (!items.length) return transformed;
+  }), function () {
+    var item = items.shift();
+    step(function () {
+      // do something.
+    });
+  })
+});
+```
+
+Or at the end...
+
+```javascript
+cadence(function (step, items) {
+  step(function () {
+    var item = items.shift();
+    step(function () {
+      // do something.
+    });
+  }, step.while(function () {
+    if (items.length);
+  });
+});
+```
+
+But, we already have an exit. We use `step`. Maybe we want loop?
+
+```javascript
+cadence(function (step, items) {
+  var transformed = [];
+  step.loop(function () {
+    var item = items.shift();
+    step(function () {
+      // do something.
+    });
+  }, function () {
+    if (items.length) step(null, transformed);
+  });
+});
+```
+
+When why do we need `jump`? To jump up and out. Maybe we use named loops?
+
+```javascript
+cadence(function (step, items) {
+  var transformed = [];
+  step.loop("outer", function () {
+    var item = items.shift();
+    step(function () {
+      // do something.
+      step.jump("outer");
+    });
+  }, function () {
+    if (items.length) step(null, transformed);
+  });
+});
+```
+
+Or we can keep our jump anywhere, but have a nicer way of labeling.
+
+```javascript
+cadence(function (step, items) {
+  var items = step.loop(function () {
+    var item = items.shift();
+    step(function () {
+      // this is like a continue, maybe.
+      step.jump(items);
+      // or maybe, this is like a continue, maybe... 
+      step(item)(null, terminated);
+      // because now we do have a special function of our own creation and we
+      // can mark it as such.
+      // But, how do we jump out? Have we been jumping forward?
+      // Yeah, but we didn't want to make special return cases.
+    });
+  }, function () {
+    if (items.length) step(null, transformed);
+  });
+});
+```
+
+Or if we want to bash syntax harder, we can make `()` mean loop. It loops and
+returns a label. That's the syntax bashing way to go.
+
+```javascript
+cadence(function (step, items) {
+  var items = step(function () {
+    var item = items.shift();
+    step(function () {
+      // this is like a continue, maybe.
+      step.jump(items);
+      // or maybe, this is like a continue, maybe... 
+      step(item, transformed);
+      // because now we do have a special function of our own creation and we
+      // can mark it as such.
+    });
+  }, function () {
+    if (items.length) step(null, transformed);
+  })();
+});
+```
+
+Oh.. And if you give it a count, it loops count times.
+
+And if you give it a function it loops while (or until);
+
+```javascript
+cadence(function (step, items) {
+  var items = step(function () {
+    var item = items.shift();
+    step(function () {
+      // this is like a continue, maybe.
+      step.jump(items);
+      // or maybe, this is like a continue, maybe... 
+      step(item, transformed);
+      // because now we do have a special function of our own creation and we
+      // can mark it as such.
+    });
+  })(items.length);
+});
+```
+
+```javascript
+cadence(function (step, items) {
+  var items = step(function () {
+    var item = items.shift();
+    step(function () {
+      // this is like a continue, maybe.
+      step.jump(items);
+      // or maybe, this is like a continue, maybe... 
+      step(item, transformed);
+      // because now we do have a special function of our own creation and we
+      // can mark it as such.
+    });
+  })(function () { return items.length });
+});
+```
+
+The difference between while and until can be arguments. Entering there will be
+no arguments, but exiting there will be.
+
+```javascript
+cadence(function (step, items) {
+  var items = step(function () {
+    var item = items.shift();
+    step(function () {
+      // this is like a continue, maybe.
+      step.jump(items);
+      // or maybe, this is like a continue, maybe... 
+      step(item, transformed);
+      // because now we do have a special function of our own creation and we
+      // can mark it as such.
+    });
+  })(function (items) { return items.length });
+});
+```
+
+That is the Cadence way. Maybe jump doesn't have to search as hard if jumping is
+no about loops. If I can write applications without the jump as goto, then I'll
+get rid if it.
+
 ## Zero to Many
 
 I creates support for zero-to-many calls of a callback, but implemented it
