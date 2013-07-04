@@ -4,7 +4,7 @@ A Swiss Army asynchronous control flow function builder for Node.js and
 JavaScript that helps you create highly-parallel control flows.
 
 Cadence is a function builder. It simplifies the writing of asynchronous
-functions of that accept and  error/result callback using a domain specific
+functions of that accept and  error/result callback using a domain-specific
 language of sorts.
 
 ```javascript
@@ -49,8 +49,24 @@ Documentation is a work in progress. Here is the current word count.
  * Arrayed sub-cadences.
  * Arity.
  * Fixup cadences.
+ * Looping.
  * Jumping.
  * Finalizers.
+
+Cadence is a syntax bashed doman-specific language. It uses JavaScript syntax in
+clever ways to express control flow with a minimum of syntacitical overhead.
+
+Note that Cadence is as terse as it can be. Yes, you must still use callbacks,
+but it avoids the temple of doom, by keeping your callbacks in line, one after
+the other. It works hard so that indentation reflects a logical nesting of your
+program into parallel operations, instead of having a nesting for each and every
+callback. Yes, the ohters do this, but Cadence keeps you form having a testing
+for each and every parallel, loop, or error handler.
+
+Is there a way to say it without sounding all mumbo-jumbo? Cadence uses existing
+JavaScript syntax in clever ways. Instead of a collection of helper functions,
+Cadence uses a single helper function; it's `step` function, to declare
+callbacks and asychronous series.
 
 ### Accepting Arguments
 
