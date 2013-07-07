@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(3, function (equal) {
+require('proof')(4, function (equal) {
   var fs = require('fs'), cadence = require('../..');
 
   cadence(function (step) {
@@ -37,5 +37,15 @@ require('proof')(3, function (equal) {
   })(function (error, result) {
     if (error) throw error;
     equal(result, 10, "counted loop");
+  });
+
+  cadence(function (step) {
+    var sum = 0
+    step(function (number) {
+      step()(null, sum = sum + number)
+    })([ 1, 2, 3, 4 ])
+  })(function (error, result) {
+    if (error) throw error
+    equal(result, 10, "reduced each loop")
   });
 });

@@ -201,7 +201,7 @@ function cadence () {
     if (!callback.arrayed) callback.starter = starter;
     
     function starter () {
-      var vargs = __slice.call(arguments), stop, count = 0, counter, whilst; 
+      var vargs = __slice.call(arguments), stop, count = 0, counter, each, whilst; 
       if (callback.arrayed) {
         return createCallback(invocation, callback, index++).apply(null, [null].concat(vargs));
       } else if (callback.starter) {
@@ -209,13 +209,17 @@ function cadence () {
 
         if (vargs.length) {
           counter = vargs.pop();
-          whilst = function () { return count++ != counter };
+          if (each = Array.isArray(counter)) {
+            whilst = function () { return count++ != counter.length };
+          } else {
+            whilst = function () { return count++ != counter };
+          }
         } else {
           whilst = function () { return true };
         }
         callback.cadence.unshift(function () {
           var vargs = __slice.call(arguments), stop;
-          if (whilst()) async().apply(this, [null].concat(vargs));
+          if (whilst()) async().apply(this, [null].concat(each ? [counter[count - 1]] : vargs));
           else async.apply(this, [null].concat(vargs));
         });
         callback.cadence.push(function () {
