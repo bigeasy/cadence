@@ -2623,6 +2623,7 @@ about parallelism.
 
 ## Next Change Log
 
+ * Implement gathered loops. #122.
  * Implement each loops. #121.
  * Implement counted loops. #120.
  * Implement endless loops. #119.

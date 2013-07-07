@@ -257,22 +257,25 @@ cadence(function (step) {
 });
 ```
 
-### Gathered Each Loops
+### Gathered Loops
 
-If you pass an initial array to the callback function, then each iteration will
-be gathered into an array result.
+Both counted loops and each loops can be gathered into an array. If you pass an
+initial array to the callback function, then each iteration will be gathered
+into an array result.
 
 ```javascript
 cadence(function (step) {
   var count = 0
   step(function () {
     step()(null, ++count)
-  })([ 1, 2, 3, 4 ])
+  })([], [ 1, 2, 3, 4 ])
 })(function (error, result) {
   if (error) throw error
   deepEqual(result, [ 1, 3, 6, 10 ], "gathered each loop")
 });
 ```
+
+You cannot gather endless loops.
 
 ### Catching Errors
 
