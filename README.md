@@ -786,7 +786,9 @@ Here is where you would discuss `step.jump` and the function index.
 
 Changes for each release.
 
-### Version 0.0.20
+### Version 0.0.21
+
+Sun Jul  7 19:47:23 UTC 2013
 
  * Implement gathered loops. #122.
  * Implement each loops. #121.
