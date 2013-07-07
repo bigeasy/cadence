@@ -182,6 +182,98 @@ thinking that it is something to be avoided.
 TK: In the sub-cadence example, talk about scope and closure.
 TK: Move up a section.
 
+## Loops
+
+TK: Serial and parallel loops, but parallel doesn't really loop.
+
+Cadence provides two looping construts; serial loops which let you do the so
+
+### Serial Loops
+
+TK: So, just Loops, then? What about Serial Each and Parallel Each?
+TK: Do examples look better without commas?
+
+Cadence want you to use nesting to represent subordinate operations, so it wants
+to provide you with a looping structure that is not terribily compilicated, or
+nested.
+
+Looping in Cadence is performed by defining a sub-cadence, then invoking the
+function that is returned by the sub-cadence definition. If you **do not
+invoke** the function, Cadence will start the sub-cadence for you when your step
+returns and run the sub-cadence once. If you **do invoke** the function, Cadence
+will run the sub-cadence as a loop.
+
+### Endless Loops
+
+If you invoke without arguments, you will invoke an endless loop. You terminate
+the loop using the `step(error, result)` explicit return.
+
+```javascript
+cadence(function (step) {
+  var count = 0
+  step(function () {
+    count++
+  }, function () {
+    if (count == 10) step(null, count)
+  })();
+})(function (error, result) {
+  if (error) throw error
+  equal(result, 10, "loop")
+})()
+```
+
+### Counted Loops
+
+You can tell Cadence to loop for a fixed number of times by invoking the loop
+start function with a count of iterations.
+
+```javascript
+cadence(function (step) {
+  var count = 0
+  step(function () {
+    step()(null, ++count)
+  })(10)
+})(function (error, result) {
+  if (error) throw error
+  equal(result, 10, "counted loop")
+});
+```
+
+### Each Loops
+
+You can invoke the loop passing it an array. The loop will be invoked once for
+each element in the array, passing the array element to the first function of
+the sub-cadence. 
+
+```javascript
+cadence(function (step) {
+  var sum = 0
+  step(function (number) {
+    step()(null, sum = sum + number)
+  })([ 1, 2, 3, 4 ])
+})(function (error, result) {
+  if (error) throw error
+  equal(result, 10, "reduced each loop")
+});
+```
+
+### Gathered Each Loops
+
+If you pass an initial array to the callback function, then each iteration will
+be gathered into an array result.
+
+```javascript
+cadence(function (step) {
+  var count = 0
+  step(function () {
+    step()(null, ++count)
+  })([ 1, 2, 3, 4 ])
+})(function (error, result) {
+  if (error) throw error
+  deepEqual(result, [ 1, 3, 6, 10 ], "gathered each loop")
+});
+```
+
 ### Catching Errors
 
 Because Cadence encourages parallelism, it's internal error handling mechanism

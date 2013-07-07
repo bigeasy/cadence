@@ -1988,6 +1988,10 @@ deal with the *exception* or else it is to continue along it's merry way.
 
 The signifier `}, function (error) {` can *mean* something, dag-gummit!
 
+**Update**: What about swallowing the error, like when a directory already
+exists? Can we not provide function? Or do we ask that the user create a
+`ignore` function? 
+
 ### Error Handling
 
 I'd decided to have a separate function that was called for an error, but
@@ -2616,3 +2620,7 @@ of it with a one liner.
 
 It was supposed to be about control flow, jumping, but it's become to be all
 about parallelism.
+
+## Next Change Log
+
+ * Implement endless loops. #119.

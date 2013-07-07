@@ -197,12 +197,31 @@ function cadence () {
   // Create a sub-cadence.
   function createCadence (invocation, callback) {
     var index = 0;
-    callback.run = ! callback.arrayed;
-    return function () {
-      var vargs = __slice.call(arguments);
-      createCallback(invocation, callback, index++).apply(null, [null].concat(vargs));
-      //runSubCadence(invocation, callback, index++, vargs);
+
+    if (!callback.arrayed) callback.starter = starter;
+    
+    function starter () {
+      var vargs = __slice.call(arguments), stop, counter; 
+      if (callback.arrayed) {
+        return createCallback(invocation, callback, index++).apply(null, [null].concat(vargs));
+      } else if (callback.starter) {
+        delete callback.starter;
+
+        var whilst = function () { return true };
+        callback.cadence.unshift(function () {
+          var vargs = __slice.call(arguments), stop, counter; 
+          if (whilst()) async().apply(this, [null].concat(vargs));
+          else async.apply(this, [null].concat(vargs));
+        });
+        callback.cadence.push(function () {
+          async.jump(callback.cadence[0]);
+        });
+        createCallback(invocation, callback, 0).call(null);
+
+      }
     }
+
+    return starter;
   }
 
   // Create an arrayed callback.
@@ -252,9 +271,9 @@ function cadence () {
         // the called counter, which may be the last.
         if (vargs[0] === invoke) {
           invocation.callbacks.forEach(function (callback) {
-            if (callback.run) {
+            if (callback.starter) {
               // A reminder; zero index because the result is not arrayed.
-              createCallback(invocation, callback, 0).apply(null);
+              createCallback(invocation, callback, 0).call(null);
             }
           });
         }
