@@ -788,6 +788,13 @@ Changes for each release.
 
 ### Version 0.0.20
 
+ * Implement gathered loops. #122.
+ * Implement each loops. #121.
+ * Implement counted loops. #120.
+ * Implement endless loops. #119.
+
+### Version 0.0.20
+
 Sun Jun 30 13:04:05 UTC 2013
 
  * Finalize error handling. #117. #116. #116. #105.

@@ -2622,8 +2622,3 @@ It was supposed to be about control flow, jumping, but it's become to be all
 about parallelism.
 
 ## Next Change Log
-
- * Implement gathered loops. #122.
- * Implement each loops. #121.
- * Implement counted loops. #120.
- * Implement endless loops. #119.
