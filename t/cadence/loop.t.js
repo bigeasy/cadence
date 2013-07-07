@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(2, function (equal) {
+require('proof')(3, function (equal) {
   var fs = require('fs'), cadence = require('../..');
 
   cadence(function (step) {
@@ -28,8 +28,6 @@ require('proof')(2, function (equal) {
     if (error) throw error;
     equal(result, 10, "double start loop");
   });
-
-  return;
 
   cadence(function (step) {
     var count = 0;
