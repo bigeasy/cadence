@@ -810,6 +810,12 @@ Here is where you would discuss `step.jump` and the function index.
 
 Changes for each release.
 
+### Version 0.0.22
+
+ * Loop returns inadvertently creating arrays. #127.
+ * Unable to loop through exception handlers. #126.
+ * Catch functions are not invoked with the correct `this`. #125.
+
 ### Version 0.0.21
 
 Sun Jul  7 19:47:23 UTC 2013

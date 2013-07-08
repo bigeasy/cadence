@@ -2620,9 +2620,3 @@ of it with a one liner.
 
 It was supposed to be about control flow, jumping, but it's become to be all
 about parallelism.
-
-## Next Change Log
-
- * Loop returns inadvertently creating arrays. #127.
- * Unable to loop through exception handlers. #126.
- * Catch functions are not invoked with the correct `this`. #125.
