@@ -243,7 +243,7 @@ cadence(function (step) {
 
 You can invoke the loop passing it an array. The loop will be invoked once for
 each element in the array, passing the array element to the first function of
-the sub-cadence. 
+the sub-cadence.
 
 ```javascript
 cadence(function (step) {
