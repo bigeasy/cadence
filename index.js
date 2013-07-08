@@ -235,7 +235,7 @@ function cadence () {
           async.jump(callback.cadence[0]);
           async().apply(this, [null].concat(vargs));
         });
-        createCallback(invocation, callback, 2).call(null);
+        createCallback(invocation, callback, 0).call(null);
       }
     }
 

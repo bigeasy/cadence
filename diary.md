@@ -2623,5 +2623,6 @@ about parallelism.
 
 ## Next Change Log
 
+ * Loop returns inadvertently creating arrays. #127.
  * Unable to loop through exception handlers. #126.
  * Catch functions are not invoked with the correct `this`. #125.
