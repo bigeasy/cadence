@@ -778,6 +778,30 @@ cadence(function (step) {
 
 This is a horrible example. Try again.
 
+Here's a `mkdirp`, but let's complete it.
+
+```javascript
+var mkdirs = cadence(function (step, directory) {
+    directory = path.resolve(directory)
+    var mode = 0777 & (~process.umask())
+    var made = null
+
+    step([function () {
+        fs.mkdir(directory, mode, step())
+    }, function (_, error) {
+        if (error.code == 'ENOENT') {
+            mkdirp(path.dirname(directory), step())
+        } else {
+            step(function () {
+                fs.stat(directory, step())
+            }, function (stat) {
+                if (!stat.isDirectory()) step(error)
+            })
+        }
+    }])
+})
+```
+
 ## Control Flow
 
 Here is where you would discuss `step.jump` and the function index.
