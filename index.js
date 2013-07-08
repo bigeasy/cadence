@@ -47,7 +47,7 @@ function cadence () {
     var vargs = __slice.call(arguments, 0),
         callback = function (error) { if (error) throw error };
     if (vargs.length) callback = vargs.pop();
-    march.call(this, null, steps, [async].concat(vargs), function (errors, finalizers) {
+    march.call(this, {}, steps, [async].concat(vargs), function (errors, finalizers) {
       var vargs = [null].concat(__slice.call(arguments, 2));
       finalize(finalizers, 0, errors, function (errors) {
         if (errors.length) {
@@ -183,7 +183,7 @@ function cadence () {
     // in the current cadence, we set the index of next step function to
     // execute; then remove the function argument and proceed.
     var invocation = invocations[0];
-    while (invocation) {
+    while (invocation.args) {
       for (var i = 0, I = invocation.args[0].steps.length; i < I; i++) {
         if (invocation.args[0].steps[i] === label) {
           invocation.args[1] = i;
@@ -354,15 +354,23 @@ function cadence () {
     var callbacks = previous.callbacks, args = [], arg, step, result, hold;
 
     if (previous.errors.length) {
+      // TODO: The finalizer juggling here is ugly. Come up with a consistent
+      // finalizer pattern.
       var catcher = cadence.catchers[index - 1];
       if (catcher) {
-        cadence.catchers[index - 1] = null;
-        cadence.steps[index - 1] = catcher;
-        previous.__args = [ previous.errors, previous.errors[0] ];
-        previous.callbacks.length = 1;
-        invoke(cadence, index - 1, previous, callback);
+        march.call(previous.self, previous, [ catcher ], [ previous.errors, previous.errors[0] ], function (errors, finalizers) {
+          previous.errors = [];
+          __push.apply(previous.finalizers, finalizers);
+          if (errors.length) {
+            arguments[1] = previous.finalizers;
+            callback.apply(this, __slice.call(arguments));
+          } else {
+            previous.__args = __slice.call(arguments, 2);
+            invoke.call(previous.self, cadence, index, previous, callback);
+          }
+        });
       } else {
-      var finalizers = previous.finalizers.splice(0, previous.finalizers.length);
+        var finalizers = previous.finalizers.splice(0, previous.finalizers.length);
         callback(previous.errors, finalizers);
       }
       return;
@@ -423,7 +431,7 @@ function cadence () {
     try {
       result = step.apply(this, args);
     } catch (errors) {
-      if (errors === previous.errors) {
+      if (errors === previous.caller.errors) {
         invocations[0].errors.uncaught = errors.uncaught;
       } else {
         errors = [ errors ];

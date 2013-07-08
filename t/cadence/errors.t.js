@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(18, function (equal, ok) {
+require('proof')(19, function (equal, ok) {
   var fs = require('fs')
     , cadence = require('../..')
     , errors = []
@@ -12,11 +12,13 @@ require('proof')(18, function (equal, ok) {
     equal(error.message, "thrown", "intercepted throw");
   });
 
+  var self = {};
   cadence([function (step) {
     step()(new Error("handled"));
   }, function (errors) {
+    ok(self === this);
     equal(errors[0].message, "handled", "intercepted passed along");
-  }])();
+  }]).call(self);
 
   cadence([function (step) {
     step()();
