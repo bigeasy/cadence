@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(12, function (equal, ok) {
+require('proof')(21, function (equal, ok) {
   var fs = require('fs')
     , cadence = require('../..')
     ;
@@ -46,7 +46,7 @@ require('proof')(12, function (equal, ok) {
 
   });
 
-  // Fixup finalizers run after explicit exit.
+  // Finalizers run after explicit exit.
   cadence(function (step, object) {
 
     step(function () {
@@ -54,7 +54,7 @@ require('proof')(12, function (equal, ok) {
         callback(null, object);
       } (step(step, [function (object) { object.closed = true }]));
     }, function (object) {
-      ok(!object.closed, 'leading finalizer open');
+      ok(!object.closed, 'on exit open');
       object.used = true;
     }, function () {
       step(null, object);
@@ -63,8 +63,56 @@ require('proof')(12, function (equal, ok) {
   })({}, function (error, object) {
 
     if (error) throw error;
-    ok(object.used, 'leading finalizer was used'); 
-    ok(object.closed, 'leading finalizer was closed'); 
+    ok(object.used, 'on exit was used'); 
+    ok(object.closed, 'on exit was closed'); 
+
+  });
+
+  // Finalizers run with correct `this`.
+  var self = {};
+  cadence(function (step) {
+
+    step(function () {
+      ! function (callback) {
+        callback(null, 1);
+      } (step(step, [function (number) {
+        ok(self === this, 'self is this');
+        this.closed = number;
+      }]));
+    }, [function () {
+      ok(self === this, 'self is still this');
+      this.closed++;
+    }], function () {
+      ok(!this.closed, 'this open');
+      this.used = true;
+    });
+
+  }).call(self, {}, function (error) {
+
+    if (error) throw error;
+    ok(self.used, 'this was used'); 
+    ok(self.closed, 'this was closed'); 
+
+  });
+
+  var me = {};
+  cadence(function (step) {
+
+    step(function () {
+      this.opened = true;
+    }, [function () {
+      ok(me === this, 'this exit')
+      this.opened = false;
+    }], function () {
+      ok(this.opened, 'this exit open');
+      this.used = true;
+    });
+
+  }).call(me, {}, function (error) {
+
+    if (error) throw error;
+    ok(me.used, 'this was used'); 
+    ok(!me.opened, 'this was closed'); 
 
   });
 

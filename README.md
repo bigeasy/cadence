@@ -812,6 +812,7 @@ Changes for each release.
 
 ### Version 0.0.22
 
+ * Finalizers are not invoked with correct `this`. #124.
  * Loop returns inadvertently creating arrays. #127.
  * Unable to loop through exception handlers. #126.
  * Catch functions are not invoked with the correct `this`. #125.

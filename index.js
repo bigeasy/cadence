@@ -49,7 +49,7 @@ function cadence () {
     if (vargs.length) callback = vargs.pop();
     march.call(this, {}, steps, [async].concat(vargs), function (errors, finalizers) {
       var vargs = [null].concat(__slice.call(arguments, 2));
-      finalize(finalizers, 0, errors, function (errors) {
+      finalize.call(this, finalizers, 0, errors, function (errors) {
         if (errors.length) {
           callback(errors.uncaught || errors.shift());
         } else {
@@ -274,7 +274,7 @@ function cadence () {
               done();
             } else {
               // TODO: Test that a sub-cadence merges it's finalizer errors.
-              finalize(finalizers, 0, invocation.errors, done);
+              finalize.call(this, finalizers, 0, invocation.errors, done);
             }
 
             function done () {
@@ -340,12 +340,12 @@ function cadence () {
 
   function finalize (finalizers, index, errors, callback) {
     if (index == finalizers.length) {
-      callback(errors);
+      callback.call(this, errors);
     } else {
       var finalizer = finalizers[index];
-      invoke({ steps: [ finalizer.step ], catchers: [], finalizers: [] }, 0, finalizer.previous, function (e) {
+      invoke.call(this, { steps: [ finalizer.step ], catchers: [], finalizers: [] }, 0, finalizer.previous, function (e) {
         __push.apply(errors, e);
-        finalize(finalizers, index + 1, errors, callback);
+        finalize.call(this, finalizers, index + 1, errors, callback);
       });
     }
   }
@@ -371,7 +371,7 @@ function cadence () {
         });
       } else {
         var finalizers = previous.finalizers.splice(0, previous.finalizers.length);
-        callback(previous.errors, finalizers);
+        callback.call(this, previous.errors, finalizers);
       }
       return;
     }
@@ -414,7 +414,7 @@ function cadence () {
 
     if (cadence.steps.length == index) {
       var finalizers = previous.finalizers.splice(0, previous.finalizers.length);
-      callback.apply(null, [ [], finalizers ].concat(args));
+      callback.apply(this, [ [], finalizers ].concat(args));
       return;
     }
 
