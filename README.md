@@ -198,15 +198,20 @@ to provide you with a looping structure that is not terribily compilicated, or
 nested.
 
 Looping in Cadence is performed by defining a sub-cadence, then invoking the
-function that is returned by the sub-cadence definition. If you **do not
-invoke** the function, Cadence will start the sub-cadence for you when your step
-returns and run the sub-cadence once. If you **do invoke** the function, Cadence
-will run the sub-cadence as a loop.
+function that is returned by the sub-cadence definition. We'll call this the
+**looper function**. If you **do not invoke** the function, Cadence will start
+the sub-cadence for you when your step returns and run the sub-cadence once. If
+you **do invoke** the function, Cadence will run the sub-cadence as a loop.
+
+You can create `while` loops, `do...while` loops, stepped loops and `forEach`
+loops using the looper function.
 
 ### Endless Loops
 
 If you invoke without arguments, you will invoke an endless loop. You terminate
 the loop using the `step(error, result)` explicit return.
+
+Calling `looper()`.
 
 ```javascript
 cadence(function (step) {
@@ -222,7 +227,36 @@ cadence(function (step) {
 })()
 ```
 
+When you're terminal condition is the last function, you've basically created a
+`do...while` loop.
+
+### Loop Initializers
+
+When an endless loop iterates, the result of the last function is passed as the
+arguments the first function. You can use this to create a `while` loop.
+
+To pass in an initial test value to the endless loop, you invoke the looper
+function with a leading `null`, followed by the parameters, `looper(null, arg1,
+arg2)` the same the way you invoke an explicit return of the `step` function.
+
+Calling `looper(null, arg)`.
+
+```javascript
+cadence(function (step) {
+    var count = 0
+    step(function (more) {
+        if (!more) step(null, count)
+    }, function () {
+        step(null, ++count < 10)
+    })(null, true)
+})
+```
+
 ### Counted Loops
+
+TODO: And put in diary, what about stepped instead? `looper(0, 10)` with an
+optional increment `looper(0, 10, 2)`? I mentioned steps above. This would be
+more useful, general purpose than just a count.
 
 You can tell Cadence to loop for a fixed number of times by invoking the loop
 start function with a count of iterations.
@@ -230,7 +264,8 @@ start function with a count of iterations.
 ```javascript
 cadence(function (step) {
   var count = 0
-  step(function () {
+  step(function (count) {
+    equal(count, index, 'keeping a count for you')
     step()(null, ++count)
   })(10)
 })(function (error, result) {
@@ -248,7 +283,8 @@ the sub-cadence.
 ```javascript
 cadence(function (step) {
   var sum = 0
-  step(function (number) {
+  step(function (number, index) {
+    equal(index, number - 1, 'keeping an index for you')
     step()(null, sum = sum + number)
   })([ 1, 2, 3, 4 ])
 })(function (error, result) {
@@ -256,6 +292,8 @@ cadence(function (step) {
   equal(result, 10, "reduced each loop")
 });
 ```
+
+TK: 4 space indent and only single quotes.
 
 ### Gathered Loops
 
