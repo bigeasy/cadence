@@ -849,6 +849,7 @@ Here is where you would discuss `step.jump` and the function index.
 
 ## Change Log
 
+ * Aways flatten callback arguments. #133.
 Changes for each release.
 
 ### Version 0.0.21

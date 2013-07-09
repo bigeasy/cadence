@@ -27,16 +27,8 @@ function cadence () {
   // return ordinarily, then `step(null)`.
 
   // 
-  function march (caller, steps, args, callback) {
-    // TODO: We pass this forward, better as a parent?
-    // TODO: Unfold can go in here.
-    var invocation = {
-      caller: caller,
-      errors: [],
-      finalizers: [],
-      __args: args
-    };
-    invoke.call(this, unfold({}, steps), 0, invocation, callback);
+  function march (caller, steps, vargs, callback) {
+      invoke.call(this, unfold({}, steps), 0, precede(caller, vargs), callback)
   }
 
   // Execute is the function returned to the user. It represents the constructed
@@ -280,7 +272,7 @@ function cadence () {
 
             function done () {
               if (-1 < index && ++invocation.called == invocation.count) {
-                argue.apply(invocation.self, invocation.args);
+                invoke.apply(invocation.self, invocation.args);
               }
             }
           });
@@ -298,45 +290,11 @@ function cadence () {
         }
       }
       if (index < 0 ? invocation.errors.length : ++invocation.called == invocation.count) {
-        argue.apply(invocation.self, invocation.args);
+        invoke.apply(invocation.self, invocation.args);
       }
       // If this is a sub-cadence, do not auto start it.
       callback.run = false;
     }
-  }
-
-  // Parallel arrays make the most sense, really. If the paralleled function
-  // is better off returning a map, it can be shimmed.
-  function contextualize (step, callbacks) {
-    var index, vargs = [], arg, callback, arity;
-
-    arg = 0;
-    while (callbacks.length) {
-      var callback = callbacks.shift();
-      if (callback.arrayed) {
-        callback.results = callback.results.filter(function (vargs) { return vargs.length });
-      }
-      if ('arity' in callback) {
-        arity = callback.arity;
-      } else {
-        arity = callback.arrayed ? 1 : 0;
-        callback.results.forEach(function (result) {
-          arity = Math.max(arity, result.length);
-        });
-      }
-      for (index = 0; index < arity; index++) {
-        vargs.push({ values: [],
-                     arrayed: ('arrayed' in callback) ? callback.arrayed : callback.results.length > 1 });
-      }
-      callback.results.forEach(function (result) {
-        for (var i = 0; i < arity; i++) {
-          vargs[arg + i].values.push(result[i]);
-        }
-      });
-      arg += arity;
-    }
-
-    return vargs.map(function (vargs) { return vargs.arrayed ? vargs.values : vargs.values.shift() });
   }
 
   function finalize (finalizers, index, errors, callback) {
@@ -351,100 +309,126 @@ function cadence () {
     }
   }
 
-  function argue (cadence, index, previous, callback) {
-    var callbacks = previous.callbacks, args = [], arg, step, result, hold;
-
-    if (previous.errors.length) {
-      // TODO: The finalizer juggling here is ugly. Come up with a consistent
-      // finalizer pattern.
-      var catcher = cadence.catchers[index - 1];
-      if (catcher) {
-        march.call(previous.self, previous, [ catcher ], [ previous.errors, previous.errors[0] ], function (errors, finalizers) {
-          previous.errors = [];
-          __push.apply(previous.finalizers, finalizers);
-          if (errors.length) {
-            arguments[1] = previous.finalizers;
-            callback.apply(this, __slice.call(arguments));
-          } else {
-            previous.__args = __slice.call(arguments, 2);
-            invoke.call(previous.self, cadence, index, previous, callback);
-          }
-        });
-      } else {
-        var finalizers = previous.finalizers.splice(0, previous.finalizers.length);
-        callback.call(this, previous.errors, finalizers);
-      }
-      return;
+  function precede (caller, vargs) {
+    return {
+      caller: caller,
+      callbacks: argue(vargs),
+      errors: [],
+      finalizers: []
     }
-
-    // No callbacks means that we use the function return value, if any.
-    if (callbacks.length == 1) {
-      callbacks[0].results[0].shift()
-      if (!callbacks[0].results[0].length) {
-        callbacks.shift();
-      }
-    } else {
-      callbacks.shift();
-    }
-
-    // Filter out the return value, if there are callbacks left, then
-    // `contextualize` will process them.
-    if (callbacks.length) {
-      args = contextualize(step, callbacks);
-    } else {
-      args = [];
-    }
-    // TODO: Distingish cadence step args from invocation args.
-    previous.__args = args;
-
-    invoke.call(this, cadence, index, previous, callback);
   }
+
+  function argue (vargs) { return [{ results: [[invoke].concat(vargs)] }] }
 
   function invoke (cadence, index, previous, callback) {
-    var callbacks = previous.callbacks, args = [], arg, step, result, hold;
+      var callbacks = previous.callbacks
+      var catcher, finalizers
+      var cb, arity, vargs = [], arg = 0, i
+      var step, result, hold
 
-    args = previous.__args;
-
-    // Add the finalizers for the current step. Save the previous invocation
-    // with the step so we can invoke the finalizer with arguments generated by
-    // the previous invocation.
-    if (cadence.finalizers[index]) {
-      previous.finalizers.push(cadence.finalizers[index]);
-      cadence.finalizers[index].previous = previous;
-    }
-
-    if (cadence.steps.length == index) {
-      var finalizers = previous.finalizers.splice(0, previous.finalizers.length);
-      callback.apply(this, [ [], finalizers ].concat(args));
-      return;
-    }
-
-    // Get the next step.
-    step = cadence.steps[index];
-
-    invocations.unshift({ callbacks: [], count: 0 , called: 0, index: index,
-                          errors: [],
-                          finalizers: previous.finalizers,
-                          callback: callback, self: this, caller: previous.caller });
-    invocations[0].args = [ cadence, index + 1, invocations[0], callback ]
-
-    hold = async();
-    try {
-      result = step.apply(this, args);
-    } catch (errors) {
-      if (errors === previous.caller.errors) {
-        invocations[0].errors.uncaught = errors.uncaught;
-      } else {
-        errors = [ errors ];
+      if (previous.errors.length) {
+          catcher = cadence.catchers[index - 1]
+          if (catcher) {
+              march.call(previous.self, previous, [ catcher ], [ previous.errors, previous.errors[0] ], function (errors, finalizers) {
+                previous.errors = []
+                __push.apply(previous.finalizers, finalizers)
+                if (errors.length) {
+                    arguments[1] = previous.finalizers
+                    callback.apply(this, __slice.call(arguments))
+                } else {
+                    previous.__args = __slice.call(arguments, 2)
+                    previous.callback = argue(__slice.call(arguments, 2))
+                    invoke.call(previous.self, cadence, index, previous, callback)
+                }
+              })
+          } else {
+              callback.call(this, previous.errors, previous.finalizers.splice(0, previous.finalizers.length))
+          }
+          return
       }
-      __push.apply(invocations[0].errors, errors);
-      invocations[0].called = invocations[0].count - 1;
-    }
-    invocations.shift();
-    hold.apply(this, [ null, invoke ].concat(result === void(0) ? [] : [ result ]));
+
+      if (callbacks.length == 1) {
+          callbacks[0].results[0].shift()
+          if (!callbacks[0].results[0].length) {
+              callbacks.shift()
+          }
+      } else {
+          callbacks.shift()
+      }
+
+      while (callbacks.length) {
+          cb = callbacks.shift()
+          if (cb.arrayed) {
+              cb.results = cb.results.filter(function (vargs) { return vargs.length })
+          }
+          if ('arity' in cb) {
+              arity = cb.arity
+          } else {
+              arity = cb.arrayed ? 1 : 0
+              cb.results.forEach(function (result) {
+                  arity = Math.max(arity, result.length)
+              })
+          }
+          for (i = 0; i < arity; i++) {
+              vargs.push({
+                  values: [],
+                  arrayed: ('arrayed' in cb) ? cb.arrayed : cb.results.length > 1
+              })
+          }
+          cb.results.forEach(function (result) {
+              for (var i = 0; i < arity; i++) {
+                  vargs[arg + i].values.push(result[i])
+              }
+          })
+          arg += arity
+      }
+
+      vargs = vargs.map(function (vargs) {
+          return vargs.arrayed ? vargs.values : vargs.values.shift()
+      })
+
+      if (cadence.finalizers[index]) {
+          previous.finalizers.push(cadence.finalizers[index])
+          cadence.finalizers[index].previous = previous
+          cadence.finalizers[index].previous.callbacks = argue(vargs)
+      }
+
+      if (cadence.steps.length == index) {
+          var finalizers = previous.finalizers.splice(0, previous.finalizers.length)
+          callback.apply(this, [ [], finalizers ].concat(vargs))
+          return
+      }
+
+      invocations.unshift({
+          self: this,
+          callbacks: [],
+          count: 0,
+          called: 0,
+          errors: [],
+          finalizers: previous.finalizers,
+          //index: index,
+          callback: callback,
+          caller: previous.caller
+      })
+      invocations[0].args = [ cadence, index + 1, invocations[0], callback ]
+
+      hold = async()
+      try {
+          result = cadence.steps[index].apply(this, vargs)
+      } catch (errors) {
+          if (errors === previous.caller.errors) {
+              invocations[0].errors.uncaught = errors.uncaught
+          } else {
+              errors = [ errors ]
+          }
+          __push.apply(invocations[0].errors, errors)
+          invocations[0].called = invocations[0].count - 1
+      }
+      invocations.shift()
+      hold.apply(this, [ null, invoke ].concat(result === void(0) ? [] : [ result ]))
   }
 
-  return execute;
+  return execute
 }
 
 module.exports = cadence;
