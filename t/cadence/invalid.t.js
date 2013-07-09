@@ -1,15 +1,14 @@
 #!/usr/bin/env node
 
 require('proof')(1, function (equal) {
-  var fs = require('fs')
-    , cadence = require('../..')
-    ;
+    var fs = require('fs')
+    var cadence = require('../..')
 
-  cadence(function (step) {
+    cadence(function (step) {
 
-    step(1, 'a', 1);
+        step(1, 'a', 1)
 
-  })(function (error) {
-    equal(error.message, 'invalid arguments');
-  });
-});
+    })(function (error) {
+        equal(error.message, 'invalid arguments')
+    })
+})

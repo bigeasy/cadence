@@ -1,40 +1,39 @@
 #!/usr/bin/env node
 
 require('proof')(2, function (step, ok, equal) {
-  var fs = require('fs')
-    , cadence = require('../..')
-    , one = step(), two = step()
-    ;
+    var fs = require('fs')
+    var cadence = require('../..')
+    var one = step(), two = step()
 
-  cadence(function (step) {
+    cadence(function (step) {
 
-    step(null, 1);
+        step(null, 1)
 
-  }, function () {
+    }, function () {
 
-    ok(false, 'should not be called');
+        ok(false, 'should not be called')
 
-  })(function (error, number) {
+    })(function (error, number) {
 
-    if (error) throw error;
-    equal(number, 1, 'early return');
-    one();
+        if (error) throw error
+        equal(number, 1, 'early return')
+        one()
 
-  });
+    })
 
-  cadence(function (step) {
+    cadence(function (step) {
 
-    step(new Error('abend'));
+        step(new Error('abend'))
 
-  }, function () {
+    }, function () {
 
-    ok(false, 'should not be called');
+        ok(false, 'should not be called')
 
-  })(function (error) {
+    })(function (error) {
 
-    if (error.message != 'abend') throw error;
-    equal(error.message, 'abend', 'early return with error');
-    two();
+        if (error.message != 'abend') throw error
+        equal(error.message, 'abend', 'early return with error')
+        two()
 
-  });
-});
+    })
+})

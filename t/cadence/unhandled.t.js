@@ -1,41 +1,40 @@
 #!/usr/bin/env node
 
 require('proof')(4, function (ok, equal) {
-  var fs = require('fs')
-    , cadence = require('../..')
-    ;
+    var fs = require('fs')
+    var cadence = require('../..')
 
-  try {
-    cadence(function () {
+    try {
+        cadence(function () {
 
-      throw new Error("thrown");
+            throw new Error('thrown')
 
-    })();
-  } catch (error) {
-    equal(error.message, "thrown", "unhandled throw");
-  }
+        })()
+    } catch (error) {
+        equal(error.message, 'thrown', 'unhandled throw')
+    }
 
-  try {
+    try {
+        cadence(function (step) {
+
+            step()(new Error('handed'))
+
+        })()
+    } catch (error) {
+        equal(error.message, 'handed', 'unhandled error')
+    }
+
     cadence(function (step) {
+        step()(new Error('one'))
+        step()(new Error('two'))
+    })(function (error) {
+        equal(error.message, 'one', 'got first error from default handler')
+    })
 
-      step()(new Error("handed"));
-
-    })();
-  } catch (error) {
-    equal(error.message, "handed", "unhandled error");
-  }
-
-  cadence(function (step) {
-    step()(new Error("one"));
-    step()(new Error("two"));
-  })(function (error) {
-    equal(error.message, "one", "got first error from default handler")
-  });
-
-  try {
-    cadence(function () {})();
-    ok(1, "no exception");
-  } catch (e) {
-    ok(0, "no exception");
-  }
-});
+    try {
+        cadence(function () {})()
+        ok(1, 'no exception')
+    } catch (e) {
+        ok(0, 'no exception')
+    }
+})

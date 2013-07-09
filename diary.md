@@ -1990,7 +1990,7 @@ The signifier `}, function (error) {` can *mean* something, dag-gummit!
 
 **Update**: What about swallowing the error, like when a directory already
 exists? Can we not provide function? Or do we ask that the user create a
-`ignore` function? 
+`ignore` function?
 
 ### Error Handling
 
@@ -2454,7 +2454,7 @@ cadence(function (step, items) {
     step(function () {
       // this is like a continue, maybe.
       step.jump(items);
-      // or maybe, this is like a continue, maybe... 
+      // or maybe, this is like a continue, maybe...
       step(item)(null, terminated);
       // because now we do have a special function of our own creation and we
       // can mark it as such.
@@ -2477,7 +2477,7 @@ cadence(function (step, items) {
     step(function () {
       // this is like a continue, maybe.
       step.jump(items);
-      // or maybe, this is like a continue, maybe... 
+      // or maybe, this is like a continue, maybe...
       step(item, transformed);
       // because now we do have a special function of our own creation and we
       // can mark it as such.
@@ -2499,7 +2499,7 @@ cadence(function (step, items) {
     step(function () {
       // this is like a continue, maybe.
       step.jump(items);
-      // or maybe, this is like a continue, maybe... 
+      // or maybe, this is like a continue, maybe...
       step(item, transformed);
       // because now we do have a special function of our own creation and we
       // can mark it as such.
@@ -2515,7 +2515,7 @@ cadence(function (step, items) {
     step(function () {
       // this is like a continue, maybe.
       step.jump(items);
-      // or maybe, this is like a continue, maybe... 
+      // or maybe, this is like a continue, maybe...
       step(item, transformed);
       // because now we do have a special function of our own creation and we
       // can mark it as such.
@@ -2534,7 +2534,7 @@ cadence(function (step, items) {
     step(function () {
       // this is like a continue, maybe.
       step.jump(items);
-      // or maybe, this is like a continue, maybe... 
+      // or maybe, this is like a continue, maybe...
       step(item, transformed);
       // because now we do have a special function of our own creation and we
       // can mark it as such.

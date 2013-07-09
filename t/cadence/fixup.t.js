@@ -1,95 +1,97 @@
 #!/usr/bin/env node
 
 require('proof')(6, function (step, equal, deepEqual) {
-  var fs = require('fs'), cadence = require('../..');
+    var fs = require('fs')
+    var cadence = require('../..')
 
-  cadence(function (step) {
+    cadence(function (step) {
 
-    step(function () {
-      (function (callback) {
-        callback(null, 1);
-      })(step(step, function (number) {
-        return number + 1;
-      }));
-    }, function (value) {
-      equal(value, 2, 'fixup direct');
-    });
+        step(function () {
+            (function (callback) {
+                callback(null, 1)
+            })(step(step, function (number) {
+                return number + 1
+            }))
+        }, function (value) {
+            equal(value, 2, 'fixup direct')
+        })
 
-  })(step());
+    })(step())
 
-  cadence(function (step) {
+    cadence(function (step) {
 
-    step(function () {
-      (function (callback) {
-        callback(new Error('errored'), 1);
-      })(step(step, function () {
-        throw new Error('should not be called');
-      }));
-    }, function () {
-      throw new Error('should not be called');
-    });
+        step(function () {
+            (function (callback) {
+                callback(new Error('errored'), 1)
+            })(step(step, function () {
+                throw new Error('should not be called')
+            }))
+        }, function () {
+            throw new Error('should not be called')
+        })
 
-  })(function (error) {
-    equal(error.message, 'errored', 'fixup short circuit');
-  });
+    })(function (error) {
+        equal(error.message, 'errored', 'fixup short circuit')
+    })
 
-  cadence(function (step) {
+    cadence(function (step) {
 
-    echo(1, step(step, function (number) {
-      echo(- number, step());
-    }));
+        echo(1, step(step, function (number) {
+            echo(- number, step())
+        }))
 
-  }, function (items) {
+    }, function (items) {
 
-    deepEqual(items, -1, 'fixup cadence');
+        deepEqual(items, -1, 'fixup cadence')
 
-  })(step());
+    })(step())
 
-  // This triggers a test of error handling when the fixup cadence errors,
-  // whether the next object in the sub cadence recieves the error.
-  cadence(function (step) {
+    // This triggers a test of error handling when the fixup cadence errors,
+    // whether the next object in the sub cadence recieves the error.
+    cadence(function (step) {
 
-    step(function () {
+        step(function () {
 
-      echo(1, step(step, function (number) {
-         step(new Error('errored'));
-      }));
+            echo(1, step(step, function (number) {
+                 step(new Error('errored'))
+            }))
 
-    }, function () {
+        }, function () {
 
-      throw new Error('should not be called');
+            throw new Error('should not be called')
 
-    });
+        })
 
-  })(function (error) {
+    })(function (error) {
 
-    equal(error.message, 'errored', 'inner error');
+        equal(error.message, 'errored', 'inner error')
 
-  });
+    })
 
-  cadence(function (step) {
+    cadence(function (step) {
 
-    echo(1, step(step, function (number) {
-      throw new Error('thrown');
-      echo(- number, step());
-    }));
+        echo(1, step(step, function (number) {
+            throw new Error('thrown')
+            echo(- number, step())
+        }))
 
-  })(function (error) {
-    equal(error.message, 'thrown', 'errors');
-  });
+    })(function (error) {
+        equal(error.message, 'thrown', 'errors')
+    })
 
-  cadence(function (step) {
+    cadence(function (step) {
 
-    var numbers = step(step, [], function (number) { return - number });
-    [ 1, 2, 3 ].forEach(function (number) {
-      echo(number, numbers());
-    });
+        var numbers = step(step, [], function (number) { return - number })
 
-  }, function (numbers) {
+        ; [ 1, 2, 3 ].forEach(function (number) {
+            echo(number, numbers())
+        })
 
-    deepEqual(numbers, [ -1, -2, -3 ], 'fixup array cadence');
+    }, function (numbers) {
 
-  })(step());
-});
+        deepEqual(numbers, [ -1, -2, -3 ], 'fixup array cadence')
+
+    })(step())
+})
 
 function echo (value, callback) { process.nextTick(function () { callback(null, value) }) }
