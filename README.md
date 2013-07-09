@@ -247,8 +247,11 @@ cadence(function (step) {
     step(function (more) {
         if (!more) step(null, count)
     }, function () {
-        step(null, ++count < 10)
+        step()(null, ++count < 10)
     })(null, true)
+})(function (error, result) {
+    if (error) throw error
+    equal(result, 10, 'initialized loop')
 })
 ```
 
@@ -847,6 +850,10 @@ Here is where you would discuss `step.jump` and the function index.
 ## Change Log
 
 Changes for each release.
+
+### Version 0.0.21
+
+ * Implement endless loop initializers. #129.
 
 ### Version 0.0.22
 
