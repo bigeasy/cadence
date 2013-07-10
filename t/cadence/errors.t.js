@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(19, function (equal, ok) {
+require('proof')(20, function (equal, ok) {
     var fs = require('fs')
     var cadence = require('../..')
     var errors = []
@@ -63,7 +63,6 @@ require('proof')(19, function (equal, ok) {
         equal(errors[0].message, "handled", "condtionally caught regex")
     }])()
 
-    /* FAILING
     cadence([function (step) {
         throw new Error
     }, function (error) {
@@ -71,7 +70,6 @@ require('proof')(19, function (equal, ok) {
     }], function (number) {
         equal(number, 1, 'handled and value changed')
     })()
-    */
 
     cadence([function (step) {
         var error = new Error("handled")

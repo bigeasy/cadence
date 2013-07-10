@@ -922,6 +922,7 @@ Changes for each release.
 
 ### Version 0.0.22
 
+ * Catch functions to not return their results to the next step. #135.
  * Implement loop labels. #131.
  * Aways flatten callback arguments. #133.
 

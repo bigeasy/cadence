@@ -73,7 +73,7 @@ function cadence () {
                             return caught
                         })
                         if (!errors.uncaught) {
-                            step[step.length - 1].call(this, errors, errors[0])
+                            return step[step.length - 1].call(this, errors, errors[0])
                         } else {
                             throw errors
                         }
@@ -330,7 +330,7 @@ function cadence () {
                       arguments[1] = previous.finalizers
                       callback.apply(this, __slice.call(arguments))
                   } else {
-                      //previous.callbacks = argue(__slice.call(arguments, 2))
+                      previous.callbacks = argue(__slice.call(arguments, 2))
                       invoke.apply(previous.self, previous.args)
                   }
                 })
