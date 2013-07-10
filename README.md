@@ -264,6 +264,10 @@ TODO: And put in diary, what about stepped instead? `looper(0, 10)` with an
 optional increment `looper(0, 10, 2)`? I mentioned steps above. This would be
 more useful, general purpose than just a count.
 
+TODO: No stepped. Hard to smoosh all that syntax. There is now a desire to have
+counted loops that take arguments, so some of those arguments might be an
+Integer.
+
 You can tell Cadence to loop for a fixed number of times by invoking the loop
 start function with a count of iterations.
 
@@ -320,6 +324,68 @@ cadence(function (step) {
 ```
 
 You cannot gather endless loops.
+
+### Loop Labels
+
+If you want to give up early and try again, you can use a loop label. When you
+invoke the looper function it returns a label object. You can use the label
+object to restart the loop.
+
+```javascript
+cadence(function (step) {
+    var count = 0
+    var retry = step([function () {
+        if (++count != 10) throw new Error
+        else step(null, 10)
+    }, function () {
+        step(retry)
+    }])(1)
+})(function (error, result) {
+    if (error) throw error
+    equal(result, 10, 'loop continue')
+})
+```
+
+This one's tricky. Because we specifed a count of `1`, the loop will only loop
+once, but because we call the `retry` label when we catch an error, the loop
+tries again.
+
+### Loop Label Quick Returns
+
+Some of the things we document here are about style and syntax bashing that you
+can do. It's not necessarily a part of Cadence.
+
+Often times when working with labels, you're testing to see if you should invoke
+the label when you enter a function, if not you would like to do something else.
+This is going to create an `if/else` block that increases our nesting. If we
+were programming synchronously in plain old JavaScript, we could call `continue`
+and that would jump to the loop label.
+
+To preserve that jumpy feeling, when you invoke `step(label)` it returns true,
+so you can create return using `&&`.
+
+```javascript
+cadence(function (step) {
+    var retry = step([function (count) {
+        if (count != 10) throw new Error('retry')
+        else step(null, 10)
+    }, function (_, error) {
+        if (error.message == 'retry') return step(retry) && count + 1
+        throw error
+    }])(1, 0)
+})(function (error, result) {
+    if (error) throw error
+    equal(result, 10, 'loop continue')
+})
+```
+
+TK: Another example of this...
+
+```javascript
+if (count != stop) return step(retry) && return count + 1
+```
+
+TK: Move loops below errors.
 
 ### Catching Errors
 
@@ -852,8 +918,12 @@ Here is where you would discuss `step.jump` and the function index.
 
 ## Change Log
 
- * Aways flatten callback arguments. #133.
 Changes for each release.
+
+### Version 0.0.22
+
+ * Implement loop labels. #131.
+ * Aways flatten callback arguments. #133.
 
 ### Version 0.0.21
 

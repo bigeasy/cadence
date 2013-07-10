@@ -38,7 +38,7 @@ require('proof')(19, function (equal, ok) {
 
     cadence([function (step) {
         step()(null, 1)
-    }, function (error) {
+    }, function () {
     }], function (number) {
         equal(number, 1, "no error with value")
     })()
@@ -62,6 +62,16 @@ require('proof')(19, function (equal, ok) {
     }, /handle/, function (errors) {
         equal(errors[0].message, "handled", "condtionally caught regex")
     }])()
+
+    /* FAILING
+    cadence([function (step) {
+        throw new Error
+    }, function (error) {
+        return 1
+    }], function (number) {
+        equal(number, 1, 'handled and value changed')
+    })()
+    */
 
     cadence([function (step) {
         var error = new Error("handled")

@@ -102,6 +102,21 @@ function cadence () {
             return
         }
 
+        if (vargs[0] instanceof Label) {
+            var invocation = invocations[0]
+            var label = vargs.shift()
+            while (invocation.args) {
+                if (invocation.args[0].steps[0] === label.step) {
+                    invocation.args[1] = 1
+                    invocation.args[2].callbacks = invocations[0].callbacks
+                    if (!vargs.length) return true
+                    return createHandler.apply({}, vargs)
+                }
+                invocation.args[1] = invocation.args[0].steps.length
+                invocation = invocation.caller
+            }
+        }
+
         var callback = { errors: [], results: [] }
         if (callback.fixup = (vargs[0] === async)) {
             vargs.shift()
@@ -156,6 +171,10 @@ function cadence () {
         }
     }
 
+    function Label (step) {
+        this.step = step
+    }
+
     function createCadence (invocation, callback) {
         var index = 0
 
@@ -169,7 +188,10 @@ function cadence () {
 
             if (callback.arrayed) {
                 return createCallback(invocation, callback, index++).apply(null, [null].concat(vargs))
-            } else if (callback.starter) {
+            } else if (vargs[0] === invoke) {
+                // A reminder; zero index because the result is not arrayed.
+                createCallback(invocation, callback, 0).call(null)
+            } else {
                 delete callback.starter
 
                 if (vargs[0] == null) {
@@ -178,9 +200,9 @@ function cadence () {
                 } else {
                     counter = vargs.pop()
                     if (each = Array.isArray(counter)) {
-                        whilst = function () { return count++ != counter.length }
+                        whilst = function () { return count != counter.length }
                     } else {
-                        whilst = function () { return count++ != counter }
+                        whilst = function () { return count != counter }
                     }
                     if (Array.isArray(vargs.shift())) gather = []
                 }
@@ -188,7 +210,7 @@ function cadence () {
                 callback.steps.unshift(function () {
                     var vargs = __slice.call(arguments)
                     if (whilst()) {
-                        async().apply(this, [null].concat(each ? [counter[count - 1]] : vargs))
+                        async().apply(this, [null].concat(each ? [counter[count]] : vargs))
                     } else if (gather) {
                         async.apply(this, [null].concat(vargs))
                         callback.results = gather
@@ -202,9 +224,14 @@ function cadence () {
                     if (gather) gather.push(vargs)
                     async.jump(callback.steps[0])
                     async().apply(this, [null].concat(vargs))
+                    count++
                 })
 
-                createCallback(invocation, callback, 0).apply(null, [null].concat(vargs))
+                callback.starter = function () {
+                    createCallback(invocation, callback, 0).apply(null, [null].concat(vargs))
+                }
+
+                return new Label(callback.steps[0])
             }
         }
 
@@ -251,10 +278,7 @@ function cadence () {
                 }
                 if (vargs[0] === invoke) {
                     invocation.callbacks.forEach(function (callback) {
-                        if (callback.starter) {
-                            // A reminder; zero index because the result is not arrayed.
-                            createCallback(invocation, callback, 0).call(null)
-                        }
+                        if (callback.starter) callback.starter(invoke)
                     })
                 }
             }
@@ -291,12 +315,14 @@ function cadence () {
     function invoke (cadence, index, previous, callback) {
         var callbacks = previous.callbacks
         var catcher, finalizers
-        var cb, arity, vargs = [], arg = 0, i
+        var cb, arity, vargs = [], arg = 0, i, j, k
         var step, result, hold
 
         if (previous.errors.length) {
             catcher = cadence.catchers[index - 1]
             if (catcher) {
+                // TODO: Pretty sure that here we're going to tuck our callbacks
+                // into this sub-cadence.
                 march.call(previous.self, previous, [ catcher ], [ previous.errors, previous.errors[0] ], function (errors, finalizers) {
                   previous.errors = []
                   __push.apply(previous.finalizers, finalizers)
@@ -304,9 +330,8 @@ function cadence () {
                       arguments[1] = previous.finalizers
                       callback.apply(this, __slice.call(arguments))
                   } else {
-                      previous.__args = __slice.call(arguments, 2)
-                      previous.callback = argue(__slice.call(arguments, 2))
-                      invoke.call(previous.self, cadence, index, previous, callback)
+                      //previous.callbacks = argue(__slice.call(arguments, 2))
+                      invoke.apply(previous.self, previous.args)
                   }
                 })
             } else {
@@ -316,16 +341,13 @@ function cadence () {
         }
 
         if (callbacks.length == 1) {
-            callbacks[0].results[0].shift()
-            if (!callbacks[0].results[0].length) {
-                callbacks.shift()
-            }
+            i = 0, j = 1
         } else {
-            callbacks.shift()
+            i = 1, j = 0
         }
 
-        while (callbacks.length) {
-            cb = callbacks.shift()
+        for (; i < callbacks.length; i++) {
+            cb = callbacks[i]
             if (cb.arrayed) {
                 cb.results = cb.results.filter(function (vargs) { return vargs.length })
             }
@@ -334,21 +356,23 @@ function cadence () {
             } else {
                 arity = cb.arrayed ? 1 : 0
                 cb.results.forEach(function (result) {
-                    arity = Math.max(arity, result.length)
+                    arity = Math.max(arity, result.length - j)
                 })
             }
-            for (i = 0; i < arity; i++) {
+            for (k = 0; k < arity; k++) {
                 vargs.push({
                     values: [],
+                    // TODO: When is arrayed not going to be definitive?
                     arrayed: ('arrayed' in cb) ? cb.arrayed : cb.results.length > 1
                 })
             }
             cb.results.forEach(function (result) {
-                for (var i = 0; i < arity; i++) {
-                    vargs[arg + i].values.push(result[i])
+                for (k = 0; k < arity; k++) {
+                    vargs[arg + k].values.push(result[k + j])
                 }
             })
             arg += arity
+            j = 0
         }
 
         vargs = vargs.map(function (vargs) {

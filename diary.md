@@ -2336,9 +2336,9 @@ How about using the object as a value cache? Or is cache to clever?
 
 Test that callback argument is actually a function. Or what is correct?
 
-Yes. Cadence is just begging for a `while` and `until` where `until` is
-evaluated at the end of the cadence. Or! Maybe you put `while` anywhere and it
-breaks the cadence?
+**Update**: Yes. Cadence is just begging for a `while` and `until` where `until`
+is evaluated at the end of the cadence. Or! Maybe you put `while` anywhere and
+it breaks the cadence?
 
 ```javascript
 cadence(function (step, items) {
@@ -2546,6 +2546,38 @@ cadence(function (step, items) {
 That is the Cadence way. Maybe jump doesn't have to search as hard if jumping is
 no about loops. If I can write applications without the jump as goto, then I'll
 get rid if it.
+
+TK: Move this up and under looping.
+
+Doing loop labels right now, and I might use those instead of assigning jump
+labels. Jump labels are cute, but they are unstructured. With labels, I can get
+back to having a single `step` function. `Error` is now freed up for the
+creation of error handlers, so we only need to choose a sigil for events. That
+could be `step(this)`, which means that the function is not a callback, but er,
+I got nothing. We could say `step(Error)` implies that the error slot has been
+filled or `step(-1)` implies that the slot has been shifted, so that `step(-1,
+Error)` means error handler, or just `step(Error)`.
+
+In any case, label invocation. I'm looking at how I'd like to use it, and I'd
+like to be able to do it as one liner at times. I chose to make `step.jump`
+separate and apart from return values, but then when I used it, and I needed
+curly braces to set the jump and set a return value, I didn't like it. I wanted
+to be able to make that one-liner because `continue` is a one liner.
+
+Now that I have labels, I'm looking for a way to express those one liners.
+
+```javascript
+step(tryagain)      // change flow, but no callback generation
+step(tryagain)()    // create a callback optionally by invoking builder
+step(tryagain, 1)   // Specify any one explicit argument, here it's arity
+tryagain()          // No! Loose the type difference.
+```
+
+Then what about immediate returns? Ah, just return true.
+
+```javascript
+if (!anygood) return step(tryagain) && 1
+```
 
 ## Zero to Many
 
