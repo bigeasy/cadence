@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(9, function (equal, deepEqual) {
+require('proof')(18, function (equal, deepEqual) {
     var fs = require('fs')
     var cadence = require('../..')
 
@@ -53,8 +53,22 @@ require('proof')(9, function (equal, deepEqual) {
     })
 
     cadence(function (step) {
-        var sum = 0
-        step(function (number) {
+        var outer = { count: 0, flag: true }
+        step(function (flag, count) {
+            equal(flag, outer.flag, 'got flag in counted loop ' + (count + 1))
+            equal(count, outer.count++, 'got count in counted loop' + (count + 1))
+            outer.flag = false
+            return false
+        })(2, true)
+    })(function (error, result) {
+        if (error) throw error
+        equal(result, false, 'counted loop with argumet')
+    })
+
+    cadence(function (step) {
+        var sum = 0, count = 0
+        step(function (number, index) {
+            equal(index, count++, 'reduced each loop index ' + index) 
             step()(null, sum = sum + number)
         })([ 1, 2, 3, 4 ])
     })(function (error, result) {

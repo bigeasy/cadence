@@ -922,6 +922,8 @@ Changes for each release.
 
 ### Version 0.0.22
 
+ * Implement arguments passed to into counted loops. #134.
+ * Include index and array in each loop. #130.
  * Remove double quotes. #137.
  * Implement loops without using `step.jump`. #138.
  * Remove `march`. #136.

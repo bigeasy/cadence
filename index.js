@@ -178,8 +178,8 @@ function cadence () {
         function starter () {
             var vargs = __slice.call(arguments)
             var count = 0
-            var gather, counter
-            var whilst, each
+            var prefix, gather, counter
+            var whilst, each, first
 
             if (callback.arrayed) {
                 return createCallback(invocation, callback, index++).apply(null, [null].concat(vargs))
@@ -189,23 +189,28 @@ function cadence () {
             } else {
                 delete callback.starter
 
+                whilst = function () { return true }
                 if (vargs[0] == null) {
-                    whilst = function () { return true }
                     vargs.shift()
-                } else {
-                    counter = vargs.pop()
-                    if (each = Array.isArray(counter)) {
+                } else if (vargs.length) {
+                    if (Array.isArray(vargs[0]) && vargs.length > 1) {
+                        gather = []
+                        vargs.shift()
+                    }
+                     counter = vargs.shift()
+                    if (typeof counter == 'number') {
+                        whilst = function () { return count != counter }
+                    } else if (each = Array.isArray(counter)) {
                         whilst = function () { return count != counter.length }
                     } else {
-                        whilst = function () { return count != counter }
+                        throw new Error('invalid arguments')
                     }
-                    if (Array.isArray(vargs.shift())) gather = []
                 }
 
                 callback.steps.unshift(function () {
                     var vargs = __slice.call(arguments)
                     if (whilst()) {
-                        async().apply(this, [null].concat(each ? [counter[count]] : vargs))
+                        async().apply(this, [null].concat(each ? [counter[count]] : vargs).concat([count]))
                     } else if (gather) {
                         async.apply(this, [null].concat(vargs))
                         callback.results = gather
