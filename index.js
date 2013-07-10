@@ -38,7 +38,6 @@ function cadence () {
 
     function unfold (steps) {
         var cadence = {
-            errors: [],
             catchers: [],
             steps: [],
         // TODO: DOCUMENT: Only one finalizer after each step. You cannot have two
