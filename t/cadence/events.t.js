@@ -9,8 +9,8 @@ require('proof')(7, function (equal, ok, step, deepEqual) {
 
     cadence(function (step, ee) {
         step(function () {
-            ee.on('data', step.event([]))
-            ee.on('end', step.event())
+            ee.on('data', step(-1, []))
+            ee.on('end', step(-1))
         }, function (data) {
             deepEqual(data, [ 1, 2, 3 ], 'events')
         })
@@ -26,8 +26,8 @@ require('proof')(7, function (equal, ok, step, deepEqual) {
 
     cadence(function (step, ee) {
         step(function () {
-            ee.on('error', step.error())
-            ee.on('end', step.event())
+            ee.on('error', step(Error))
+            ee.on('end', step(-1))
         })
     })(ee, function (error) {
         equal(error.message, 'error', 'error event')
@@ -39,8 +39,8 @@ require('proof')(7, function (equal, ok, step, deepEqual) {
 
     cadence(function (step, ees) {
       step(function () {
-          ee.on('error', step.error())
-          ee.on('end', step.event())
+          ee.on('error', step(Error))
+          ee.on('end', step(-1))
       }, function (end) {
           equal(end, 'ended', 'error ignored')
       })
@@ -52,8 +52,8 @@ require('proof')(7, function (equal, ok, step, deepEqual) {
 
     cadence(function (step, ee) {
         step(function () {
-            ee.on('data', step.event([]))
-            ee.on('end', step.event())
+            ee.on('data', step(-1, []))
+            ee.on('end', step(-1))
         }, function (data, ended) {
             deepEqual(data, [], 'arrayed event with no values')
             equal(ended, 'ended', 'arrayed event with no values ended')
@@ -66,8 +66,8 @@ require('proof')(7, function (equal, ok, step, deepEqual) {
 
     cadence(function (step, ee) {
         step(function () {
-            ee.on('data', step.event(2, []))
-            ee.on('end', step.event())
+            ee.on('data', step(-1, 2, []))
+            ee.on('end', step(-1))
         }, function (first, second, ended) {
             deepEqual(second, [], 'arrayed event with specific arity')
             equal(ended, 'ended', 'arrayed event with specific arity ended')

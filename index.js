@@ -34,7 +34,7 @@ function cadence () {
     //
     var invocations = []
 
-    function async () { return createHandler.apply(null, arguments) }
+    function async () { return createHandler(false, __slice.call(arguments)) }
 
     function unfold (steps) {
         var cadence = {
@@ -83,8 +83,7 @@ function cadence () {
         return cadence
     }
 
-    function createHandler () {
-        var vargs = __slice.call(arguments)
+    function createHandler (event, vargs) {
         var i = -1
 
         // The caller as invoked the async function directly as an explicit early
@@ -97,6 +96,10 @@ function cadence () {
             return
         }
 
+        if (vargs[0] === Error) {
+          return createHandler(true, [ 0, [] ].concat(vargs.slice(1)))
+        }
+
         if (vargs[0] instanceof Label) {
             var invocation = invocations[0]
             var label = vargs.shift()
@@ -105,13 +108,21 @@ function cadence () {
                     invocation.args[1] = 1
                     invocation.args[2].callbacks = invocations[0].callbacks
                     if (!vargs.length) return true
-                    return createHandler.apply({}, vargs)
+                    return createHandler(false, vargs)
                 }
                 invocation.args[1] = invocation.args[0].steps.length
                 invocation = invocation.caller
             }
         }
 
+        if (vargs[0] === -1) {
+          var callback = createHandler(true, vargs.slice(1))
+          return function () {
+              return callback.apply(null, [ null ].concat(__slice.call(arguments)))
+          }
+        }
+
+        // TODO Callback can be empty.
         var callback = { errors: [], results: [] }
         if (callback.fixup = (vargs[0] === async)) {
             vargs.shift()
@@ -135,7 +146,7 @@ function cadence () {
         }
 
         if (callback.arrayed) {
-            if (this.event) return createCallback(invocations[0], callback, -1)
+            if (event) return createCallback(invocations[0], callback, -1)
             else return createArray(invocations[0], callback)
         }
 
@@ -143,14 +154,6 @@ function cadence () {
     }
 
     async.event = function () {
-        var callback = createHandler.apply({ event: true }, arguments)
-        return function () {
-            return callback.apply(null, [ null ].concat(__slice.call(arguments)))
-        }
-    }
-
-    async.error = function () {
-        return createHandler.apply({ event: true }, [0, []].concat(__slice.call(arguments)))
     }
 
     async.jump = function (label) {
