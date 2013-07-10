@@ -218,7 +218,7 @@ function cadence () {
                 callback.steps.push(function () {
                     var vargs = __slice.call(arguments)
                     if (gather) gather.push(vargs)
-                    async.jump(callback.steps[0])
+                    invocations[0].args[1] = 0
                     async().apply(this, [null].concat(vargs))
                     count++
                 })
