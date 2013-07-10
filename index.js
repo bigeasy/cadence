@@ -4,17 +4,13 @@ var __push = [].push
 function cadence () {
     var steps = __slice.call(arguments)
 
-    function march (caller, steps, vargs, callback) {
-        invoke.call(this, unfold(steps), 0, precede(caller, vargs), callback)
-    }
-
     function execute () {
         var vargs = __slice.call(arguments, 0)
         var callback = function (error) { if (error) throw error }
         if (vargs.length) {
             callback = vargs.pop()
         }
-        march.call(this, {}, steps, [async].concat(vargs), function (errors, finalizers) {
+        invoke.call(this, unfold(steps), 0, precede({}, [async].concat(vargs)), function (errors, finalizers) {
             var vargs = [null].concat(__slice.call(arguments, 2))
             finalize.call(this, finalizers, 0, errors, function (errors) {
                 if (errors.length) {
@@ -258,7 +254,7 @@ function cadence () {
                 else callback.results[index] = vargs
                 if (callback.steps.length) {
                   invocation.count++
-                  march.call(invocation.self, invocation, callback.steps, callback.results[index], function (errors, finalizers) {
+                  invoke.call(invocation.self, unfold(callback.steps), 0, precede(invocation, callback.results[index]), function (errors, finalizers) {
                       callback.results[index] = __slice.call(arguments, 2) // TODO: use argue
                       __push.apply(invocation.errors, errors)
 
@@ -294,7 +290,7 @@ function cadence () {
             callback.call(this, errors)
         } else {
             var finalizer = finalizers[index]
-            invoke.call(this, { steps: [ finalizer.step ], catchers: [], finalizers: [] }, 0, finalizer.previous, function (e) {
+            invoke.call(this, unfold([ finalizer.step ]), 0, finalizer.previous, function (e) {
                 __push.apply(errors, e)
                 finalize.call(this, finalizers, index + 1, errors, callback)
             })
@@ -314,16 +310,14 @@ function cadence () {
 
     function invoke (cadence, index, previous, callback) {
         var callbacks = previous.callbacks
-        var catcher, finalizers
+        var catcher, finalizers, errors
         var cb, arity, vargs = [], arg = 0, i, j, k
         var step, result, hold
 
         if (previous.errors.length) {
             catcher = cadence.catchers[index - 1]
             if (catcher) {
-                // TODO: Pretty sure that here we're going to tuck our callbacks
-                // into this sub-cadence.
-                march.call(previous.self, previous, [ catcher ], [ previous.errors, previous.errors[0] ], function (errors, finalizers) {
+                invoke.call(previous.self, unfold([ catcher ]), 0, precede(previous, [ previous.errors, previous.errors[0] ]), function (errors, finalizers) {
                   previous.errors = []
                   __push.apply(previous.finalizers, finalizers)
                   if (errors.length) {
@@ -398,7 +392,6 @@ function cadence () {
             called: 0,
             errors: [],
             finalizers: previous.finalizers,
-            //index: index,
             callback: callback,
             caller: previous.caller
         })
