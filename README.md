@@ -162,8 +162,8 @@ cadence(function () {
 
     }, function (a, b) {
 
-        equal(a, 1, "first")
-        equal(b, 2, "second")
+        equal(a, 1, 'first')
+        equal(b, 2, 'second')
 
     })
 })
@@ -226,7 +226,7 @@ cadence(function (step) {
     })()
 })(function (error, result) {
     if (error) throw error
-    equal(result, 10, "loop")
+    equal(result, 10, 'loop')
 })()
 ```
 
@@ -280,7 +280,7 @@ cadence(function (step) {
     })(10)
 })(function (error, result) {
     if (error) throw error
-    equal(result, 10, "counted loop")
+    equal(result, 10, 'counted loop')
 })
 ```
 
@@ -299,7 +299,7 @@ cadence(function (step) {
     })([ 1, 2, 3, 4 ])
 })(function (error, result) {
     if (error) throw error
-    equal(result, 10, "reduced each loop")
+    equal(result, 10, 'reduced each loop')
 })
 ```
 
@@ -319,7 +319,7 @@ cadence(function (step) {
     })([], [ 1, 2, 3, 4 ])
 })(function (error, result) {
     if (error) throw error
-    deepEqual(result, [ 1, 3, 6, 10 ], "gathered each loop")
+    deepEqual(result, [ 1, 3, 6, 10 ], 'gathered each loop')
 })
 ```
 
@@ -922,6 +922,9 @@ Changes for each release.
 
 ### Version 0.0.22
 
+ * Remove double quotes. #137.
+ * Implement loops without using `step.jump`. #138.
+ * Remove `march`. #136.
  * Catch functions to not return their results to the next step. #135.
  * Implement loop labels. #131.
  * Aways flatten callback arguments. #133.
@@ -1034,7 +1037,7 @@ Sat Mar 16 05:35:06 UTC 2013
  * Remove timeouts. #80.
  * Use `Error` to indicate subsequent error handler. #68.
  * Remove wrap option. #78.
- * Remove "use strict".
+ * Remove 'use strict'.
  * Ensure reentrancy. #74.
  * Remove underscore to indicate zero arity. #73.
 

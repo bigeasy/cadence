@@ -2,7 +2,7 @@ var deltree = cadence(function (cadence, directory) {
   cadence(function () {
     fs.readdir(directory, cadence());
   }, function (error) {
-    if (error.code != "ENOENT") cadence(error);
+    if (error.code != 'ENOENT') cadence(error);
     else cadence(null, []);
   }, function shift (files, rmdir) {
     if (files.length) return path.resolve(directory, files.shift());
@@ -22,7 +22,7 @@ var deltree = cadence(function (cadence, directory) {
   cadence(function () {
     fs.readdir(directory, cadence());
   }, function (error) {
-    if (error.code != "ENOENT") cadence(error);
+    if (error.code != 'ENOENT') cadence(error);
     else cadence(null, []);
   }, function (files) {
     files.forEach(function (file) {
@@ -33,7 +33,7 @@ var deltree = cadence(function (cadence, directory) {
         if (stat.isDirectory()) deltree(file, cadence());
         else fs.unlink(file, cadence());
       }, function (error) {
-        if (error.code != "ENOENT") {
+        if (error.code != 'ENOENT') {
           error.file = file;
           errors.push(error);
         }
@@ -52,7 +52,7 @@ var deltree = cadence(function (cadence, directory)
     fs.readdir(directory, cadence());
   }, function (error, files) {
     if (error) {
-      if (error.code != "ENOENT") throw error;
+      if (error.code != 'ENOENT') throw error;
       cadence(null);
     } else {
       files.forEach(function (file, i) {
@@ -74,7 +74,7 @@ var deltree = cadence(function (cadence, directory)
   }, function (error, files) {
     // Messy.
     if (error) {
-      if (error.code != "ENOENT") throw error;
+      if (error.code != 'ENOENT') throw error;
       cadence(null);
     } else {
       files.forEach(function (file, i) {

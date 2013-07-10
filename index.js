@@ -75,10 +75,10 @@ function cadence () {
                         }
                     }
                 }
-            } else if (typeof step == "function") {
+            } else if (typeof step == 'function') {
                 cadence.steps.push(step)
             } else {
-                throw new Error("invalid arguments")
+                throw new Error('invalid arguments')
             }
         })
         return cadence
