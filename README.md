@@ -3,9 +3,8 @@
 A Swiss Army asynchronous control flow function builder for Node.js and
 JavaScript that helps you create highly-parallel control flows.
 
-Cadence is a function builder. It simplifies the writing of asynchronous
-functions of that accept and  error/result callback using a domain-specific
-language of sorts.
+Cadence is a function builder. It helps you write asynchronous functions of that
+accept an error/result callback.
 
 ```javascript
 // Use Cadence.
@@ -20,7 +19,7 @@ var cat = cadence(function (step) {
 
     }, function (body) {
 
-        console.log(body)
+        process.stdout.write(body)
 
     })
 })
@@ -28,6 +27,34 @@ var cat = cadence(function (step) {
 // Use it in your program.
 cat(function (error) { if (error) throw error })
 ```
+
+You create a Cadnece using the magical `step` function that can express all
+mannor of asynchronous operations. Cadence supports.
+ 
+ * serial asynchronous operations, natch
+ * heterogenous and homongenous parallel operations
+ * while loops, do..while loops, or counted loops
+ * each loops that can either map or reduce an array
+ * events, streaming events and error events
+ * asynchronous try and catch exception handling
+ * asynchronous finalizers for clean up
+
+You can use Cadence in the browser too, because it is not Node.js dependent and
+it minzips to under 2k.
+
+TK: Too much intro, sell them with examples.
+
+Cadence is an exmaple of syntax bashing; taking the extending the syntax of a
+computer language using the existing syntax, usually using metadata, such as
+type of class data. Method chaining is a form of syntax bashing, but Cadence
+does not use method chaining.
+
+Instead, cadence has a single `step` function. With it you can define
+asynchronous parallel operations, 
+
+Cadence is a syntax bashed domain-specific language. Syntax bashing is 
+That domain-specific language is just plain JavaScript twisted and contorted is
+like a ba
 
 You create a function by passing a function to `cadence` that creates cadences.
 

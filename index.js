@@ -153,9 +153,7 @@ function cadence () {
         return createCallback(invocations[0], callback, 0)
     }
 
-    async.event = function () {
-    }
-
+    // Undocumetend, outgoing.
     async.jump = function (label) {
         var invocation = invocations[0]
         while (invocation.args) {
@@ -195,7 +193,7 @@ function cadence () {
                 whilst = function () { return true }
                 if (vargs[0] == null) {
                     vargs.shift()
-                } else if (vargs.length) {
+                } else {
                     if (Array.isArray(vargs[0]) && vargs.length > 1) {
                         gather = []
                         vargs.shift()

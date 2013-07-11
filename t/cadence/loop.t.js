@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 
-require('proof')(18, function (equal, deepEqual) {
+require('proof')(19, function (equal, deepEqual) {
     var fs = require('fs')
     var cadence = require('../..')
+
+    cadence(function (step) {
+        step(function () {})('bad')
+    })(function (error, result) {
+        equal(error.message, 'invalid arguments', 'invalid arguments')
+    })
 
     cadence(function (step) {
         var count = 0
