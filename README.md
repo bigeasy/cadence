@@ -947,6 +947,10 @@ Here is where you would discuss `step.jump` and the function index.
 
 Changes for each release.
 
+### Version 0.0.24
+
+ * Upgrade Proof to 0.0.32. #141.
+
 ### Version 0.0.23
 
 Thu Jul 11 01:38:54 UTC 2013
