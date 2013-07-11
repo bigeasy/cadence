@@ -30,7 +30,7 @@ cat(function (error) { if (error) throw error })
 
 You create a Cadnece using the magical `step` function that can express all
 mannor of asynchronous operations. Cadence supports.
- 
+
  * serial asynchronous operations, natch
  * heterogenous and homongenous parallel operations
  * while loops, do..while loops, or counted loops
@@ -50,9 +50,9 @@ type of class data. Method chaining is a form of syntax bashing, but Cadence
 does not use method chaining.
 
 Instead, cadence has a single `step` function. With it you can define
-asynchronous parallel operations, 
+asynchronous parallel operations,
 
-Cadence is a syntax bashed domain-specific language. Syntax bashing is 
+Cadence is a syntax bashed domain-specific language. Syntax bashing is
 That domain-specific language is just plain JavaScript twisted and contorted is
 like a ba
 

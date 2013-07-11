@@ -74,7 +74,7 @@ require('proof')(19, function (equal, deepEqual) {
     cadence(function (step) {
         var sum = 0, count = 0
         step(function (number, index) {
-            equal(index, count++, 'reduced each loop index ' + index) 
+            equal(index, count++, 'reduced each loop index ' + index)
             step()(null, sum = sum + number)
         })([ 1, 2, 3, 4 ])
     })(function (error, result) {
