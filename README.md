@@ -947,7 +947,7 @@ Here is where you would discuss `step.jump` and the function index.
 
 Changes for each release.
 
-### Version 0.0.22
+### Version 0.0.23
 
  * Implement events using `-1` as the sigil. #139.
  * All `createHandler` invocations should have an explicit `this`, not `null`. #132.
@@ -960,7 +960,9 @@ Changes for each release.
  * Implement loop labels. #131.
  * Aways flatten callback arguments. #133.
 
-### Version 0.0.21
+### Version 0.0.22
+
+Mon Jul  8 14:36:37 UTC 2013
 
  * Implement endless loop initializers. #129.
 
