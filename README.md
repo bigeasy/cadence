@@ -949,6 +949,7 @@ Changes for each release.
 
 ### Version 0.0.24
 
+ * Fix catch of propagated exception. Closes #142.
  * Upgrade Proof to 0.0.32. #141.
 
 ### Version 0.0.23
