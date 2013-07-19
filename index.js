@@ -196,6 +196,7 @@ function cadence () {
                 } else {
                     if (Array.isArray(vargs[0]) && vargs.length > 1) {
                         gather = []
+                        callback.arrayed = true
                         vargs.shift()
                     }
                      counter = vargs.shift()
@@ -359,11 +360,7 @@ function cadence () {
                 })
             }
             for (k = 0; k < arity; k++) {
-                vargs.push({
-                    values: [],
-                    // TODO: When is arrayed not going to be definitive?
-                    arrayed: ('arrayed' in cb) ? cb.arrayed : cb.results.length > 1
-                })
+                vargs.push({ values: [], arrayed: cb.arrayed })
             }
             cb.results.forEach(function (result) {
                 for (k = 0; k < arity; k++) {
