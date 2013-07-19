@@ -949,6 +949,8 @@ Changes for each release.
 
 ### Version 0.0.24
 
+Fri Jul 19 03:46:54 UTC 2013
+
  * Fix catch of propagated exception. Closes #142.
  * Upgrade Proof to 0.0.32. #141.
 
