@@ -7,12 +7,17 @@ function cadence () {
     function execute () {
         var vargs = __slice.call(arguments, 0)
         var callback = function (error) { if (error) throw error }
+        var master = {}
         if (vargs.length) {
             callback = vargs.pop()
         }
-        invoke.call(this, unfold(steps), 0, precede({}, [async].concat(vargs)), function (errors, finalizers) {
+        invoke.call(
+            this, unfold(steps), 0,
+            precede({ master: master }, [async].concat(vargs)),
+        function (errors, finalizers) {
             var vargs = [null].concat(__slice.call(arguments, 2))
             finalize.call(this, finalizers, 0, errors, function (errors) {
+                master.completed = true
                 if (errors.length) {
                     callback(errors.uncaught || errors.shift())
                 } else {
@@ -88,10 +93,16 @@ function cadence () {
 
         // The caller as invoked the async function directly as an explicit early
         // return to exit the entire cadence.
+        //
+        // The rediculous callback count means that as callbacks complete, they
+        // never trigger the next step.
+        //
+        // We callback explicitly to whoever called `invoke`, wait for our
+        // parallel operations to end, but ignore their results.
         if (vargs[0] === null || vargs[0] instanceof Error) {
             vargs[0] = vargs[0] ? [ vargs[0] ] : []
             vargs.splice(1, 0, invocations[0].finalizers.splice(0, invocations[0].finalizers.length))
-            invocations[0].count = Number.MAX_VALUE
+            invocations[0].count = -Number.MAX_VALUE
             invocations[0].callback.apply(null, vargs)
             return
         }
@@ -306,6 +317,7 @@ function cadence () {
     function precede (caller, vargs) {
         return {
             caller: caller,
+            master: caller.master,
             callbacks: argue(vargs),
             errors: [],
             finalizers: []
@@ -381,7 +393,7 @@ function cadence () {
             cadence.finalizers[index].previous.callbacks = argue(vargs)
         }
 
-        if (cadence.steps.length == index) {
+        if (cadence.steps.length == index) { // FIXME: can't be right, we're using MAX_VALUE above.
             var finalizers = previous.finalizers.splice(0, previous.finalizers.length)
             callback.apply(this, [ [], finalizers ].concat(vargs))
             return
@@ -394,6 +406,7 @@ function cadence () {
             called: 0,
             errors: [],
             finalizers: previous.finalizers,
+            master: previous.master,
             callback: callback,
             caller: previous.caller
         })
@@ -403,6 +416,7 @@ function cadence () {
         try {
             result = cadence.steps[index].apply(this, vargs)
         } catch (errors) {
+            if (invocations[0].master.completed) throw errors
             if (errors === previous.caller.errors) {
                 invocations[0].errors.uncaught = errors.uncaught
             } else {

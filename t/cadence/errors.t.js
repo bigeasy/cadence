@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(20, function (equal, ok) {
+require('proof')(24, function (step, equal, ok) {
     var fs = require('fs')
     var cadence = require('../..')
     var errors = []
@@ -122,5 +122,54 @@ require('proof')(20, function (equal, ok) {
         throw errors
     }])(function (error) {
         equal(error.message, 'handled', 'uncaughtedness reset')
+    })
+
+    var dirty = true
+    try {
+        cadence(function (step) {
+            step([function () {
+                dirty = false
+            }], function () {
+                step(function () {
+                    step(null)
+                })
+                throw Error('propagated')
+            }, function () {
+                process.exit(1)
+            })
+        })(function (error) {
+            if (error) throw error
+        })
+    } catch (e) {
+        ok(!dirty, 'finalizer ran')
+        equal(e.message, 'propagated', 'propagated')
+    }
+
+    var domain = require('domain').create(), wait = step()
+    domain.on('error', function (e) {
+        ok(!dirty, 'finalizer ran')
+        equal(e.message, 'propagated', 'propagated')
+        wait()
+    })
+    domain.run(function () {
+        cadence(function (step) {
+            step([function () {
+                dirty = false
+            }], function () {
+                step(function () {
+                    process.nextTick(step())
+                }, function () {
+                    step(null)
+                }, function () {
+                    console.log('should not get here')
+                    process.exit(1)
+                })
+                throw Error('propagated')
+            }, function () {
+                process.exit(1)
+            })
+        })(function (error) {
+            if (error) throw error
+        })
     })
 })
