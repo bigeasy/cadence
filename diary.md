@@ -2292,6 +2292,9 @@ to Cadence, which, if it is Domain friendly.
 
 Does Cadence look for a Domain object? That would make it particular to Node.js.
 
+Started using Cadence with Domains. Attached some notes about some issues that
+I'll have to document.
+
 ## Inbox
 
 Notes on returning the step function. Notes on event handlers, if you have any.
