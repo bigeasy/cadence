@@ -1,0 +1,3 @@
+[submodule "vendor/lesshat"]
+	path = vendor/lesshat
+	url = https://github.com/CSSHat/LESSHat.git

@@ -1,1 +1,1062 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<title>Cadence</title>
+<!--
+<link href='http://fonts.googleapis.com/css?family=Parisienne|Oxygen+Mono|PT+Mono|Offside|Nova+Mono|Averia+Serif+Libre|Alex+Brush|Autour+One|Share+Tech+Mono|Merriweather|Maven+Pro|Raleway' rel='stylesheet' type='text/css'>
+-->
+<!-- todo: why doesn't fork me float? -->
+<link href="http://fonts.googleapis.com/css?family=Cutive+Mono|Sorts+Mill+Goudy|Mate|Oxygen+Mono|Offside|Raleway:400,700" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=Sorts+Mill+Goudy">
+<link rel="stylesheet" type="text/css" href="css/syntax.css">
+<link rel="stylesheet" type="text/css" href="css/cadence.css">
+<body><a href="https://github.com/bigeasy/cadence/"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_gray_6d6d6d.png" alt="Fork me on GitHub"></a><div class="container">
+
+<div class="unit welcome">
 <h1>Cadence</h1>
+</div>
+<!-- todo: code font is too small for body text font -->
+<div class="unit description markdown"><p>A Swiss Army asynchronous control flow function builder for Node.js and
+JavaScript that helps you create highly-parallel control flows.</p>
+<p>Cadence is a function builder. It helps you write asynchronous functions of that
+accept an error/result callback.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="c1">// Use Cadence.</span>
+<span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">)</span>
+<span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+
+<span class="c1">// Create an asynchronous function.</span>
+<span class="kd">var</span> <span class="nx">cat</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">__filename</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span>
+
+    <span class="p">})</span>
+<span class="p">})</span>
+
+<span class="c1">// Use it in your program.</span>
+<span class="nx">cat</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span> <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span> <span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>You create a Cadnece using the magical <code>step</code> function that can express all
+mannor of asynchronous operations. Cadence supports.</p>
+<ul>
+<li>serial asynchronous operations, natch</li>
+<li>heterogenous and homongenous parallel operations</li>
+<li>while loops, do..while loops, or counted loops</li>
+<li>each loops that can either map or reduce an array</li>
+<li>events, streaming events and error events</li>
+<li>asynchronous try and catch exception handling</li>
+<li>asynchronous finalizers for clean up</li>
+</ul>
+<p>You can use Cadence in the browser too, because it is not Node.js dependent and
+it minzips to under 2k.</p>
+<p>TK: Too much intro, sell them with examples.</p>
+<p>Cadence is an exmaple of syntax bashing; taking the extending the syntax of a
+computer language using the existing syntax, usually using metadata, such as
+type of class data. Method chaining is a form of syntax bashing, but Cadence
+does not use method chaining.</p>
+<p>Instead, cadence has a single <code>step</code> function. With it you can define
+asynchronous parallel operations,</p>
+<p>Cadence is a syntax bashed domain-specific language. Syntax bashing is
+That domain-specific language is just plain JavaScript twisted and contorted is
+like a ba</p>
+<p>You create a function by passing a function to <code>cadence</code> that creates cadences.</p>
+<p>We call the series of functions a <strong><em>cadence</em></strong>. We call an individual function
+in a cadence a <strong><em>step</em></strong>. We use the <code>step</code> function to both define cadences
+and to create the callbacks that will take us from one step to another.</p>
+<p>The functions in a cadence are run in <strong>serial</strong>. A step inside a cadence can
+contain callbacks whose return values appear in the next step or sub-cadences.
+The callbacks and sub-cadences in a step are run in <strong>parallel</strong>. You can run
+multiple sub-cadences in parallel. With this, you&#39;ve got your serial and your
+parallel, and you mix or match to create your asynchronous program.</p>
+<p>Documentation is a work in progress. Here is the current word count.</p>
+<pre><code class="lang-console">  425  1982 12935 README.md</code></pre>
+<ul>
+<li>Arrayed sub-cadences.</li>
+<li>Arity.</li>
+<li>Fixup cadences.</li>
+<li>Looping.</li>
+<li>Jumping.</li>
+<li>Finalizers.</li>
+</ul>
+<p>Cadence is a syntax bashed doman-specific language. It uses JavaScript syntax in
+clever ways to express control flow with a minimum of syntacitical overhead.</p>
+<p>Note that Cadence is as terse as it can be. Yes, you must still use callbacks,
+but it avoids the temple of doom, by keeping your callbacks in line, one after
+the other. It works hard so that indentation reflects a logical nesting of your
+program into parallel operations, instead of having a nesting for each and every
+callback. Yes, the ohters do this, but Cadence keeps you form having a testing
+for each and every parallel, loop, or error handler.</p>
+<p>Is there a way to say it without sounding all mumbo-jumbo? Cadence uses existing
+JavaScript syntax in clever ways. Instead of a collection of helper functions,
+Cadence uses a single helper function; it&#39;s <code>step</code> function, to declare
+callbacks and asychronous series.</p>
+<h3>Accepting Arguments</h3>
+<p>Here&#39;s an example of a function built by Cadence that accepts arguments.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="c1">// Use Cadence.</span>
+<span class="kd">var</span> <span class="nx">cadance</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">)</span>
+<span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+
+<span class="c1">// Delete a file if the condition is true.</span>
+<span class="kd">var</span> <span class="nx">deleteIf</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">,</span> <span class="nx">file</span><span class="p">,</span> <span class="nx">condition</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">stat</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">condition</span><span class="p">(</span><span class="nx">stat</span><span class="p">))</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">unlink</span><span class="p">(</span><span class="nx">step</span><span class="p">())</span>
+    <span class="p">})</span>
+<span class="p">})</span>
+
+<span class="c1">// Test to see if a file is empty.</span>
+<span class="kd">function</span> <span class="nx">empty</span> <span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">stat</span><span class="p">.</span><span class="nx">size</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">}</span>
+
+<span class="c1">// Delete a file if it is empty.</span>
+<span class="nx">deleteIf</span><span class="p">(</span><span class="nx">__filename</span><span class="p">,</span> <span class="nx">empty</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span> <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span> <span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>In the above example we create a function that will asynchronously stat a file,
+then if a test function passes, it will asynchronously delete the file. We
+assign our cadence to a variable named <code>deleteIf</code>. We can now call <code>deleteIf</code>
+providing a standard issue Node.js error reporting callback.</p>
+<h3>Sub-Cadences</h3>
+<p>Let&#39;s say that we want to get a <code>stat</code> object, but include the body of the file
+in the <code>stat</code> object. When we get out <code>stat</code> object, we can use a sub-cadence to
+complete the <code>stat</code> object by reading the body.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">cadance</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">)</span>
+<span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+
+<span class="c1">// Stat a file and add the file body to the stat.</span>
+<span class="kd">var</span> <span class="nx">bodyStat</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">,</span> <span class="nx">file</span><span class="p">,</span> <span class="nx">condition</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">stat</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="c1">// We create a sub-cadence here because we want to work with</span>
+        <span class="c1">// the `stat` object. The `stat` object is in scope for all</span>
+        <span class="c1">// the function in the sub-cadence.</span>
+        <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+            <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+        <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
+
+            <span class="nx">stat</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="nx">body</span>
+            <span class="k">return</span> <span class="nx">stat</span><span class="p">;</span> <span class="c1">// return value of both the sub-cadence and the</span>
+                         <span class="c1">// step that created the cadence. See more below.</span>
+
+        <span class="p">})</span>
+    <span class="p">})</span>
+<span class="p">})</span>
+
+<span class="c1">// Delete a file if it is empty.</span>
+<span class="nx">statBody</span><span class="p">(</span><span class="nx">__filename</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span>
+    <span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s1">&#39;content-length: &#39;</span> <span class="o">+</span> <span class="nx">stat</span><span class="p">.</span><span class="nx">size</span> <span class="o">+</span> <span class="s1">&#39;\n\n&#39;</span><span class="p">)</span>
+    <span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">stat</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>TK: Take the above example and say; the sub-cadence return is the first argument
+to the next function. Use a stupid assertion <code>ok(body.length == size)</code>.</p>
+<h3>Subsequent Arguments</h3>
+<p>When you create callbacks in a Cadence step, the results are passed onto the
+subsequent step. The order of the callbacks determines the order of of the
+arguments.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="kd">var</span> <span class="nx">first</span> <span class="o">=</span> <span class="nx">step</span><span class="p">()</span>
+        <span class="kd">var</span> <span class="nx">second</span> <span class="o">=</span> <span class="nx">step</span><span class="p">()</span>
+
+        <span class="nx">second</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="nx">first</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;first&#39;</span><span class="p">)</span>
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">b</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;second&#39;</span><span class="p">)</span>
+
+    <span class="p">})</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>NOTE: Documentation pro-tip: Create examples sooner than later and then
+reference the examples in your wiring.</p>
+<p>In the above example, observe that the declaration order determines argument
+order, not the order of invocation of the callbacks. Even if <code>second</code> is called
+back before <code>first</code>, the argument to first the subsequent step is invoked with
+results of <code>first</code> as the first argument <code>a</code>,<code>second</code> as the second argument
+<code>b</code>.</p>
+<p>TK: More words and examples here.
+TK: Example using <code>fs</code>.
+TK: Always use an initial sub-cadence in the <code>README.md</code> so people don&#39;t get to
+thinking that it is something to be avoided.
+TK: In the sub-cadence example, talk about scope and closure.
+TK: Move up a section.</p>
+<h2>Loops</h2>
+<p>TK: Serial and parallel loops, but parallel doesn&#39;t really loop.</p>
+<p>Cadence provides two looping construts; serial loops which let you do the so</p>
+<h3>Serial Loops</h3>
+<p>TK: So, just Loops, then? What about Serial Each and Parallel Each?
+TK: Do examples look better without commas?</p>
+<p>Cadence want you to use nesting to represent subordinate operations, so it wants
+to provide you with a looping structure that is not terribily compilicated, or
+nested.</p>
+<p>Looping in Cadence is performed by defining a sub-cadence, then invoking the
+function that is returned by the sub-cadence definition. We&#39;ll call this the
+<strong>looper function</strong>. If you <strong>do not invoke</strong> the function, Cadence will start
+the sub-cadence for you when your step returns and run the sub-cadence once. If
+you <strong>do invoke</strong> the function, Cadence will run the sub-cadence as a loop.</p>
+<p>You can create <code>while</code> loops, <code>do...while</code> loops, stepped loops and <code>forEach</code>
+loops using the looper function.</p>
+<h3>Endless Loops</h3>
+<p>If you invoke without arguments, you will invoke an endless loop. You terminate
+the loop using the <code>step(error, result)</code> explicit return.</p>
+<p>Calling <code>looper()</code>.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">count</span><span class="o">++</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">count</span> <span class="o">==</span> <span class="mi">10</span><span class="p">)</span> <span class="nx">step</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">count</span><span class="p">)</span>
+    <span class="p">})()</span>
+<span class="p">})(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span>
+    <span class="nx">equal</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;loop&#39;</span><span class="p">)</span>
+<span class="p">})()</span>
+</pre></div>
+</code></pre>
+<p>When you&#39;re terminal condition is the last function, you&#39;ve basically created a
+<code>do...while</code> loop.</p>
+<h3>Loop Initializers</h3>
+<p>When an endless loop iterates, the result of the last function is passed as the
+arguments the first function. You can use this to create a <code>while</code> loop.</p>
+<p>To pass in an initial test value to the endless loop, you invoke the looper
+function with a leading <code>null</code>, followed by the parameters, <code>looper(null, arg1,
+arg2)</code> the same the way you invoke an explicit return of the <code>step</code> function.</p>
+<p>Calling <code>looper(null, arg)</code>.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">more</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">more</span><span class="p">)</span> <span class="nx">step</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">count</span><span class="p">)</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+          <span class="nx">step</span><span class="p">()(</span><span class="kc">null</span><span class="p">,</span> <span class="o">++</span><span class="nx">count</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="p">})(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span>
+<span class="p">})(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span>
+    <span class="nx">equal</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;initialized loop&#39;</span><span class="p">)</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<h3>Counted Loops</h3>
+<p>TODO: And put in diary, what about stepped instead? <code>looper(0, 10)</code> with an
+optional increment <code>looper(0, 10, 2)</code>? I mentioned steps above. This would be
+more useful, general purpose than just a count.</p>
+<p>TODO: No stepped. Hard to smoosh all that syntax. There is now a desire to have
+counted loops that take arguments, so some of those arguments might be an
+Integer.</p>
+<p>You can tell Cadence to loop for a fixed number of times by invoking the loop
+start function with a count of iterations.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">count</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">count</span><span class="p">,</span> <span class="nx">index</span><span class="p">,</span> <span class="s1">&#39;keeping a count for you&#39;</span><span class="p">)</span>
+        <span class="nx">step</span><span class="p">()(</span><span class="kc">null</span><span class="p">,</span> <span class="o">++</span><span class="nx">count</span><span class="p">)</span>
+    <span class="p">})(</span><span class="mi">10</span><span class="p">)</span>
+<span class="p">})(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span>
+    <span class="nx">equal</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;counted loop&#39;</span><span class="p">)</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<h3>Each Loops</h3>
+<p>You can invoke the loop passing it an array. The loop will be invoked once for
+each element in the array, passing the array element to the first function of
+the sub-cadence.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">sum</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">number</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">index</span><span class="p">,</span> <span class="nx">number</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;keeping an index for you&#39;</span><span class="p">)</span>
+        <span class="nx">step</span><span class="p">()(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">sum</span> <span class="o">=</span> <span class="nx">sum</span> <span class="o">+</span> <span class="nx">number</span><span class="p">)</span>
+    <span class="p">})([</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span> <span class="p">])</span>
+<span class="p">})(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span>
+    <span class="nx">equal</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;reduced each loop&#39;</span><span class="p">)</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>TK: 4 space indent and only single quotes.</p>
+<h3>Gathered Loops</h3>
+<p>Both counted loops and each loops can be gathered into an array. If you pass an
+initial array to the callback function, then each iteration will be gathered
+into an array result.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">step</span><span class="p">()(</span><span class="kc">null</span><span class="p">,</span> <span class="o">++</span><span class="nx">count</span><span class="p">)</span>
+    <span class="p">})([],</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span> <span class="p">])</span>
+<span class="p">})(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span>
+    <span class="nx">deepEqual</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">10</span> <span class="p">],</span> <span class="s1">&#39;gathered each loop&#39;</span><span class="p">)</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>You cannot gather endless loops.</p>
+<h3>Loop Labels</h3>
+<p>If you want to give up early and try again, you can use a loop label. When you
+invoke the looper function it returns a label object. You can use the label
+object to restart the loop.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="kd">var</span> <span class="nx">retry</span> <span class="o">=</span> <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">++</span><span class="nx">count</span> <span class="o">!=</span> <span class="mi">10</span><span class="p">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span>
+        <span class="k">else</span> <span class="nx">step</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">step</span><span class="p">(</span><span class="nx">retry</span><span class="p">)</span>
+    <span class="p">}])(</span><span class="mi">1</span><span class="p">)</span>
+<span class="p">})(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span>
+    <span class="nx">equal</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;loop continue&#39;</span><span class="p">)</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>This one&#39;s tricky. Because we specifed a count of <code>1</code>, the loop will only loop
+once, but because we call the <code>retry</code> label when we catch an error, the loop
+tries again.</p>
+<h3>Loop Label Quick Returns</h3>
+<p>Some of the things we document here are about style and syntax bashing that you
+can do. It&#39;s not necessarily a part of Cadence.</p>
+<p>Often times when working with labels, you&#39;re testing to see if you should invoke
+the label when you enter a function, if not you would like to do something else.
+This is going to create an <code>if/else</code> block that increases our nesting. If we
+were programming synchronously in plain old JavaScript, we could call <code>continue</code>
+and that would jump to the loop label.</p>
+<p>To preserve that jumpy feeling, when you invoke <code>step(label)</code> it returns true,
+so you can create return using <code>&amp;&amp;</code>.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">retry</span> <span class="o">=</span> <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">(</span><span class="nx">count</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">count</span> <span class="o">!=</span> <span class="mi">10</span><span class="p">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;retry&#39;</span><span class="p">)</span>
+        <span class="k">else</span> <span class="nx">step</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">_</span><span class="p">,</span> <span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span> <span class="o">==</span> <span class="s1">&#39;retry&#39;</span><span class="p">)</span> <span class="k">return</span> <span class="nx">step</span><span class="p">(</span><span class="nx">retry</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">throw</span> <span class="nx">error</span>
+    <span class="p">}])(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="p">})(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span>
+    <span class="nx">equal</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;loop continue&#39;</span><span class="p">)</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>TK: Another example of this...</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="k">if</span> <span class="p">(</span><span class="nx">count</span> <span class="o">!=</span> <span class="nx">stop</span><span class="p">)</span> <span class="k">return</span> <span class="nx">step</span><span class="p">(</span><span class="nx">retry</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="k">return</span> <span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span>
+</pre></div>
+</code></pre>
+<p>TK: Move loops below errors.</p>
+<h3>Catching Errors</h3>
+<p>Because Cadence encourages parallelism, it&#39;s internal error handling mechanism
+deals with arrays of errors because parallel operations can also fail in
+parallel, raising many exceptions in parallel. You know, fun stuff.</p>
+<p>Externally however, your caller is expecting one single error, because Cadence
+builds a function that follows the error-first callback standard. Thus, even
+when there are many errors, the default is to return the first error that occurs
+in the cadence.</p>
+<p>When an error occurs, Cadence waits for all parallel operations to complete,
+then it raises the error along with any other errors that occured in parallel.
+If you want to catch these errors, create a try/catch function pair by wrapping
+it in an array.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="c1">// Do something stupid.</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/shadow&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="c1">// Catch the exception.</span>
+        <span class="nx">ok</span><span class="p">(</span><span class="nx">errors</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">code</span> <span class="o">==</span> <span class="s1">&#39;EACCES&#39;</span><span class="p">,</span> <span class="s1">&#39;caught EACCES&#39;</span><span class="p">)</span>
+        <span class="nx">ok</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;caught EACCES and only EACCES&#39;</span><span class="p">)</span>
+
+    <span class="p">}])</span>
+<span class="p">})()</span>
+</pre></div>
+</code></pre>
+<p>In the above, we catch the <code>EACCES</code> that is raised when we attempt to read a
+read-protected file. Note the array that binds the catch function to the step
+that proceeds it.</p>
+<p>If no error occurs, the catch function is not invoked. The next function in the
+cadence after the try/catch pair is invoked with the successful result of the
+try function.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="c1">// Read a readable file.</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/hosts&#39;</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="c1">// This will not be called.</span>
+        <span class="nx">proecss</span><span class="p">.</span><span class="nx">stderr</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s1">&#39;Hosts file is missing!\n&#39;</span><span class="p">)</span>
+
+    <span class="p">}],</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">hosts</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">hosts</span><span class="p">)</span>
+
+    <span class="p">})</span>
+<span class="p">})()</span>
+</pre></div>
+</code></pre>
+<p>When an error triggers the catch function, the catch function can recover and
+continue the cadence by returning normally.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="c1">// Read file that might be missing.</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">env</span><span class="p">.</span><span class="nx">HOME</span> <span class="o">+</span> <span class="s1">&#39;/.config&#39;</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="c1">// That didn&#39;t work, for whatever reason, so try the global.</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/config&#39;</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">}],</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">config</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">config</span><span class="p">)</span>
+
+    <span class="p">})</span>
+<span class="p">})()</span>
+</pre></div>
+</code></pre>
+<p>Also note that both the try function and error function can use sub-cadences,
+arrayed cadences, fixups; everything that Cadence has to offer.</p>
+<p>A catch function also catches thrown exceptions.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;thrown&#39;</span><span class="p">)</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">ok</span><span class="p">(</span><span class="nx">errors</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">message</span> <span class="o">==</span> <span class="s1">&#39;thrown&#39;</span><span class="p">,</span> <span class="s1">&#39;caught thrown&#39;</span><span class="p">)</span>
+        <span class="nx">ok</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;caught thrown and only thrown&#39;</span><span class="p">)</span>
+
+    <span class="p">}])</span>
+<span class="p">})()</span>
+</pre></div>
+</code></pre>
+<p>Errors are provided in an <code>errors</code> array. Why an array? Because with Cadence,
+you&#39;re encouraged to do stupid things in parallel.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="c1">// Read two read-protected files.</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/shadow&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/sudoers&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">ok</span><span class="p">(</span><span class="nx">errors</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">code</span> <span class="o">==</span> <span class="s1">&#39;EACCES&#39;</span><span class="p">,</span> <span class="s1">&#39;caught EACCES&#39;</span><span class="p">)</span>
+        <span class="nx">ok</span><span class="p">(</span><span class="nx">errors</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">code</span> <span class="o">==</span> <span class="s1">&#39;EACCES&#39;</span><span class="p">,</span> <span class="s1">&#39;caught another EACCES&#39;</span><span class="p">)</span>
+        <span class="nx">ok</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;caught two EACCES&#39;</span><span class="p">)</span>
+
+    <span class="p">}])</span>
+<span class="p">})()</span>
+</pre></div>
+</code></pre>
+<p>Note that, the errors are ordered in the <strong>order in which they were caught</strong>,
+not in the order in which their callbacks were declared.</p>
+<p>The second argument to a function callback is the first error in the errors
+array. This is in case you&#39;re certain that you&#39;ll only ever get a single error,
+and the array subscript into the <code>errors</code> array displeases you.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/shadow&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">errors</span><span class="p">,</span> <span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">ok</span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">code</span> <span class="o">==</span> <span class="s1">&#39;EACCES&#39;</span><span class="p">,</span> <span class="s1">&#39;caught EACCES&#39;</span><span class="p">)</span>
+
+    <span class="p">}])</span>
+<span class="p">})()</span>
+</pre></div>
+</code></pre>
+<p>There is no third argument.</p>
+<p>For the sake of style, when you don&#39;t want to reference the errors array, you
+can hide it using <code>_</code> or if that is already in you, double <code>__</code>.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/shadow&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">_</span><span class="p">,</span> <span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">ok</span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">code</span> <span class="o">==</span> <span class="s1">&#39;EACCES&#39;</span><span class="p">,</span> <span class="s1">&#39;caught EACCES&#39;</span><span class="p">)</span>
+
+    <span class="p">}])</span>
+<span class="p">})()</span>
+</pre></div>
+</code></pre>
+<h3>Propagating Errors</h3>
+<p>You can propagate all of the caught errors by throwing the <code>errors</code> array.</p>
+<p>Imagine a system where sudo is not installed (as is the case with a base
+FreeBSD.)</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="c1">// Read two read-protected files.</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/sudoers&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/shadow&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="c1">// Maybe sudo isn&#39;t installed and we got `ENOENT`?</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">errors</span><span class="p">.</span><span class="nx">every</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">error</span><span class="p">.</span><span class="nx">code</span> <span class="o">==</span> <span class="s1">&#39;EACCES&#39;</span> <span class="p">}))</span> <span class="p">{</span>
+            <span class="k">throw</span> <span class="nx">errors</span>
+        <span class="p">}</span>
+
+    <span class="p">}])</span>
+<span class="p">})(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="c1">// Only the first exception raised is reported to the caller.</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span>
+
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>You can also just throw an exception of your chosing.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="c1">// Read two read-protected files.</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/sudoers&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/shadow&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="c1">// Maybe sudo isn&#39;t installed and we got `ENOENT`?</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">errors</span><span class="p">.</span><span class="nx">every</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">error</span><span class="p">.</span><span class="nx">code</span> <span class="o">==</span> <span class="s1">&#39;EACCES&#39;</span> <span class="p">}))</span> <span class="p">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;something bad happened&#39;</span><span class="p">)</span>
+        <span class="p">}</span>
+
+    <span class="p">}])</span>
+<span class="p">})(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="nx">ok</span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span> <span class="s1">&#39;something bad happened&#39;</span><span class="p">)</span>
+
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>When you raise an error in an catch function, it cannot be caught in the current
+Cadence. You can still catch it in a calling cadence.</p>
+<p>Here we log any errors before raising them all up to the default handler.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+            <span class="c1">// Read two read-protected files.</span>
+            <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/sudoers&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+            <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/shadow&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+        <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
+
+            <span class="c1">// Maybe sudo isn&#39;t installed and we got `ENOENT`?</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">errors</span><span class="p">.</span><span class="nx">every</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">error</span><span class="p">.</span><span class="nx">code</span> <span class="o">==</span> <span class="s1">&#39;EACCES&#39;</span> <span class="p">}))</span> <span class="p">{</span>
+                <span class="k">throw</span> <span class="nx">errors</span>
+            <span class="p">}</span>
+
+        <span class="p">}])</span>
+  <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
+
+      <span class="nx">errors</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">})</span>
+
+      <span class="k">throw</span> <span class="nx">errors</span>
+
+  <span class="p">}])</span>
+<span class="p">})(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="nx">ok</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="s1">&#39;got a single error&#39;</span><span class="p">)</span>
+
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>As you can see, Cadence will catch exceptions as well as handle errors passed to
+callbacks.</p>
+<h3>Conditional Error Handling</h3>
+<p>Dealing with an array of errors means you&#39;re almost always going to want to
+filter the array to see if contains the error you&#39;re expecting, and which error
+that might be. Because this is so common, it&#39;s built into Cadence.</p>
+<p>To create a try/catch pair that will respond only to certain errors, add a
+condition between the try function and the catch function.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="c1">// Read file that might be missing.</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">env</span><span class="p">.</span><span class="nx">HOME</span> <span class="o">+</span> <span class="s1">&#39;/.config&#39;</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="s1">&#39;ENOENT&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="c1">// That didn&#39;t work because the file does not exist, try the global.</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/config&#39;</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">}],</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">config</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">config</span><span class="p">)</span>
+
+    <span class="p">})</span>
+<span class="p">})()</span>
+</pre></div>
+</code></pre>
+<p>In the above example, we only catch an exception if the <code>code</code> property is equal
+to <code>ENOENT</code>. If there is a different error, say the file exists but  we can&#39;t
+read it, that error is not caught by try/catch pair.</p>
+<p>The condition is tested against the <code>code</code> property if it exists. If it doesn&#39;t
+exist then it is tested against the <code>message</code> property.</p>
+<p>The condition can either be a string literal that is tested for equality the
+property or a regular expression.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;handled&#39;</span><span class="p">)</span>
+
+    <span class="p">},</span> <span class="s1">&#39;handled&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">_</span><span class="p">,</span> <span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">ok</span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span> <span class="o">==</span> <span class="s1">&#39;handled&#39;</span><span class="p">,</span> <span class="s1">&#39;handled&#39;</span><span class="p">)</span>
+
+    <span class="p">}])</span>
+<span class="p">})()</span>
+</pre></div>
+</code></pre>
+<p>The condition must match all the errors raised.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/sudoers&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/shadow&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="sr">/^EACCES$/</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">ok</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;handled&#39;</span><span class="p">)</span>
+
+    <span class="p">}])</span>
+<span class="p">})()</span>
+</pre></div>
+</code></pre>
+<p>You can test for multiple error codes using a regular expression. Here we test
+for both <code>EACCES</code> and <code>ENOENT</code>.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/sudoers&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/shadow&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="sr">/^(EACCES|ENOENT)$/</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">ok</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;handled&#39;</span><span class="p">)</span>
+
+    <span class="p">}])</span>
+<span class="p">})()</span>
+</pre></div>
+</code></pre>
+<p>You can also be explicit about the property used to test by adding the name of
+that property between the try function and the condition. Here we expllicity
+state that the <code>code</code> property is the property to test.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/sudoers&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/shadow&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="s1">&#39;code&#39;</span><span class="p">,</span> <span class="sr">/^(EACCES|ENOENT)$/</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">ok</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;handled&#39;</span><span class="p">)</span>
+
+    <span class="p">}])</span>
+<span class="p">})()</span>
+</pre></div>
+</code></pre>
+<p>If the condition does not match all the examples raised, then the catch function
+is not invoked, and the errors are propagated.</p>
+<p>However, if the errors are not caught and propagated out of Cadence and to the
+caller, then the caller will receive the first exception that did not match the
+conditional.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="nx">step</span><span class="p">()(</span><span class="kc">null</span><span class="p">,</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/sudoers&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;/etc/shadow&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="sr">/^(EACCES|ENOENT)$/</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">errors</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">ok</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;handled&#39;</span><span class="p">)</span>
+
+    <span class="p">}])</span>
+<span class="p">})()</span>
+</pre></div>
+</code></pre>
+<p>Why? Because we can only return one exception to the caller, so it is better to
+return the unexpected exception that caused the condition to fail, even if it
+was not the first exception raised by the Cadence. It makes it clear that the
+condition is failing because of additional errors.</p>
+<p>TK: Throwing errors resets the concept of unmatched.</p>
+<h4>Error Catching Example</h4>
+<p>Let&#39;s extend our <code>deleteIf</code> function. Let&#39;s say that if the file doesn&#39;t exist,
+we ignore the error raised when we stat the file. To catch the error we wrap our
+call to <code>stat</code> in a try/catch function pair. If the call to <code>stat</code> results in
+<code>ENOENT</code>, our catch function is called. The catch function simply returns early
+because ther is no file to delete.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="c1">// Use Cadence.</span>
+<span class="kd">var</span> <span class="nx">cadance</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">),</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+
+<span class="c1">// Delete a file if it exists and the condition is true.</span>
+<span class="kd">var</span> <span class="nx">deleteIf</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">,</span> <span class="nx">file</span><span class="p">,</span> <span class="nx">condition</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">stat</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="sr">/^ENOENT$/</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="c1">// TK: Early return example can be if it is a directory, return early.</span>
+        <span class="nx">step</span><span class="p">(</span><span class="kc">null</span><span class="p">)</span>
+
+    <span class="p">}],</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
+
+      <span class="k">if</span> <span class="p">(</span><span class="nx">stat</span> <span class="o">&amp;&amp;</span> <span class="nx">condition</span><span class="p">(</span><span class="nx">stat</span><span class="p">))</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">unlink</span><span class="p">(</span><span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">})</span>
+<span class="p">})</span>
+
+<span class="c1">// Test to see if a file is empty.</span>
+<span class="kd">function</span> <span class="nx">empty</span> <span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">stat</span><span class="p">.</span><span class="nx">size</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">}</span>
+
+<span class="c1">// Delete a file if it exists and is empty.</span>
+<span class="nx">deleteIf</span><span class="p">(</span><span class="nx">__filename</span><span class="p">,</span> <span class="nx">empty</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span> <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span> <span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>We test to see if the error is <code>ENOENT</code>. If not, we have a real problem, so we
+throw the error. The throw is caught and forwarded to the callback that invoked
+the cadence function.</p>
+<p>If the error is <code>ENOENT</code>, we exit early by calling the step function directly as
+a if it were itself an error/result callback, passing <code>null</code> to indicate no
+error.</p>
+<h2>Working with Events.</h2>
+<p>Cadence also works with event emitting objects that do not accept an error as
+the first parameter. These are event mechanisms like the DOM events or the
+events generated by the Node.js <code>EventEmitter</code>.</p>
+<p>Here is a unit test for working with <code>EventEmitter</code> illustrating the use of
+events in Cadence.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">),</span> <span class="nx">event</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;event&#39;</span><span class="p">)</span>
+  <span class="p">,</span> <span class="nx">ee</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">event</span><span class="p">.</span><span class="nx">EventEmitter</span><span class="p">()</span>
+
+<span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">,</span> <span class="nx">ee</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">ee</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">.</span><span class="nx">event</span><span class="p">([]))</span>
+        <span class="nx">ee</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">.</span><span class="nx">event</span><span class="p">())</span>
+        <span class="nx">ee</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">.</span><span class="nx">error</span><span class="p">())</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">assert</span><span class="p">.</span><span class="nx">deepEqual</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="p">])</span>
+    <span class="p">})</span>
+<span class="p">})(</span><span class="nx">emitter</span><span class="p">)</span>
+
+<span class="nx">ee</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="nx">ee</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="nx">ee</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+<span class="nx">ee</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">)</span>
+</pre></div>
+</code></pre>
+<p>Below we use the example of splitting an HTTP server log for many hosts
+into a log file for each host.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">),</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+
+<span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">readable</span> <span class="o">=</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">readableStream</span><span class="p">(</span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39;/logins.txt&#39;</span><span class="p">)</span>
+        <span class="nx">readable</span><span class="p">.</span><span class="nx">setEncoding</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">)</span>
+        <span class="nx">readable</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">.</span><span class="nx">event</span><span class="p">([]))</span>
+        <span class="nx">readable</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">)</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">hosts</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="nx">data</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">split</span><span class="p">(</span><span class="sr">/\n/</span><span class="p">).</span><span class="nx">foreach</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">line</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">host</span> <span class="o">=</span> <span class="sr">/^([\w\d.]+)\s+(.*)/</span><span class="p">.</span><span class="nx">exec</span><span class="p">(</span><span class="nx">line</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="p">(</span><span class="nx">hosts</span><span class="p">[</span><span class="nx">host</span><span class="p">]</span> <span class="o">||</span> <span class="p">(</span><span class="nx">hosts</span><span class="p">[</span><span class="nx">host</span><span class="p">])).</span><span class="nx">push</span><span class="p">(</span><span class="nx">line</span><span class="p">)</span>
+        <span class="p">})</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">host</span> <span class="k">in</span> <span class="nx">hosts</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">writable</span> <span class="o">=</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">writableStream</span><span class="p">(</span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="nx">host</span> <span class="o">+</span> <span class="s1">&#39;.log&#39;</span><span class="p">)</span>
+            <span class="nx">writable</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">hosts</span><span class="p">[</span><span class="nx">host</span><span class="p">].</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;\n&#39;</span><span class="p">)</span>
+            <span class="nx">writable</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;drain&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">.</span><span class="nx">event</span><span class="p">())</span>
+        <span class="p">}</span>
+    <span class="p">})</span>
+<span class="p">})()</span>
+</pre></div>
+</code></pre>
+<p>This is a horrible example. Try again.</p>
+<p>Here&#39;s a <code>mkdirp</code>, but let&#39;s complete it.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">mkdirs</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">,</span> <span class="nx">directory</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">directory</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">directory</span><span class="p">)</span>
+    <span class="kd">var</span> <span class="nx">mode</span> <span class="o">=</span> <span class="mi">0777</span> <span class="o">&amp;</span> <span class="p">(</span><span class="o">~</span><span class="nx">process</span><span class="p">.</span><span class="nx">umask</span><span class="p">())</span>
+    <span class="kd">var</span> <span class="nx">made</span> <span class="o">=</span> <span class="kc">null</span>
+
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">mkdir</span><span class="p">(</span><span class="nx">directory</span><span class="p">,</span> <span class="nx">mode</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">_</span><span class="p">,</span> <span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">code</span> <span class="o">==</span> <span class="s1">&#39;ENOENT&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">mkdirp</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">dirname</span><span class="p">(</span><span class="nx">directory</span><span class="p">),</span> <span class="nx">step</span><span class="p">())</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="nx">fs</span><span class="p">.</span><span class="nx">stat</span><span class="p">(</span><span class="nx">directory</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+            <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">stat</span><span class="p">.</span><span class="nx">isDirectory</span><span class="p">())</span> <span class="nx">step</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span>
+            <span class="p">})</span>
+        <span class="p">}</span>
+    <span class="p">}])</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<h2>Control Flow</h2>
+<p>Here is where you would discuss <code>step.jump</code> and the function index.</p>
+<h2>Change Log</h2>
+<p>Changes for each release.</p>
+<h3>Version 0.0.24</h3>
+<p>Fri Jul 19 03:46:54 UTC 2013</p>
+<ul>
+<li>Fix catch of propagated exception. Closes #142.</li>
+<li>Upgrade Proof to 0.0.32. #141.</li>
+</ul>
+<h3>Version 0.0.23</h3>
+<p>Thu Jul 11 01:38:54 UTC 2013</p>
+<ul>
+<li>Implement events using <code>-1</code> as the sigil. #139.</li>
+<li>All <code>createHandler</code> invocations should have an explicit <code>this</code>, not <code>null</code>. #132.</li>
+<li>Implement arguments passed to into counted loops. #134.</li>
+<li>Include index and array in each loop. #130.</li>
+<li>Remove double quotes. #137.</li>
+<li>Implement loops without using <code>step.jump</code>. #138.</li>
+<li>Remove <code>march</code>. #136.</li>
+<li>Catch functions to not return their results to the next step. #135.</li>
+<li>Implement loop labels. #131.</li>
+<li>Aways flatten callback arguments. #133.</li>
+</ul>
+<h3>Version 0.0.22</h3>
+<p>Mon Jul  8 14:36:37 UTC 2013</p>
+<ul>
+<li>Implement endless loop initializers. #129.</li>
+</ul>
+<h3>Version 0.0.22</h3>
+<p>Mon Jul  8 14:36:37 UTC 2013</p>
+<ul>
+<li>Finalizers are not invoked with correct <code>this</code>. #124.</li>
+<li>Loop returns inadvertently creating arrays. #127.</li>
+<li>Unable to loop through exception handlers. #126.</li>
+<li>Catch functions are not invoked with the correct <code>this</code>. #125.</li>
+</ul>
+<h3>Version 0.0.21</h3>
+<p>Sun Jul  7 19:47:23 UTC 2013</p>
+<ul>
+<li>Implement gathered loops. #122.</li>
+<li>Implement each loops. #121.</li>
+<li>Implement counted loops. #120.</li>
+<li>Implement endless loops. #119.</li>
+</ul>
+<h3>Version 0.0.20</h3>
+<p>Sun Jun 30 13:04:05 UTC 2013</p>
+<ul>
+<li>Finalize error handling. #117. #116. #116. #105.</li>
+<li>Implement conditional catch. #110.</li>
+<li>Test that first error is returned to outer callback. #114.</li>
+<li>Implement finalizers. #111.</li>
+<li>Test that a fixup is not called with an error. #111.</li>
+<li>Implement try and catch functions. #109.</li>
+<li>Remove shifted callbacks. #112.</li>
+<li>Upgrade to Proof 0.0.30. #106.</li>
+</ul>
+<h3>Version 0.0.19</h3>
+<p>Tue Jun 18 22:03:00 UTC 2013</p>
+<ul>
+<li>Change function index of calling cadence from sub-cadence. #104.</li>
+</ul>
+<h3>Version 0.0.18</h3>
+<p>Mon Jun 17 17:43:13 UTC 2013</p>
+<ul>
+<li>Create a named function to jump within the cadence. #102.</li>
+</ul>
+<h3>Version 0.0.17</h3>
+<p>Thu Jun 13 23:40:08 UTC 2013</p>
+<ul>
+<li>Fix arrayed event handlers. #100.</li>
+</ul>
+<h3>Version 0.0.16</h3>
+<p>Thu Apr 25 02:48:25 UTC 2013</p>
+<ul>
+<li>Measure test coverage using Istanbul and report test coverage using
+Coveralls. #94. #95.</li>
+<li>Rework event building into the <code>step.event</code> and <code>step.error</code> functions #99.</li>
+<li>Fix global variable namespace leak.</li>
+<li>Test with Node.js 0.10.</li>
+<li>Add support for Bower. #93.</li>
+<li><code>README.md</code> editing. #92.</li>
+</ul>
+<h3>Version 0.0.15</h3>
+<p>Thu Mar 21 08:33:24 UTC 2013</p>
+<ul>
+<li>Handle errors from sub-cadences. #79.</li>
+<li>Specify zero-to-many in <code>step</code> constructor, not in arry constructor. #81.</li>
+<li>Tidy <code>.gitignore</code>.</li>
+<li>Set arity and specify arity of event handlers. #91.</li>
+</ul>
+<h3>Version 0.0.14</h3>
+<p>Thu Mar 21 05:16:29 UTC 2013</p>
+<ul>
+<li>Handle error events. #89. #83.</li>
+<li>Use strings to indicate an event handler. #63. #50.</li>
+<li>Shift arguments for callbacks with no error message. #85.</li>
+</ul>
+<h3>Version 0.0.13</h3>
+<p>Sun Mar 17 06:24:14 UTC 2013</p>
+<ul>
+<li>Check for error handler on fix-up cadence error. #88.</li>
+<li>Check for error handler on sub-cadence error. #86.</li>
+<li>Add contribution guide.</li>
+<li>Upgrade Proof to 0.0.23.</li>
+</ul>
+<h3>Version 0.0.12</h3>
+<p>Sat Mar 16 05:35:06 UTC 2013</p>
+<ul>
+<li>Propagate <code>this</code>. #84.</li>
+<li>Use identity operator in check for early return. #82.</li>
+<li>Build <code>callback</code> object in <code>_async</code>.</li>
+<li>Rename <code>arguments</code> property to <code>args</code>.</li>
+<li>Move sizes indent from <code>t/sizes</code> to <code>t/test</code>.</li>
+<li>More tests for fix-up cadences.</li>
+<li>Remove <code>if</code> statement to test for invoke callback. #66.</li>
+<li>Fix cadence return values. #76.</li>
+<li>Fix arity.</li>
+<li>Remove hidden context. #75.</li>
+<li>Remove timeouts. #80.</li>
+<li>Use <code>Error</code> to indicate subsequent error handler. #68.</li>
+<li>Remove wrap option. #78.</li>
+<li>Remove &#39;use strict&#39;.</li>
+<li>Ensure reentrancy. #74.</li>
+<li>Remove underscore to indicate zero arity. #73.</li>
+</ul>
+<h3>Version 0.0.11</h3>
+<p>Tue Mar 12 07:50:52 UTC 2013</p>
+<ul>
+<li>Make default arity of scalars zero. #71.</li>
+</ul>
+<h3>Version 0.0.10</h3>
+<p>Tue Mar 12 05:57:10 UTC 2013</p>
+<ul>
+<li>Drop support for parameter inferred plain callbacks. #70.</li>
+<li>Implement zero-to-many callback functions. #62.</li>
+<li>Spell check and tidy prose. #69. #65.</li>
+<li>Implement arrayed sub-cadences. #64.</li>
+<li>Implement fix-up cadences. #61.</li>
+<li>Fix snuggled parameters. #60.</li>
+<li>Created a design document in <code>design.markdown</code>.</li>
+</ul>
+<h3>Version 0.0.9</h3>
+<p>Released: Sat Mar  9 04:06:57 UTC 2013</p>
+<ul>
+<li>New logic to specify order of parameters to subsequent function. #58.</li>
+</ul>
+<h3>Version 0.0.8</h3>
+<p>Released: Mon Mar  4 06:56:26 UTC 2013</p>
+<ul>
+<li>Rename <code>async</code> function to <code>step</code>. #55.</li>
+<li>Exception when <code>step</code> arguments are invalid. #56.</li>
+</ul>
+<h3>Version 0.0.7</h3>
+<p>Released: Wed Feb 27 00:33:51 UTC 2013</p>
+<ul>
+<li>Step over to stop out of <code>async</code>. #47.</li>
+<li>Add <code>.js</code> suffix to test file names. #54.</li>
+<li>Update <code>t/sizes</code> and <code>t/test</code> to work with a POSIX shell.</li>
+<li>Return <code>cadence</code> function directly instead of factory function. #49.</li>
+<li>Moved <code>build</code> directory contents to <code>t</code>. #51.</li>
+<li>Rename inner <code>cadence</code> function to <code>async</code>. #52.</li>
+<li>Consume events from event emitters. #48.</li>
+<li>An <code>_</code> underbar as a step function name means to disable argument
+inference. #46. #25</li>
+</ul>
+<h3>Version 0.0.6</h3>
+<p>Released: Fri Jul 13 16:27:39 UTC 2012</p>
+<ul>
+<li>Flatten arguments to inner <code>cadence</code> unless first arg is null. #44.</li>
+</ul>
+<h3>Version 0.0.5</h3>
+<p>Released: Fri Jul 13 15:25:00 UTC 2012</p>
+<ul>
+<li>Do not flatten arguments to <code>async</code>. #43.</li>
+<li>Upgrade to Proof 0.0.14. #42.</li>
+<li>Build on Windows. #41.</li>
+</ul>
+<h3>Version 0.0.4</h3>
+<p>Released: Wed Jul 11 21:56:29 UTC 2012</p>
+<ul>
+<li>No inference when there are no arguments. #40.</li>
+</ul>
+<h3>Version 0.0.3</h3>
+<p>Released: Wed Jul 11 00:54:38 UTC 2012</p>
+<ul>
+<li>Set context after uncaught error. #39.</li>
+</ul>
+<h3>Version 0.0.2</h3>
+<p>Released: Sun Jul  8 05:48:38 UTC 2012</p>
+<ul>
+<li>Remove object merge with cadence context. #38.</li>
+</ul>
+<h3>Version 0.0.1</h3>
+<p>Released: Sun Jul  8 04:28:52 UTC 2012</p>
+<ul>
+<li>Test case for Proof set context. #35.</li>
+<li>Variadic and external arguments. #34. #31.</li>
+<li>Store ephemeral variables outside of cadence context. #33.</li>
+<li>Pass parameters in from external function. #23.</li>
+<li>Create change log. #32.</li>
+<li>Return values to application. #14.</li>
+<li>Early exit. #30.</li>
+<li>Plain old callbacks. #29.</li>
+<li>Immediate context assignment within step function. #28.</li>
+<li>Application specified base context. #27.</li>
+<li>Application specified alias for <code>cadence</code>. #16.</li>
+<li>Error-only error handling step functions. #26.</li>
+<li>Handle errors from parallel asynchronous calls. #8.</li>
+<li>Branching. #24. #2.</li>
+<li>Add Travis CI chicklet to <code>README.md</code>. #11.</li>
+<li>Track minified size in Travis CI builds. #22. #21.</li>
+<li>Parallel sub-cadences. #19.</li>
+<li>Cadence context as stack. #4.</li>
+<li>Application specified step function wrappers. #3.</li>
+<li>Fix <code>README.md</code> examples. #9.</li>
+<li>Build a Node.js style asynchronous function. #13.</li>
+<li>Catch-all exception handling. #1&amp;. #12.</li>
+<li>Rename test directories. #15.</li>
+<li>Gather results from parallel executions. #10.</li>
+<li>Infer context names from step function argument names. #7.</li>
+</ul>
+<h3>Version 0.0.0</h3>
+<p>Released: Tue Jul  3 19:17:38 UTC 2012</p>
+<ul>
+<li>Build on Travis CI. #5.</li>
+<li>Extract Cadence from Proof. #6.</li>
+</ul>
+</div>
+
+</div></body>
+<!-- todo: move into an edify plugin -->
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-20388260-3', 'bigeasy.github.io');
+ga('send', 'pageview');
+</script>
+</html>
