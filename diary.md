@@ -1988,6 +1988,10 @@ deal with the *exception* or else it is to continue along it's merry way.
 
 The signifier `}, function (error) {` can *mean* something, dag-gummit!
 
+**Update**: What about swallowing the error, like when a directory already
+exists? Can we not provide function? Or do we ask that the user create a
+`ignore` function?
+
 ### Error Handling
 
 I'd decided to have a separate function that was called for an error, but
@@ -2288,6 +2292,9 @@ to Cadence, which, if it is Domain friendly.
 
 Does Cadence look for a Domain object? That would make it particular to Node.js.
 
+Started using Cadence with Domains. Attached some notes about some issues that
+I'll have to document.
+
 ## Inbox
 
 Notes on returning the step function. Notes on event handlers, if you have any.
@@ -2329,6 +2336,251 @@ indicates shifting.
 Oh, cute; I was calling the return value from `step` an "inverse future."
 
 How about using the object as a value cache? Or is cache to clever?
+
+Test that callback argument is actually a function. Or what is correct?
+
+**Update**: Yes. Cadence is just begging for a `while` and `until` where `until`
+is evaluated at the end of the cadence. Or! Maybe you put `while` anywhere and
+it breaks the cadence?
+
+```javascript
+cadence(function (step, items) {
+  step(step.while(function () { return  items.length }), function () {
+    var item = items.shift();
+    step(function () {
+      // do something.
+    });
+  })
+});
+```
+
+Or formatted thus...
+
+```javascript
+cadence(function (step, items) {
+  step(step.while(function () {
+    return  items.length
+  }), function () {
+    var item = items.shift();
+    step(function () {
+      // do something.
+    });
+  })
+});
+```
+
+Or...
+
+```javascript
+cadence(function (step, items) {
+  step(step.exit(function () {
+    return !items.length;
+  }), function () {
+    var item = items.shift();
+    step(function () {
+      // do something.
+    });
+  })
+});
+```
+
+How do you return?
+
+```javascript
+cadence(function (step, items) {
+  var transformed = [];
+  step(step.while(function () {
+    if (!items.length) return transformed;
+  }), function () {
+    var item = items.shift();
+    step(function () {
+      // do something.
+    });
+  })
+});
+```
+
+Or at the end...
+
+```javascript
+cadence(function (step, items) {
+  step(function () {
+    var item = items.shift();
+    step(function () {
+      // do something.
+    });
+  }, step.while(function () {
+    if (items.length);
+  });
+});
+```
+
+But, we already have an exit. We use `step`. Maybe we want loop?
+
+```javascript
+cadence(function (step, items) {
+  var transformed = [];
+  step.loop(function () {
+    var item = items.shift();
+    step(function () {
+      // do something.
+    });
+  }, function () {
+    if (items.length) step(null, transformed);
+  });
+});
+```
+
+When why do we need `jump`? To jump up and out. Maybe we use named loops?
+
+```javascript
+cadence(function (step, items) {
+  var transformed = [];
+  step.loop("outer", function () {
+    var item = items.shift();
+    step(function () {
+      // do something.
+      step.jump("outer");
+    });
+  }, function () {
+    if (items.length) step(null, transformed);
+  });
+});
+```
+
+Or we can keep our jump anywhere, but have a nicer way of labeling.
+
+```javascript
+cadence(function (step, items) {
+  var items = step.loop(function () {
+    var item = items.shift();
+    step(function () {
+      // this is like a continue, maybe.
+      step.jump(items);
+      // or maybe, this is like a continue, maybe...
+      step(item)(null, terminated);
+      // because now we do have a special function of our own creation and we
+      // can mark it as such.
+      // But, how do we jump out? Have we been jumping forward?
+      // Yeah, but we didn't want to make special return cases.
+    });
+  }, function () {
+    if (items.length) step(null, transformed);
+  });
+});
+```
+
+Or if we want to bash syntax harder, we can make `()` mean loop. It loops and
+returns a label. That's the syntax bashing way to go.
+
+```javascript
+cadence(function (step, items) {
+  var items = step(function () {
+    var item = items.shift();
+    step(function () {
+      // this is like a continue, maybe.
+      step.jump(items);
+      // or maybe, this is like a continue, maybe...
+      step(item, transformed);
+      // because now we do have a special function of our own creation and we
+      // can mark it as such.
+    });
+  }, function () {
+    if (items.length) step(null, transformed);
+  })();
+});
+```
+
+Oh.. And if you give it a count, it loops count times.
+
+And if you give it a function it loops while (or until);
+
+```javascript
+cadence(function (step, items) {
+  var items = step(function () {
+    var item = items.shift();
+    step(function () {
+      // this is like a continue, maybe.
+      step.jump(items);
+      // or maybe, this is like a continue, maybe...
+      step(item, transformed);
+      // because now we do have a special function of our own creation and we
+      // can mark it as such.
+    });
+  })(items.length);
+});
+```
+
+```javascript
+cadence(function (step, items) {
+  var items = step(function () {
+    var item = items.shift();
+    step(function () {
+      // this is like a continue, maybe.
+      step.jump(items);
+      // or maybe, this is like a continue, maybe...
+      step(item, transformed);
+      // because now we do have a special function of our own creation and we
+      // can mark it as such.
+    });
+  })(function () { return items.length });
+});
+```
+
+The difference between while and until can be arguments. Entering there will be
+no arguments, but exiting there will be.
+
+```javascript
+cadence(function (step, items) {
+  var items = step(function () {
+    var item = items.shift();
+    step(function () {
+      // this is like a continue, maybe.
+      step.jump(items);
+      // or maybe, this is like a continue, maybe...
+      step(item, transformed);
+      // because now we do have a special function of our own creation and we
+      // can mark it as such.
+    });
+  })(function (items) { return items.length });
+});
+```
+
+That is the Cadence way. Maybe jump doesn't have to search as hard if jumping is
+no about loops. If I can write applications without the jump as goto, then I'll
+get rid if it.
+
+TK: Move this up and under looping.
+
+Doing loop labels right now, and I might use those instead of assigning jump
+labels. Jump labels are cute, but they are unstructured. With labels, I can get
+back to having a single `step` function. `Error` is now freed up for the
+creation of error handlers, so we only need to choose a sigil for events. That
+could be `step(this)`, which means that the function is not a callback, but er,
+I got nothing. We could say `step(Error)` implies that the error slot has been
+filled or `step(-1)` implies that the slot has been shifted, so that `step(-1,
+Error)` means error handler, or just `step(Error)`.
+
+In any case, label invocation. I'm looking at how I'd like to use it, and I'd
+like to be able to do it as one liner at times. I chose to make `step.jump`
+separate and apart from return values, but then when I used it, and I needed
+curly braces to set the jump and set a return value, I didn't like it. I wanted
+to be able to make that one-liner because `continue` is a one liner.
+
+Now that I have labels, I'm looking for a way to express those one liners.
+
+```javascript
+step(tryagain)      // change flow, but no callback generation
+step(tryagain)()    // create a callback optionally by invoking builder
+step(tryagain, 1)   // Specify any one explicit argument, here it's arity
+tryagain()          // No! Loose the type difference.
+```
+
+Then what about immediate returns? Ah, just return true.
+
+```javascript
+if (!anygood) return step(tryagain) && 1
+```
 
 ## Zero to Many
 

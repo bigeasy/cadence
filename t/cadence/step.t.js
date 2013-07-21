@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 
 require('proof')(1, function (step, deepEqual) {
-  var fs = require('fs'), cadence = require('../..');
+    var fs = require('fs')
+    var cadence = require('../..')
 
-  cadence(function (step) {
+    cadence(function (step) {
 
-    item(1, step());
+        item(1, step())
 
-  }, function (number) {
+    }, function (number) {
 
-    deepEqual(number, 1, 'step');
+        deepEqual(number, 1, 'step')
 
-  })(step());
-});
+    })(step())
+})
 
-function item (number, callback) { callback(null, number) };
+function item (number, callback) { callback(null, number) }

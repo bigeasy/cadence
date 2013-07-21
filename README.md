@@ -3,30 +3,58 @@
 A Swiss Army asynchronous control flow function builder for Node.js and
 JavaScript that helps you create highly-parallel control flows.
 
-Cadence is a function builder. It simplifies the writing of asynchronous
-functions of that accept and  error/result callback using a domain specific
-language of sorts.
+Cadence is a function builder. It helps you write asynchronous functions of that
+accept an error/result callback.
 
 ```javascript
 // Use Cadence.
-var cadence = require('cadence'), fs = require('fs');
+var cadence = require('cadence')
+var fs = require('fs')
 
 // Create an asynchronous function.
 var cat = cadence(function (step) {
-  step(function () {
+    step(function () {
 
-    fs.readFile(__filename, 'utf8', step());
+        fs.readFile(__filename, 'utf8', step())
 
-  }, function (body) {
+    }, function (body) {
 
-    console.log(body);
+        process.stdout.write(body)
 
-  });
+    })
 })
 
 // Use it in your program.
-cat(function (error) { if (error) throw error });
+cat(function (error) { if (error) throw error })
 ```
+
+You create a Cadnece using the magical `step` function that can express all
+mannor of asynchronous operations. Cadence supports.
+
+ * serial asynchronous operations, natch
+ * heterogenous and homongenous parallel operations
+ * while loops, do..while loops, or counted loops
+ * each loops that can either map or reduce an array
+ * events, streaming events and error events
+ * asynchronous try and catch exception handling
+ * asynchronous finalizers for clean up
+
+You can use Cadence in the browser too, because it is not Node.js dependent and
+it minzips to under 2k.
+
+TK: Too much intro, sell them with examples.
+
+Cadence is an exmaple of syntax bashing; taking the extending the syntax of a
+computer language using the existing syntax, usually using metadata, such as
+type of class data. Method chaining is a form of syntax bashing, but Cadence
+does not use method chaining.
+
+Instead, cadence has a single `step` function. With it you can define
+asynchronous parallel operations,
+
+Cadence is a syntax bashed domain-specific language. Syntax bashing is
+That domain-specific language is just plain JavaScript twisted and contorted is
+like a ba
 
 You create a function by passing a function to `cadence` that creates cadences.
 
@@ -49,8 +77,24 @@ Documentation is a work in progress. Here is the current word count.
  * Arrayed sub-cadences.
  * Arity.
  * Fixup cadences.
+ * Looping.
  * Jumping.
  * Finalizers.
+
+Cadence is a syntax bashed doman-specific language. It uses JavaScript syntax in
+clever ways to express control flow with a minimum of syntacitical overhead.
+
+Note that Cadence is as terse as it can be. Yes, you must still use callbacks,
+but it avoids the temple of doom, by keeping your callbacks in line, one after
+the other. It works hard so that indentation reflects a logical nesting of your
+program into parallel operations, instead of having a nesting for each and every
+callback. Yes, the ohters do this, but Cadence keeps you form having a testing
+for each and every parallel, loop, or error handler.
+
+Is there a way to say it without sounding all mumbo-jumbo? Cadence uses existing
+JavaScript syntax in clever ways. Instead of a collection of helper functions,
+Cadence uses a single helper function; it's `step` function, to declare
+callbacks and asychronous series.
 
 ### Accepting Arguments
 
@@ -58,22 +102,23 @@ Here's an example of a function built by Cadence that accepts arguments.
 
 ```javascript
 // Use Cadence.
-var cadance = require('cadence'), fs = require('fs');
+var cadance = require('cadence')
+var fs = require('fs')
 
 // Delete a file if the condition is true.
 var deleteIf = cadence(function (step, file, condition) {
-  step(function () {
-    fs.stat(file, step());
-  }, function (stat) {
-    if (condition(stat)) fs.unlink(step());
-  });
-});
+    step(function () {
+        fs.stat(file, step())
+    }, function (stat) {
+        if (condition(stat)) fs.unlink(step())
+    })
+})
 
 // Test to see if a file is empty.
 function empty (stat) { return stat.size == 0 }
 
 // Delete a file if it is empty.
-deleteIf(__filename, empty, function (error) { if (error) throw error });
+deleteIf(__filename, empty, function (error) { if (error) throw error })
 ```
 
 In the above example we create a function that will asynchronously stat a file,
@@ -88,38 +133,39 @@ in the `stat` object. When we get out `stat` object, we can use a sub-cadence to
 complete the `stat` object by reading the body.
 
 ```javascript
-var cadance = require('cadence'), fs = require('fs');
+var cadance = require('cadence')
+var fs = require('fs')
 
 // Stat a file and add the file body to the stat.
 var bodyStat = cadence(function (step, file, condition) {
-  step(function () {
-
-    fs.stat(file, step());
-
-  }, function (stat) {
-
-    // We create a sub-cadence here because we want to work with `stat`. The
-    // `stat` object is in scope for all the function in the sub-cadence.
     step(function () {
 
-      fs.readFile(file, step());
+        fs.stat(file, step())
 
-    }, function (body) {
+    }, function (stat) {
 
-      stat.body = body;
-      return stat; // return value of both the sub-cadence and the step that
-                   // created the cadence. See more below.
+        // We create a sub-cadence here because we want to work with `stat`. The
+        // `stat` object is in scope for all the function in the sub-cadence.
+        step(function () {
 
-    });
-  });
-});
+            fs.readFile(file, step())
+
+        }, function (body) {
+
+            stat.body = body
+            return stat; // return value of both the sub-cadence and the step that
+                         // created the cadence. See more below.
+
+        })
+    })
+})
 
 // Delete a file if it is empty.
 statBody(__filename, function (error) {
-  if (error) throw error
-  process.stdout.write('content-length: ' + stat.size + '\n\n');
-  process.stdout.write(stat.body.toString('utf8'));
-});
+    if (error) throw error
+    process.stdout.write('content-length: ' + stat.size + '\n\n')
+    process.stdout.write(stat.body.toString('utf8'))
+})
 ```
 
 TK: Take the above example and say; the sub-cadence return is the first argument
@@ -133,21 +179,21 @@ arguments.
 
 ```javascript
 cadence(function () {
-  step(function () {
+    step(function () {
 
-    var first = step();
-    var second = step();
+        var first = step()
+        var second = step()
 
-    second(null, 2);
-    first(null, 1);
+        second(null, 2)
+        first(null, 1)
 
-  }, function (a, b) {
+    }, function (a, b) {
 
-    equal(a, 1, "first");
-    equal(b, 2, "second");
+        equal(a, 1, 'first')
+        equal(b, 2, 'second')
 
-  });
-});
+    })
+})
 ```
 
 NOTE: Documentation pro-tip: Create examples sooner than later and then
@@ -165,6 +211,208 @@ TK: Always use an initial sub-cadence in the `README.md` so people don't get to
 thinking that it is something to be avoided.
 TK: In the sub-cadence example, talk about scope and closure.
 TK: Move up a section.
+
+## Loops
+
+TK: Serial and parallel loops, but parallel doesn't really loop.
+
+Cadence provides two looping construts; serial loops which let you do the so
+
+### Serial Loops
+
+TK: So, just Loops, then? What about Serial Each and Parallel Each?
+TK: Do examples look better without commas?
+
+Cadence want you to use nesting to represent subordinate operations, so it wants
+to provide you with a looping structure that is not terribily compilicated, or
+nested.
+
+Looping in Cadence is performed by defining a sub-cadence, then invoking the
+function that is returned by the sub-cadence definition. We'll call this the
+**looper function**. If you **do not invoke** the function, Cadence will start
+the sub-cadence for you when your step returns and run the sub-cadence once. If
+you **do invoke** the function, Cadence will run the sub-cadence as a loop.
+
+You can create `while` loops, `do...while` loops, stepped loops and `forEach`
+loops using the looper function.
+
+### Endless Loops
+
+If you invoke without arguments, you will invoke an endless loop. You terminate
+the loop using the `step(error, result)` explicit return.
+
+Calling `looper()`.
+
+```javascript
+cadence(function (step) {
+    var count = 0
+    step(function () {
+        count++
+    }, function () {
+        if (count == 10) step(null, count)
+    })()
+})(function (error, result) {
+    if (error) throw error
+    equal(result, 10, 'loop')
+})()
+```
+
+When you're terminal condition is the last function, you've basically created a
+`do...while` loop.
+
+### Loop Initializers
+
+When an endless loop iterates, the result of the last function is passed as the
+arguments the first function. You can use this to create a `while` loop.
+
+To pass in an initial test value to the endless loop, you invoke the looper
+function with a leading `null`, followed by the parameters, `looper(null, arg1,
+arg2)` the same the way you invoke an explicit return of the `step` function.
+
+Calling `looper(null, arg)`.
+
+```javascript
+cadence(function (step) {
+    var count = 0
+    step(function (more) {
+          if (!more) step(null, count)
+    }, function () {
+          step()(null, ++count < 10)
+    })(null, true)
+})(function (error, result) {
+    if (error) throw error
+    equal(result, 10, 'initialized loop')
+})
+```
+
+### Counted Loops
+
+TODO: And put in diary, what about stepped instead? `looper(0, 10)` with an
+optional increment `looper(0, 10, 2)`? I mentioned steps above. This would be
+more useful, general purpose than just a count.
+
+TODO: No stepped. Hard to smoosh all that syntax. There is now a desire to have
+counted loops that take arguments, so some of those arguments might be an
+Integer.
+
+You can tell Cadence to loop for a fixed number of times by invoking the loop
+start function with a count of iterations.
+
+```javascript
+cadence(function (step) {
+    var count = 0
+    step(function (count) {
+        equal(count, index, 'keeping a count for you')
+        step()(null, ++count)
+    })(10)
+})(function (error, result) {
+    if (error) throw error
+    equal(result, 10, 'counted loop')
+})
+```
+
+### Each Loops
+
+You can invoke the loop passing it an array. The loop will be invoked once for
+each element in the array, passing the array element to the first function of
+the sub-cadence.
+
+```javascript
+cadence(function (step) {
+    var sum = 0
+    step(function (number, index) {
+        equal(index, number - 1, 'keeping an index for you')
+        step()(null, sum = sum + number)
+    })([ 1, 2, 3, 4 ])
+})(function (error, result) {
+    if (error) throw error
+    equal(result, 10, 'reduced each loop')
+})
+```
+
+TK: 4 space indent and only single quotes.
+
+### Gathered Loops
+
+Both counted loops and each loops can be gathered into an array. If you pass an
+initial array to the callback function, then each iteration will be gathered
+into an array result.
+
+```javascript
+cadence(function (step) {
+    var count = 0
+    step(function () {
+        step()(null, ++count)
+    })([], [ 1, 2, 3, 4 ])
+})(function (error, result) {
+    if (error) throw error
+    deepEqual(result, [ 1, 3, 6, 10 ], 'gathered each loop')
+})
+```
+
+You cannot gather endless loops.
+
+### Loop Labels
+
+If you want to give up early and try again, you can use a loop label. When you
+invoke the looper function it returns a label object. You can use the label
+object to restart the loop.
+
+```javascript
+cadence(function (step) {
+    var count = 0
+    var retry = step([function () {
+        if (++count != 10) throw new Error
+        else step(null, 10)
+    }, function () {
+        step(retry)
+    }])(1)
+})(function (error, result) {
+    if (error) throw error
+    equal(result, 10, 'loop continue')
+})
+```
+
+This one's tricky. Because we specifed a count of `1`, the loop will only loop
+once, but because we call the `retry` label when we catch an error, the loop
+tries again.
+
+### Loop Label Quick Returns
+
+Some of the things we document here are about style and syntax bashing that you
+can do. It's not necessarily a part of Cadence.
+
+Often times when working with labels, you're testing to see if you should invoke
+the label when you enter a function, if not you would like to do something else.
+This is going to create an `if/else` block that increases our nesting. If we
+were programming synchronously in plain old JavaScript, we could call `continue`
+and that would jump to the loop label.
+
+To preserve that jumpy feeling, when you invoke `step(label)` it returns true,
+so you can create return using `&&`.
+
+```javascript
+cadence(function (step) {
+    var retry = step([function (count) {
+        if (count != 10) throw new Error('retry')
+        else step(null, 10)
+    }, function (_, error) {
+        if (error.message == 'retry') return step(retry) && count + 1
+        throw error
+    }])(1, 0)
+})(function (error, result) {
+    if (error) throw error
+    equal(result, 10, 'loop continue')
+})
+```
+
+TK: Another example of this...
+
+```javascript
+if (count != stop) return step(retry) && return count + 1
+```
+
+TK: Move loops below errors.
 
 ### Catching Errors
 
@@ -184,19 +432,19 @@ it in an array.
 
 ```javascript
 cadence(function () {
-  step([function ()
+    step([function () {
 
-    // Do something stupid.
-    fs.readFile('/etc/shadow', step())
+        // Do something stupid.
+        fs.readFile('/etc/shadow', step())
 
-  }, function (errors) {
+    }, function (errors) {
 
-    // Catch the exception.
-    ok(errors[0].code == 'EACCES', 'caught EACCES');
-    ok(errors.length == 1, 'caught EACCES and only EACCES');
+        // Catch the exception.
+        ok(errors[0].code == 'EACCES', 'caught EACCES')
+        ok(errors.length == 1, 'caught EACCES and only EACCES')
 
-  }]);
-})();
+    }])
+})()
 ```
 
 In the above, we catch the `EACCES` that is raised when we attempt to read a
@@ -209,22 +457,22 @@ try function.
 
 ```javascript
 cadence(function () {
-  step([function ()
+    step([function () {
 
-    // Read a readable file.
-    fs.readFile('/etc/hosts', 'utf8', step())
+        // Read a readable file.
+        fs.readFile('/etc/hosts', 'utf8', step())
 
-  }, function (errors) {
+    }, function (errors) {
 
-    // This will not be called.
-    proecss.stderr.write('Hosts file is missing!\n');
+        // This will not be called.
+        proecss.stderr.write('Hosts file is missing!\n')
 
-  }], function (hosts) {
+    }], function (hosts) {
 
-    process.stdout.write(hosts);
+        process.stdout.write(hosts)
 
-  });
-})();
+    })
+})()
 ```
 
 When an error triggers the catch function, the catch function can recover and
@@ -232,22 +480,22 @@ continue the cadence by returning normally.
 
 ```javascript
 cadence(function () {
-  step([function ()
+    step([function () {
 
-    // Read file that might be missing.
-    fs.readFile(env.HOME + '/.config', 'utf8', step())
+        // Read file that might be missing.
+        fs.readFile(env.HOME + '/.config', 'utf8', step())
 
-  }, function (errors) {
+    }, function (errors) {
 
-    // That didn't work, for whatever reason, so try the global.
-    fs.readFile('/etc/config', 'utf8', step())
+        // That didn't work, for whatever reason, so try the global.
+        fs.readFile('/etc/config', 'utf8', step())
 
-  }], function (config) {
+    }], function (config) {
 
-    process.stdout.write(config);
+        process.stdout.write(config)
 
-  });
-})();
+    })
+})()
 ```
 
 Also note that both the try function and error function can use sub-cadences,
@@ -257,17 +505,17 @@ A catch function also catches thrown exceptions.
 
 ```javascript
 cadence(function () {
-  step([function ()
+    step([function () {
 
-    throw new Error('thrown');
+        throw new Error('thrown')
 
-  }, function (errors) {
+    }, function (errors) {
 
-    ok(errors[0].message == 'thrown', 'caught thrown');
-    ok(errors.length == 1, 'caught thrown and only thrown');
+        ok(errors[0].message == 'thrown', 'caught thrown')
+        ok(errors.length == 1, 'caught thrown and only thrown')
 
-  }]);
-})();
+    }])
+})()
 ```
 
 Errors are provided in an `errors` array. Why an array? Because with Cadence,
@@ -275,20 +523,20 @@ you're encouraged to do stupid things in parallel.
 
 ```javascript
 cadence(function () {
-  step([function ()
+    step([function () {
 
-    // Read two read-protected files.
-    fs.readFile('/etc/shadow', step())
-    fs.readFile('/etc/sudoers', step())
+        // Read two read-protected files.
+        fs.readFile('/etc/shadow', step())
+        fs.readFile('/etc/sudoers', step())
 
-  }, function (errors) {
+    }, function (errors) {
 
-    ok(errors[0].code == 'EACCES', 'caught EACCES');
-    ok(errors[1].code == 'EACCES', 'caught another EACCES');
-    ok(errors.length == 2, 'caught two EACCES');
+        ok(errors[0].code == 'EACCES', 'caught EACCES')
+        ok(errors[1].code == 'EACCES', 'caught another EACCES')
+        ok(errors.length == 2, 'caught two EACCES')
 
-  }]);
-})();
+    }])
+})()
 ```
 
 Note that, the errors are ordered in the **order in which they were caught**,
@@ -300,16 +548,16 @@ and the array subscript into the `errors` array displeases you.
 
 ```javascript
 cadence(function () {
-  step([function ()
+    step([function () {
 
-    fs.readFile('/etc/shadow', step())
+        fs.readFile('/etc/shadow', step())
 
-  }, function (errors, error) {
+    }, function (errors, error) {
 
-    ok(error.code == 'EACCES', 'caught EACCES');
+        ok(error.code == 'EACCES', 'caught EACCES')
 
-  }]);
-})();
+    }])
+})()
 ```
 
 There is no third argument.
@@ -319,16 +567,16 @@ can hide it using `` _ `` or if that is already in you, double `` __ ``.
 
 ```javascript
 cadence(function () {
-  step([function ()
+    step([function () {
 
-    fs.readFile('/etc/shadow', step())
+        fs.readFile('/etc/shadow', step())
 
-  }, function (_, error) {
+    }, function (_, error) {
 
-    ok(error.code == 'EACCES', 'caught EACCES');
+        ok(error.code == 'EACCES', 'caught EACCES')
 
-  }]);
-})();
+    }])
+})()
 ```
 
 ### Propagating Errors
@@ -340,51 +588,51 @@ FreeBSD.)
 
 ```javascript
 cadence(function () {
-  step([function ()
+    step([function () {
 
-    // Read two read-protected files.
-    fs.readFile('/etc/sudoers', step())
-    fs.readFile('/etc/shadow', step())
+        // Read two read-protected files.
+        fs.readFile('/etc/sudoers', step())
+        fs.readFile('/etc/shadow', step())
 
-  }, function (errors) {
+    }, function (errors) {
 
-    // Maybe sudo isn't installed and we got `ENOENT`?
-    if (!errors.every(function (error) { return error.code == 'EACCES' })) {
-      throw errors;
-    }
+        // Maybe sudo isn't installed and we got `ENOENT`?
+        if (!errors.every(function (error) { return error.code == 'EACCES' })) {
+            throw errors
+        }
 
-  }]);
+    }])
 })(function (error) {
 
-  // Only the first exception raised is reported to the caller.
-  if (error) console.log(error);
+    // Only the first exception raised is reported to the caller.
+    if (error) console.log(error)
 
-});
+})
 ```
 
 You can also just throw an exception of your chosing.
 
 ```javascript
 cadence(function () {
-  step([function ()
+    step([function () {
 
-    // Read two read-protected files.
-    fs.readFile('/etc/sudoers', step())
-    fs.readFile('/etc/shadow', step())
+        // Read two read-protected files.
+        fs.readFile('/etc/sudoers', step())
+        fs.readFile('/etc/shadow', step())
 
-  }, function (errors) {
+    }, function (errors) {
 
-    // Maybe sudo isn't installed and we got `ENOENT`?
-    if (!errors.every(function (error) { return error.code == 'EACCES' })) {
-      throw new Error('something bad happened');
-    }
+        // Maybe sudo isn't installed and we got `ENOENT`?
+        if (!errors.every(function (error) { return error.code == 'EACCES' })) {
+            throw new Error('something bad happened')
+        }
 
-  }]);
+    }])
 })(function (error) {
 
-  ok(error.message, 'something bad happened');
+    ok(error.message, 'something bad happened')
 
-});
+})
 ```
 
 When you raise an error in an catch function, it cannot be caught in the current
@@ -394,33 +642,33 @@ Here we log any errors before raising them all up to the default handler.
 
 ```javascript
 cadence(function () {
-  step([function () {
-    step([function ()
+    step([function () {
+        step([function () {
 
-      // Read two read-protected files.
-      fs.readFile('/etc/sudoers', step())
-      fs.readFile('/etc/shadow', step())
+            // Read two read-protected files.
+            fs.readFile('/etc/sudoers', step())
+            fs.readFile('/etc/shadow', step())
 
-    }, function (errors) {
+        }, function (errors) {
 
-      // Maybe sudo isn't installed and we got `ENOENT`?
-      if (!errors.every(function (error) { return error.code == 'EACCES' })) {
-        throw errors;
-      }
+            // Maybe sudo isn't installed and we got `ENOENT`?
+            if (!errors.every(function (error) { return error.code == 'EACCES' })) {
+                throw errors
+            }
 
-    }]);
+        }])
   }, function (errors) {
 
-    errors.forEach(function () { console.log(error) });
+      errors.forEach(function () { console.log(error) })
 
-    throw errors;
+      throw errors
 
-  }]);
+  }])
 })(function (error) {
 
-  ok(error, 'got a single error');
+    ok(error, 'got a single error')
 
-});
+})
 ```
 
 As you can see, Cadence will catch exceptions as well as handle errors passed to
@@ -437,22 +685,22 @@ condition between the try function and the catch function.
 
 ```javascript
 cadence(function () {
-  step([function ()
+    step([function () {
 
-    // Read file that might be missing.
-    fs.readFile(env.HOME + '/.config', 'utf8', step())
+        // Read file that might be missing.
+        fs.readFile(env.HOME + '/.config', 'utf8', step())
 
-  }, 'ENOENT', function () {
+    }, 'ENOENT', function () {
 
-    // That didn't work because the file does not exist, try the global.
-    fs.readFile('/etc/config', 'utf8', step())
+        // That didn't work because the file does not exist, try the global.
+        fs.readFile('/etc/config', 'utf8', step())
 
-  }], function (config) {
+    }], function (config) {
 
-    process.stdout.write(config);
+        process.stdout.write(config)
 
-  });
-})();
+    })
+})()
 ```
 
 In the above example, we only catch an exception if the `code` property is equal
@@ -467,33 +715,33 @@ property or a regular expression.
 
 ```javascript
 cadence(function () {
-  step([function ()
+    step([function () {
 
-    throw new Error('handled');
+        throw new Error('handled')
 
-  }, 'handled', function (_, error) {
+    }, 'handled', function (_, error) {
 
-    ok(error.message == 'handled', 'handled');
+        ok(error.message == 'handled', 'handled')
 
-  }]);
-})();
+    }])
+})()
 ```
 
 The condition must match all the errors raised.
 
 ```javascript
 cadence(function () {
-  step([function ()
+    step([function () {
 
-    fs.readFile('/etc/sudoers', step())
-    fs.readFile('/etc/shadow', step())
+        fs.readFile('/etc/sudoers', step())
+        fs.readFile('/etc/shadow', step())
 
-  }, /^EACCES$/, function (errors) {
+    }, /^EACCES$/, function (errors) {
 
-    ok(errors.length == 2, 'handled');
+        ok(errors.length == 2, 'handled')
 
-  }]);
-})();
+    }])
+})()
 ```
 
 You can test for multiple error codes using a regular expression. Here we test
@@ -501,17 +749,17 @@ for both `EACCES` and `ENOENT`.
 
 ```javascript
 cadence(function () {
-  step([function ()
+    step([function () {
 
-    fs.readFile('/etc/sudoers', step())
-    fs.readFile('/etc/shadow', step())
+        fs.readFile('/etc/sudoers', step())
+        fs.readFile('/etc/shadow', step())
 
-  }, /^(EACCES|ENOENT)$/, function (errors) {
+    }, /^(EACCES|ENOENT)$/, function (errors) {
 
-    ok(errors.length == 2, 'handled');
+        ok(errors.length == 2, 'handled')
 
-  }]);
-})();
+    }])
+})()
 ```
 
 You can also be explicit about the property used to test by adding the name of
@@ -520,17 +768,17 @@ state that the `code` property is the property to test.
 
 ```javascript
 cadence(function () {
-  step([function ()
+    step([function () {
 
-    fs.readFile('/etc/sudoers', step())
-    fs.readFile('/etc/shadow', step())
+        fs.readFile('/etc/sudoers', step())
+        fs.readFile('/etc/shadow', step())
 
-  }, 'code', /^(EACCES|ENOENT)$/, function (errors) {
+    }, 'code', /^(EACCES|ENOENT)$/, function (errors) {
 
-    ok(errors.length == 2, 'handled');
+        ok(errors.length == 2, 'handled')
 
-  }]);
-})();
+    }])
+})()
 ```
 
 If the condition does not match all the examples raised, then the catch function
@@ -542,18 +790,18 @@ conditional.
 
 ```javascript
 cadence(function () {
-  step([function ()
+    step([function () {
 
-    step()(null,
-    fs.readFile('/etc/sudoers', step())
-    fs.readFile('/etc/shadow', step())
+        step()(null,
+        fs.readFile('/etc/sudoers', step())
+        fs.readFile('/etc/shadow', step())
 
-  }, /^(EACCES|ENOENT)$/, function (errors) {
+    }, /^(EACCES|ENOENT)$/, function (errors) {
 
-    ok(errors.length == 2, 'handled');
+        ok(errors.length == 2, 'handled')
 
-  }]);
-})();
+    }])
+})()
 ```
 
 Why? Because we can only return one exception to the caller, so it is better to
@@ -573,31 +821,31 @@ because ther is no file to delete.
 
 ```javascript
 // Use Cadence.
-var cadance = require('cadence'), fs = require('fs');
+var cadance = require('cadence'), fs = require('fs')
 
 // Delete a file if it exists and the condition is true.
 var deleteIf = cadence(function (step, file, condition) {
-  step([function () {
+    step([function () {
 
-    fs.stat(file, step());
+        fs.stat(file, step())
 
-  }, /^ENOENT$/, function (error) {
+    }, /^ENOENT$/, function (error) {
 
-    // TK: Early return example can be if it is a directory, return early.
-    step(null);
+        // TK: Early return example can be if it is a directory, return early.
+        step(null)
 
-  }], function (stat) {
+    }], function (stat) {
 
-    if (stat && condition(stat)) fs.unlink(step());
+      if (stat && condition(stat)) fs.unlink(step())
 
-  });
-});
+    })
+})
 
 // Test to see if a file is empty.
 function empty (stat) { return stat.size == 0 }
 
 // Delete a file if it exists and is empty.
-deleteIf(__filename, empty, function (error) { if (error) throw error });
+deleteIf(__filename, empty, function (error) { if (error) throw error })
 ```
 
 We test to see if the error is `ENOENT`. If not, we have a real problem, so we
@@ -619,53 +867,77 @@ events in Cadence.
 
 ```javascript
 var cadence = require('cadence'), event = require('event')
-  , ee = new event.EventEmitter();
+  , ee = new event.EventEmitter()
 
 cadence(function (step, ee) {
-  step(function () {
-    ee.on('data', step.event([]));
-    ee.on('end', step.event());
-    ee.on('error', step.error());
-  }, function (data) {
-    assert.deepEqual(data, [ 1, 2, 3 ]);
-  });
-})(emitter);
+    step(function () {
+        ee.on('data', step.event([]))
+        ee.on('end', step.event())
+        ee.on('error', step.error())
+    }, function (data) {
+        assert.deepEqual(data, [ 1, 2, 3 ])
+    })
+})(emitter)
 
-ee.emit('data', 1);
-ee.emit('data', 2);
-ee.emit('data', 3);
+ee.emit('data', 1)
+ee.emit('data', 2)
+ee.emit('data', 3)
 
-ee.emit('end');
+ee.emit('end')
 ```
 
 Below we use the example of splitting an HTTP server log for many hosts
 into a log file for each host.
 
 ```javascript
-var cadence = require('cadence'), fs = require('fs');
+var cadence = require('cadence'), fs = require('fs')
 
 cadence(function (step) {
-  step(function () {
-    var readable = fs.readableStream(__dirname + '/logins.txt');
-    readable.setEncoding('utf8');
-    readable.on('data', step.event([]));
-    readable.on('end');
-  }, function (data) {
-    var hosts = {};
-    data.join('').split(/\n/).foreach(function (line) {
-      var host = /^([\w\d.]+)\s+(.*)/.exec(line)[1];
-      (hosts[host] || (hosts[host])).push(line);
-    });
-    for (var host in hosts) {
-      var writable = fs.writableStream(__dirname + '/' + host + '.log');
-      writable.end(hosts[host].join('\n') + '\n');
-      writable.on('drain', step.event());
-    }
-  });
-})();
+    step(function () {
+        var readable = fs.readableStream(__dirname + '/logins.txt')
+        readable.setEncoding('utf8')
+        readable.on('data', step.event([]))
+        readable.on('end')
+    }, function (data) {
+        var hosts = {}
+        data.join('').split(/\n/).foreach(function (line) {
+            var host = /^([\w\d.]+)\s+(.*)/.exec(line)[1]
+            (hosts[host] || (hosts[host])).push(line)
+        })
+        for (var host in hosts) {
+            var writable = fs.writableStream(__dirname + '/' + host + '.log')
+            writable.end(hosts[host].join('\n') + '\n')
+            writable.on('drain', step.event())
+        }
+    })
+})()
 ```
 
 This is a horrible example. Try again.
+
+Here's a `mkdirp`, but let's complete it.
+
+```javascript
+var mkdirs = cadence(function (step, directory) {
+    directory = path.resolve(directory)
+    var mode = 0777 & (~process.umask())
+    var made = null
+
+    step([function () {
+        fs.mkdir(directory, mode, step())
+    }, function (_, error) {
+        if (error.code == 'ENOENT') {
+            mkdirp(path.dirname(directory), step())
+        } else {
+            step(function () {
+                fs.stat(directory, step())
+            }, function (stat) {
+                if (!stat.isDirectory()) step(error)
+            })
+        }
+    }])
+})
+```
 
 ## Control Flow
 
@@ -675,7 +947,55 @@ Here is where you would discuss `step.jump` and the function index.
 
 Changes for each release.
 
+### Version 0.0.24
+
+Fri Jul 19 03:46:54 UTC 2013
+
+ * Fix catch of propagated exception. Closes #142.
+ * Upgrade Proof to 0.0.32. #141.
+
+### Version 0.0.23
+
+Thu Jul 11 01:38:54 UTC 2013
+
+ * Implement events using `-1` as the sigil. #139.
+ * All `createHandler` invocations should have an explicit `this`, not `null`. #132.
+ * Implement arguments passed to into counted loops. #134.
+ * Include index and array in each loop. #130.
+ * Remove double quotes. #137.
+ * Implement loops without using `step.jump`. #138.
+ * Remove `march`. #136.
+ * Catch functions to not return their results to the next step. #135.
+ * Implement loop labels. #131.
+ * Aways flatten callback arguments. #133.
+
+### Version 0.0.22
+
+Mon Jul  8 14:36:37 UTC 2013
+
+ * Implement endless loop initializers. #129.
+
+### Version 0.0.22
+
+Mon Jul  8 14:36:37 UTC 2013
+
+ * Finalizers are not invoked with correct `this`. #124.
+ * Loop returns inadvertently creating arrays. #127.
+ * Unable to loop through exception handlers. #126.
+ * Catch functions are not invoked with the correct `this`. #125.
+
+### Version 0.0.21
+
+Sun Jul  7 19:47:23 UTC 2013
+
+ * Implement gathered loops. #122.
+ * Implement each loops. #121.
+ * Implement counted loops. #120.
+ * Implement endless loops. #119.
+
 ### Version 0.0.20
+
+Sun Jun 30 13:04:05 UTC 2013
 
  * Finalize error handling. #117. #116. #116. #105.
  * Implement conditional catch. #110.
@@ -759,7 +1079,7 @@ Sat Mar 16 05:35:06 UTC 2013
  * Remove timeouts. #80.
  * Use `Error` to indicate subsequent error handler. #68.
  * Remove wrap option. #78.
- * Remove "use strict".
+ * Remove 'use strict'.
  * Ensure reentrancy. #74.
  * Remove underscore to indicate zero arity. #73.
 
