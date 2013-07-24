@@ -298,7 +298,6 @@ function cadence () {
             if (index < 0 ? invocation.errors.length : ++invocation.called == invocation.count) {
                 invoke.apply(invocation.self, invocation.args)
             }
-            callback.run = false
         }
     }
 
