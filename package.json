@@ -8,6 +8,7 @@
     "contributors" :    [],
     "dependencies":
     {
+        "serve": "1.3.0",
         "connect": "~2",
         "cadence": "0.0.24",
         "edify": "0.0.4",
