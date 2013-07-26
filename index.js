@@ -164,20 +164,6 @@ function cadence () {
         return createCallback(invocations[0], callback, 0)
     }
 
-    // Undocumetend, outgoing.
-    async.jump = function (label) {
-        var invocation = invocations[0]
-        while (invocation.args) {
-            for (var i = 0, I = invocation.args[0].steps.length; i < I; i++) {
-                if (invocation.args[0].steps[i] === label) {
-                    invocation.args[1] = i
-                    return
-                }
-            }
-            invocation = invocation.caller
-        }
-    }
-
     function Label (step) {
         this.step = step
     }
