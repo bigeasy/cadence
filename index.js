@@ -60,14 +60,10 @@ function cadence () {
                         errors.forEach(function (error) {
                             var caught = true
                             if (step.length == 4) {
-                                caught = (typeof step[2] == 'string')
-                                       ? error[step[1]] == step[2]
-                                       : step[2].test(error[step[1]])
+                                caught = step[2].test(error[step[1]])
                             } else if (step.length == 3) {
                                 var value = error.code || error.message
-                                caught = (typeof step[1] == 'string')
-                                       ? value == step[1]
-                                       : step[1].test(value)
+                                caught = step[1].test(value)
                             }
                             if (!caught && !errors.uncaught) errors.uncaught = error
                             return caught
