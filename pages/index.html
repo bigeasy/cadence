@@ -21,95 +21,8 @@ A Swiss Army asynchronous control flow function builder for Node.js and
 JavaScript that helps you create highly-parallel control flows.
 
 Cadence is a function builder. It helps you write asynchronous functions that
-accept an error/result callback.
-
-```javascript
-// Use Cadence.
-var cadence = require('cadence')
-var fs = require('fs')
-
-// Create an asynchronous function.
-var cat = cadence(function (step) {
-    step(function () {
-
-        fs.readFile(__filename, 'utf8', step())
-
-    }, function (body) {
-
-        process.stdout.write(body)
-
-    })
-})
-
-// Use it in your program.
-cat(function (error) { if (error) throw error })
-```
-
-You create a Cadence using the magical `step` function, which can express all
-manner of asynchronous operations. Cadence supports:
-
- * serial asynchronous operations, natch
- * heterogenous and homongenous parallel operations
- * while loops, do..while loops, or counted loops
- * each loops that can either map or reduce an array
- * events, streaming events and error events
- * asynchronous try and catch exception handling
- * asynchronous finalizers for clean up
-
-You can use Cadence in the browser too, because it is not Node.js dependent and
-it minzips to under 2k.
-
-TK: Too much intro, sell them with examples.
-
-Cadence is an example of syntax bashing: extending the syntax of a
-computer language using the existing syntax, usually using metadata, such as
-type or class data. Method chaining is a form of syntax bashing, but Cadence
-does not use method chaining.
-
-Instead, cadence has a single `step` function. With it you can define
-asynchronous parallel operations.
-
-You create a cadence by passing a series of functions to `cadence`.
-
-We call the series of functions a ***cadence***. We call an individual function
-in a cadence a ***step***. We use the `step` function to both define cadences
-and to create the callbacks that will take us from one step to another.
-
-The functions in a cadence are run in **serial**. A step inside a cadence can
-contain callbacks whose return values appear in the next step or sub-cadences.
-The callbacks and sub-cadences in a step are run in **parallel**, allowing you
-to mix and match cadences and sub-cadences to construct your asynchronous
-program.
-
-Documentation is a work in progress. Here is the current word count.
-
-```console
-  425  1982 12935 README.md
-```
-
- * Arrayed sub-cadences.
- * Arity.
- * Fixup cadences.
- * Looping.
- * Jumping.
- * Finalizers.
-
-Cadence is a syntax bashed doman-specific language. It uses JavaScript syntax in
-clever ways to express control flow with a minimum of syntacitical overhead.
-
-Note that Cadence is as terse as it can be. Yes, you must still use callbacks,
-but it avoids the temple of doom by keeping your callbacks in line, one after
-the other. It works hard so that indentation reflects a logical nesting of your
-program into parallel operations, instead of having a nesting for each and every
-callback. Yes, the others do this, but Cadence keeps you form having a testing
-for each and every parallel, loop, or error handler.
-
-TL;DR: By cleverly manipulating existing JavaScript syntax, Cadence allows you
-to hide ugly callback indentation with a simple, inline `step` function.
-
-### Accepting Arguments
-
-Here's an example of a function built by Cadence that accepts arguments.
+accept an error/result callback. You create a Cadence by simply passing a series
+of functions to 'cadence'.
 
 ```javascript
 // Use Cadence.
@@ -136,6 +49,69 @@ In the above example we create a function that will asynchronously stat a file,
 then if a test function passes, it will asynchronously delete the file. We
 assign our cadence to a variable named `deleteIf`. We can now call `deleteIf`
 providing a standard issue Node.js error reporting callback.
+
+We call the series of functions a ***cadence***. We call an individual function
+in a cadence a ***step***. We use the `step` function to both define cadences
+and to create the callbacks that will take us from one step to another.
+Below is an example without the arguments:
+
+```javascript
+// Use Cadence.
+var cadence = require('cadence')
+var fs = require('fs')
+
+// Create an asynchronous function.
+var cat = cadence(function (step) {
+    step(function () {
+
+        //Note that in this line, we invoke step() as our callback
+        //which immediately 'steps into' our callback function below,
+        //with the output of readFile() curried over.
+        fs.readFile(__filename, 'utf8', step())
+
+    }, function (body) {
+
+        process.stdout.write(body)
+
+    })
+})
+
+// Use it in your program.
+cat(function (error) { if (error) throw error })
+```
+
+Cadence can express all manner of asynchronous operations, including:
+
+ * serial asynchronous operations, natch
+ * heterogenous and homongenous parallel operations
+ * while loops, do..while loops, or counted loops
+ * each loops that can either map or reduce an array
+ * events, streaming events and error events
+ * asynchronous try and catch exception handling
+ * asynchronous finalizers for clean up
+
+You can use Cadence in the browser too, because it is not Node.js dependent and
+it minzips to under 2k.
+
+
+Cadence is an example of syntax bashing: extending the syntax of a
+computer language using the existing syntax, usually using metadata such as
+type or class data.
+
+Unlike method-chaining or other forms of syntax-bashing, cadence has a
+single `step` function with which you can define asynchronous parallel operations.
+
+The functions in a cadence are run in **serial**. A step inside a cadence can
+contain callbacks whose return values appear in the next step or sub-cadences.
+The callbacks and sub-cadences in a step are run in **parallel**, allowing you
+to mix and match cadences and sub-cadences to direct the flow of your
+asynchronous program.
+
+Note that Cadence is as terse as it can be. Yes, you must still use callbacks,
+but it avoids the temple of doom by keeping your callbacks in line, one after
+the other. It works hard so that indentation reflects a logical nesting of your
+program into parallel operations, instead of having a nesting for each and every
+callback.
 
 ### Sub-Cadences
 
@@ -172,16 +148,7 @@ var bodyStat = cadence(function (step, file, condition) {
     })
 })
 
-// Delete a file if it is empty.
-statBody(__filename, function (error) {
-    if (error) throw error
-    process.stdout.write('content-length: ' + stat.size + '\n\n')
-    process.stdout.write(stat.body.toString('utf8'))
-})
 ```
-
-TK: Take the above example and say; the sub-cadence return is the first argument
-to the next function. Use a stupid assertion `ok(body.length == size)`.
 
 ### Subsequent Arguments
 
@@ -208,13 +175,10 @@ cadence(function () {
 })
 ```
 
-NOTE: Documentation pro-tip: Create examples sooner than later and then
-reference the examples in your wiring.
-
 In the above example, observe that the declaration order determines argument
 order, not the order of invocation of the callbacks. Even if `second` is called
-back before `first`, the argument to first the subsequent step is invoked with
-results of `first` as the first argument `a`,`second` as the second argument
+back before `first`, the argument to first in the subsequent step is invoked with
+the results of `first` as the first argument `a`, and `second` as the second argument
 `b`.
 
 TK: More words and examples here.
@@ -226,9 +190,9 @@ TK: Move up a section.
 
 ### Catching Errors
 
-Because Cadence encourages parallelism, it's internal error handling mechanism
-deals with arrays of errors because parallel operations can also fail in
-parallel, raising many exceptions in parallel. You know, fun stuff.
+Cadence encourages parallelism, and because parallel operations can also
+fail in parallel and/or raise many exceptions in parallel (fun stuff),
+its internal error handling mechanism deals with arrays of errors.
 
 Externally, however, your caller is expecting one single error, because Cadence
 builds a function that follows the error-first callback standard. Thus, even
@@ -309,7 +273,7 @@ cadence(function () {
 ```
 
 Also note that both the try function and error function can use sub-cadences,
-arrayed cadences, fixups; everything that Cadence has to offer.
+arrayed cadences, fixups, etc.; everything that Cadence has to offer.
 
 A catch function also catches thrown exceptions.
 
@@ -328,7 +292,7 @@ cadence(function () {
 })()
 ```
 
-Errors are provided in an `errors` array. Why an array? Because with Cadence,
+Errors are provided in an `errors` array. Why an array, again? Because with Cadence,
 you're encouraged to do stupid things in parallel.
 
 ```javascript
@@ -349,7 +313,7 @@ cadence(function () {
 })()
 ```
 
-Note that the errors are ordered in the **order in which they were caught**,
+Note that the errors are indexed in the **order in which they were caught**,
 not in the order in which their callbacks were declared.
 
 The second argument to a function callback is the first error in the errors
@@ -370,10 +334,8 @@ cadence(function () {
 })()
 ```
 
-There is no third argument.
-
 For the sake of style, when you don't want to reference the errors array, you
-can hide it using `` _ `` or, if that is already in use, double `` __ ``.
+can of course hide it using `` _ `` or, if that is already in use, double `` __ ``.
 
 ```javascript
 cadence(function () {
@@ -445,10 +407,10 @@ cadence(function () {
 })
 ```
 
-When you raise an error in an catch function, it cannot be caught in the current
-cadence. You can still catch it in a calling cadence.
+When you raise an error in a catch function, it cannot be caught in the current
+cadence. You can still catch it in a calling cadence, however.
 
-Here we log any errors before raising them all up to the default handler.
+Here we log any errors before raising them all up to the default handler:
 
 ```javascript
 cadence(function () {
@@ -486,7 +448,7 @@ callbacks.
 ### Conditional Error Handling
 
 Dealing with an array of errors means you're almost always going to want to
-filter the array to see if contains the error you're expecting, and which error
+filter the array to see if it contains the error you're expecting, and which error
 that might be. Because this is so common, it's built into Cadence.
 
 To create a try/catch pair that will respond only to certain errors, add a
@@ -514,7 +476,7 @@ cadence(function () {
 
 In the above example, we only catch an exception if the `code` property matches
 /ENOENT/. If there is a different error- say, the file exists but we can't
-read it- that error is not caught by try/catch pair.
+read it- that error is not caught by our try/catch pair.
 
 The condition is tested against the `code` property if it exists. If it doesn't
 exist then it is tested against the `message` property.
@@ -538,7 +500,7 @@ cadence(function () {
 ```
 
 You can also be explicit about the property used to test by adding the name of
-that property between the try function and the condition. Here we expllicity
+that property between the try function and the condition. Here we explicitly
 state that the `code` property is the property to test.
 
 ```javascript
@@ -718,14 +680,12 @@ var mkdirs = cadence(function (step, directory) {
 
 TK: Serial and parallel loops, but parallel doesn't really loop.
 
-Cadence provides two looping construts; serial loops which let you do the so
-
 ### Serial Loops
 
 TK: So, just Loops, then? What about Serial Each and Parallel Each?
 TK: Do examples look better without commas?
 
-Cadence want you to use nesting to represent subordinate operations, so it wants
+Cadence wants you to use nesting to represent subordinate operations, so it wants
 to provide you with a looping structure that is not terribily compilicated, or
 nested.
 
@@ -752,7 +712,7 @@ cadence(function (step) {
         count++
     }, function () {
         if (count == 10) step(null, count)
-    })()
+    })() //immediate invocation
 })(function (error, result) {
     if (error) throw error
     equal(result, 10, 'loop')
@@ -789,14 +749,6 @@ cadence(function (step) {
 
 ### Counted Loops
 
-TODO: And put in diary, what about stepped instead? `looper(0, 10)` with an
-optional increment `looper(0, 10, 2)`? I mentioned steps above. This would be
-more useful, general purpose than just a count.
-
-TODO: No stepped. Hard to smoosh all that syntax. There is now a desire to have
-counted loops that take arguments, so some of those arguments might be an
-Integer.
-
 You can tell Cadence to loop for a fixed number of times by invoking the loop
 start function with a count of iterations.
 
@@ -831,8 +783,6 @@ cadence(function (step) {
     equal(result, 10, 'reduced each loop')
 })
 ```
-
-TK: 4 space indent and only single quotes.
 
 ### Gathered Loops
 
@@ -891,7 +841,7 @@ were programming synchronously in plain old JavaScript, we could call `continue`
 and that would jump to the loop label.
 
 To preserve that jumpy feeling, when you invoke `step(label)` it returns true,
-so you can create return using `&&`.
+so you can create a return using `&&`.
 
 ```javascript
 cadence(function (step) {
