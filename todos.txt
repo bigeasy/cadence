@@ -1,0 +1,69 @@
+
+ Things to cover:
+
+ * Arrayed sub-cadences.
+ * Arity.
+ * Fixup cadences.
+ * Looping.
+ * Jumping.
+ * Finalizers.
+
+Removed the 'Accepting Arguments' section and moved code sample to the top. Will
+probably add simpler, original intro code below for a step-by-step (heh) walkthrough
+or some such.
+
+#############
+//This section is for code examples that may be re-used or are being shuffled
+//about.
+
+```javascript
+// Use Cadence.
+var cadence = require('cadence')
+var fs = require('fs')
+
+// Create an asynchronous function.
+var cat = cadence(function (step) {
+    step(function () {
+
+        fs.readFile(__filename, 'utf8', step())
+
+    }, function (body) {
+
+        process.stdout.write(body)
+
+    })
+})
+
+// Use it in your program.
+cat(function (error) { if (error) throw error })
+```
+
+```javascript
+// Delete a file if it is empty.
+statBody(__filename, function (error) {
+    if (error) throw error
+    process.stdout.write('content-length: ' + stat.size + '\n\n')
+    process.stdout.write(stat.body.toString('utf8'))
+})
+```
+###########################
+//This section is for bits with interesting or insightful wording that does not
+//yet have a fitting place in the documentation flow.
+
+
+Cadence is a syntax bashed domain-specific language. It uses JavaScript syntax in
+clever ways to express control flow with a minimum of syntacitical overhead.
+
+NOTE: Documentation pro-tip: Create examples sooner than later and then
+reference the examples in your wiring.
+
+
+TL;DR: By cleverly manipulating existing JavaScript syntax, Cadence allows you
+to hide ugly callback indentation with a simple, inline `step` function.
+TODO: And put in diary, what about stepped instead? `looper(0, 10)` with an
+optional increment `looper(0, 10, 2)`? I mentioned steps above. This would be
+more useful, general purpose than just a count.
+
+TODO: No stepped. Hard to smoosh all that syntax. There is now a desire to have
+counted loops that take arguments, so some of those arguments might be an
+Integer.

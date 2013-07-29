@@ -19,79 +19,8 @@
 <div class="unit description markdown"><p>A Swiss Army asynchronous control flow function builder for Node.js and
 JavaScript that helps you create highly-parallel control flows.</p>
 <p>Cadence is a function builder. It helps you write asynchronous functions that
-accept an error/result callback.</p>
-<pre><code class="lang-javascript"><div class="highlight"><pre><span class="c1">// Use Cadence.</span>
-<span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">)</span>
-<span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
-
-<span class="c1">// Create an asynchronous function.</span>
-<span class="kd">var</span> <span class="nx">cat</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-
-        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">__filename</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
-
-    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
-
-        <span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span>
-
-    <span class="p">})</span>
-<span class="p">})</span>
-
-<span class="c1">// Use it in your program.</span>
-<span class="nx">cat</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span> <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span> <span class="p">})</span>
-</pre></div>
-</code></pre>
-<p>You create a Cadence using the magical <code>step</code> function, which can express all
-manner of asynchronous operations. Cadence supports:</p>
-<ul>
-<li>serial asynchronous operations, natch</li>
-<li>heterogenous and homongenous parallel operations</li>
-<li>while loops, do..while loops, or counted loops</li>
-<li>each loops that can either map or reduce an array</li>
-<li>events, streaming events and error events</li>
-<li>asynchronous try and catch exception handling</li>
-<li>asynchronous finalizers for clean up</li>
-</ul>
-<p>You can use Cadence in the browser too, because it is not Node.js dependent and
-it minzips to under 2k.</p>
-<p>TK: Too much intro, sell them with examples.</p>
-<p>Cadence is an example of syntax bashing: extending the syntax of a
-computer language using the existing syntax, usually using metadata, such as
-type or class data. Method chaining is a form of syntax bashing, but Cadence
-does not use method chaining.</p>
-<p>Instead, cadence has a single <code>step</code> function. With it you can define
-asynchronous parallel operations.</p>
-<p>You create a cadence by passing a series of functions to <code>cadence</code>.</p>
-<p>We call the series of functions a <strong><em>cadence</em></strong>. We call an individual function
-in a cadence a <strong><em>step</em></strong>. We use the <code>step</code> function to both define cadences
-and to create the callbacks that will take us from one step to another.</p>
-<p>The functions in a cadence are run in <strong>serial</strong>. A step inside a cadence can
-contain callbacks whose return values appear in the next step or sub-cadences.
-The callbacks and sub-cadences in a step are run in <strong>parallel</strong>, allowing you
-to mix and match cadences and sub-cadences to construct your asynchronous
-program.</p>
-<p>Documentation is a work in progress. Here is the current word count.</p>
-<pre><code class="lang-console">  425  1982 12935 README.md</code></pre>
-<ul>
-<li>Arrayed sub-cadences.</li>
-<li>Arity.</li>
-<li>Fixup cadences.</li>
-<li>Looping.</li>
-<li>Jumping.</li>
-<li>Finalizers.</li>
-</ul>
-<p>Cadence is a syntax bashed doman-specific language. It uses JavaScript syntax in
-clever ways to express control flow with a minimum of syntacitical overhead.</p>
-<p>Note that Cadence is as terse as it can be. Yes, you must still use callbacks,
-but it avoids the temple of doom by keeping your callbacks in line, one after
-the other. It works hard so that indentation reflects a logical nesting of your
-program into parallel operations, instead of having a nesting for each and every
-callback. Yes, the others do this, but Cadence keeps you form having a testing
-for each and every parallel, loop, or error handler.</p>
-<p>TL;DR: By cleverly manipulating existing JavaScript syntax, Cadence allows you
-to hide ugly callback indentation with a simple, inline <code>step</code> function.</p>
-<h3>Accepting Arguments</h3>
-<p>Here&#39;s an example of a function built by Cadence that accepts arguments.</p>
+accept an error/result callback. You create a Cadence by simply passing a series
+of functions to &#39;cadence&#39;.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="c1">// Use Cadence.</span>
 <span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">)</span>
 <span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
@@ -116,6 +45,61 @@ to hide ugly callback indentation with a simple, inline <code>step</code> functi
 then if a test function passes, it will asynchronously delete the file. We
 assign our cadence to a variable named <code>deleteIf</code>. We can now call <code>deleteIf</code>
 providing a standard issue Node.js error reporting callback.</p>
+<p>We call the series of functions a <strong><em>cadence</em></strong>. We call an individual function
+in a cadence a <strong><em>step</em></strong>. We use the <code>step</code> function to both define cadences
+and to create the callbacks that will take us from one step to another.
+Below is an example without the arguments:</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="c1">// Use Cadence.</span>
+<span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">)</span>
+<span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+
+<span class="c1">// Create an asynchronous function.</span>
+<span class="kd">var</span> <span class="nx">cat</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="c1">//Note that in this line, we invoke step() as our callback</span>
+        <span class="c1">//which immediately &#39;steps into&#39; our callback function below,</span>
+        <span class="c1">//with the output of readFile() curried over.</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">__filename</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span>
+
+    <span class="p">})</span>
+<span class="p">})</span>
+
+<span class="c1">// Use it in your program.</span>
+<span class="nx">cat</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span> <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span> <span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>Cadence can express all manner of asynchronous operations, including:</p>
+<ul>
+<li>serial asynchronous operations, natch</li>
+<li>heterogenous and homongenous parallel operations</li>
+<li>while loops, do..while loops, or counted loops</li>
+<li>each loops that can either map or reduce an array</li>
+<li>events, streaming events and error events</li>
+<li>asynchronous try and catch exception handling</li>
+<li>asynchronous finalizers for clean up</li>
+</ul>
+<p>You can use Cadence in the browser too, because it is not Node.js dependent and
+it minzips to under 2k.</p>
+<p>Cadence is an example of syntax bashing: extending the syntax of a
+computer language using the existing syntax, usually using metadata such as
+type or class data.</p>
+<p>Unlike method-chaining or other forms of syntax-bashing, cadence has a
+single <code>step</code> function with which you can define asynchronous parallel operations.</p>
+<p>The functions in a cadence are run in <strong>serial</strong>. A step inside a cadence can
+contain callbacks whose return values appear in the next step or sub-cadences.
+The callbacks and sub-cadences in a step are run in <strong>parallel</strong>, allowing you
+to mix and match cadences and sub-cadences to direct the flow of your
+asynchronous program.</p>
+<p>Note that Cadence is as terse as it can be. Yes, you must still use callbacks,
+but it avoids the temple of doom by keeping your callbacks in line, one after
+the other. It works hard so that indentation reflects a logical nesting of your
+program into parallel operations, instead of having a nesting for each and every
+callback.</p>
 <h3>Sub-Cadences</h3>
 <p>Let&#39;s say that we want to get a <code>stat</code> object, but include the body of the file
 in the <code>stat</code> object. When we get our <code>stat</code> object, we can use a sub-cadence to
@@ -147,17 +131,8 @@ complete the <code>stat</code> object by reading the body.</p>
         <span class="p">})</span>
     <span class="p">})</span>
 <span class="p">})</span>
-
-<span class="c1">// Delete a file if it is empty.</span>
-<span class="nx">statBody</span><span class="p">(</span><span class="nx">__filename</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span>
-    <span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="s1">&#39;content-length: &#39;</span> <span class="o">+</span> <span class="nx">stat</span><span class="p">.</span><span class="nx">size</span> <span class="o">+</span> <span class="s1">&#39;\n\n&#39;</span><span class="p">)</span>
-    <span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">stat</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;utf8&#39;</span><span class="p">))</span>
-<span class="p">})</span>
 </pre></div>
 </code></pre>
-<p>TK: Take the above example and say; the sub-cadence return is the first argument
-to the next function. Use a stupid assertion <code>ok(body.length == size)</code>.</p>
 <h3>Subsequent Arguments</h3>
 <p>When you create callbacks in a Cadence step, the results are passed onto the
 subsequent step. The order of the callbacks determines the order of of the
@@ -180,12 +155,10 @@ arguments.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<p>NOTE: Documentation pro-tip: Create examples sooner than later and then
-reference the examples in your wiring.</p>
 <p>In the above example, observe that the declaration order determines argument
 order, not the order of invocation of the callbacks. Even if <code>second</code> is called
-back before <code>first</code>, the argument to first the subsequent step is invoked with
-results of <code>first</code> as the first argument <code>a</code>,<code>second</code> as the second argument
+back before <code>first</code>, the argument to first in the subsequent step is invoked with
+the results of <code>first</code> as the first argument <code>a</code>, and <code>second</code> as the second argument
 <code>b</code>.</p>
 <p>TK: More words and examples here.
 TK: Example using <code>fs</code>.
@@ -194,9 +167,9 @@ thinking that it is something to be avoided.
 TK: In the sub-cadence example, talk about scope and closure.
 TK: Move up a section.</p>
 <h3>Catching Errors</h3>
-<p>Because Cadence encourages parallelism, it&#39;s internal error handling mechanism
-deals with arrays of errors because parallel operations can also fail in
-parallel, raising many exceptions in parallel. You know, fun stuff.</p>
+<p>Cadence encourages parallelism, and because parallel operations can also
+fail in parallel and/or raise many exceptions in parallel (fun stuff),
+its internal error handling mechanism deals with arrays of errors.</p>
 <p>Externally, however, your caller is expecting one single error, because Cadence
 builds a function that follows the error-first callback standard. Thus, even
 when there are many errors, the default is to return the first error that occurs
@@ -268,7 +241,7 @@ continue the cadence by returning normally.</p>
 </pre></div>
 </code></pre>
 <p>Also note that both the try function and error function can use sub-cadences,
-arrayed cadences, fixups; everything that Cadence has to offer.</p>
+arrayed cadences, fixups, etc.; everything that Cadence has to offer.</p>
 <p>A catch function also catches thrown exceptions.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
     <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
@@ -284,7 +257,7 @@ arrayed cadences, fixups; everything that Cadence has to offer.</p>
 <span class="p">})()</span>
 </pre></div>
 </code></pre>
-<p>Errors are provided in an <code>errors</code> array. Why an array? Because with Cadence,
+<p>Errors are provided in an <code>errors</code> array. Why an array, again? Because with Cadence,
 you&#39;re encouraged to do stupid things in parallel.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
     <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
@@ -303,7 +276,7 @@ you&#39;re encouraged to do stupid things in parallel.</p>
 <span class="p">})()</span>
 </pre></div>
 </code></pre>
-<p>Note that the errors are ordered in the <strong>order in which they were caught</strong>,
+<p>Note that the errors are indexed in the <strong>order in which they were caught</strong>,
 not in the order in which their callbacks were declared.</p>
 <p>The second argument to a function callback is the first error in the errors
 array. This is in case you&#39;re certain that you&#39;ll only ever get a single error,
@@ -321,9 +294,8 @@ and the array subscript into the <code>errors</code> array displeases you.</p>
 <span class="p">})()</span>
 </pre></div>
 </code></pre>
-<p>There is no third argument.</p>
 <p>For the sake of style, when you don&#39;t want to reference the errors array, you
-can hide it using <code>_</code> or, if that is already in use, double <code>__</code>.</p>
+can of course hide it using <code>_</code> or, if that is already in use, double <code>__</code>.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
     <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
 
@@ -387,9 +359,9 @@ FreeBSD.)</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<p>When you raise an error in an catch function, it cannot be caught in the current
-cadence. You can still catch it in a calling cadence.</p>
-<p>Here we log any errors before raising them all up to the default handler.</p>
+<p>When you raise an error in a catch function, it cannot be caught in the current
+cadence. You can still catch it in a calling cadence, however.</p>
+<p>Here we log any errors before raising them all up to the default handler:</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
     <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
         <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
@@ -423,7 +395,7 @@ cadence. You can still catch it in a calling cadence.</p>
 callbacks.</p>
 <h3>Conditional Error Handling</h3>
 <p>Dealing with an array of errors means you&#39;re almost always going to want to
-filter the array to see if contains the error you&#39;re expecting, and which error
+filter the array to see if it contains the error you&#39;re expecting, and which error
 that might be. Because this is so common, it&#39;s built into Cadence.</p>
 <p>To create a try/catch pair that will respond only to certain errors, add a
 regular expression between the try function and the catch function.</p>
@@ -448,7 +420,7 @@ regular expression between the try function and the catch function.</p>
 </code></pre>
 <p>In the above example, we only catch an exception if the <code>code</code> property matches
 /ENOENT/. If there is a different error- say, the file exists but we can&#39;t
-read it- that error is not caught by try/catch pair.</p>
+read it- that error is not caught by our try/catch pair.</p>
 <p>The condition is tested against the <code>code</code> property if it exists. If it doesn&#39;t
 exist then it is tested against the <code>message</code> property.</p>
 <p>You can easily test for multiple error codes using a regular expression, as
@@ -468,7 +440,7 @@ well. Here we test for both <code>EACCES</code> and <code>ENOENT</code>.</p>
 </pre></div>
 </code></pre>
 <p>You can also be explicit about the property used to test by adding the name of
-that property between the try function and the condition. Here we expllicity
+that property between the try function and the condition. Here we explicitly
 state that the <code>code</code> property is the property to test.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
     <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
@@ -625,11 +597,10 @@ into a log file for each host.</p>
 </code></pre>
 <h2>Loops</h2>
 <p>TK: Serial and parallel loops, but parallel doesn&#39;t really loop.</p>
-<p>Cadence provides two looping construts; serial loops which let you do the so</p>
 <h3>Serial Loops</h3>
 <p>TK: So, just Loops, then? What about Serial Each and Parallel Each?
 TK: Do examples look better without commas?</p>
-<p>Cadence want you to use nesting to represent subordinate operations, so it wants
+<p>Cadence wants you to use nesting to represent subordinate operations, so it wants
 to provide you with a looping structure that is not terribily compilicated, or
 nested.</p>
 <p>Looping in Cadence is performed by defining a sub-cadence, then invoking the
@@ -649,7 +620,7 @@ the loop using the <code>step(error, result)</code> explicit return.</p>
         <span class="nx">count</span><span class="o">++</span>
     <span class="p">},</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
         <span class="k">if</span> <span class="p">(</span><span class="nx">count</span> <span class="o">==</span> <span class="mi">10</span><span class="p">)</span> <span class="nx">step</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">count</span><span class="p">)</span>
-    <span class="p">})()</span>
+    <span class="p">})()</span> <span class="c1">//immediate invocation</span>
 <span class="p">})(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span>
     <span class="nx">equal</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;loop&#39;</span><span class="p">)</span>
@@ -679,12 +650,6 @@ arg2)</code> the same the way you invoke an explicit return of the <code>step</c
 </pre></div>
 </code></pre>
 <h3>Counted Loops</h3>
-<p>TODO: And put in diary, what about stepped instead? <code>looper(0, 10)</code> with an
-optional increment <code>looper(0, 10, 2)</code>? I mentioned steps above. This would be
-more useful, general purpose than just a count.</p>
-<p>TODO: No stepped. Hard to smoosh all that syntax. There is now a desire to have
-counted loops that take arguments, so some of those arguments might be an
-Integer.</p>
 <p>You can tell Cadence to loop for a fixed number of times by invoking the loop
 start function with a count of iterations.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
@@ -715,7 +680,6 @@ the sub-cadence.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<p>TK: 4 space indent and only single quotes.</p>
 <h3>Gathered Loops</h3>
 <p>Both counted loops and each loops can be gathered into an array. If you pass an
 initial array to the callback function, then each iteration will be gathered
@@ -762,7 +726,7 @@ This is going to create an <code>if/else</code> block that increases our nesting
 were programming synchronously in plain old JavaScript, we could call <code>continue</code>
 and that would jump to the loop label.</p>
 <p>To preserve that jumpy feeling, when you invoke <code>step(label)</code> it returns true,
-so you can create return using <code>&amp;&amp;</code>.</p>
+so you can create a return using <code>&amp;&amp;</code>.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">retry</span> <span class="o">=</span> <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">(</span><span class="nx">count</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">if</span> <span class="p">(</span><span class="nx">count</span> <span class="o">!=</span> <span class="mi">10</span><span class="p">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;retry&#39;</span><span class="p">)</span>
