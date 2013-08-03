@@ -24,7 +24,7 @@ after_success:
   - chmod 600 ~/.s3cfg
   - echo "access_key = $ARTIFACTS_AWS_ACCESS_KEY_ID" >> ~/.s3cfg
   - echo "secret_key = $ARTIFACTS_AWS_SECRET_ACCESS_KEY" >> ~/.s3cfg
-  - s3cmd sync ./coverage/ s3://bigeasy/coverage/cadence/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID
+  - s3cmd sync './coverage/' 's3://bigeasy/coverage/cadence/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/'
 
 env:
   global:
