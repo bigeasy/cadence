@@ -17,7 +17,7 @@ before_install:
   - npm install istanbul coveralls
 
 before_script:
-  - gem install s3cmd
+  - gem install s3sync
 
 after_success:
   - echo '[default]' > ~/.s3cfg
