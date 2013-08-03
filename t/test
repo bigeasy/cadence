@@ -25,6 +25,7 @@ if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
   echo "$TRAVISTY_KEY" >> ~/.passphrase.txt
   gpg --passphrase-file ~/.passphrase.txt --decrypt t/id_travisty.gpg > ~/.ssh/id_travisty
   chmod 600 ~/.ssh/id_travisty
+  cat t/known_hosts >> ~/.ssh/known_hosts
   ssh -i ~/.ssh/id_travisty alan@prettyrobots.com /home/alan/travisty < ~/coverage.tar.gz
 
   echo ""

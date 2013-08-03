@@ -1,23 +1,21 @@
 language: node_js
+
 node_js:
-- '0.10'
+  - '0.10'
+
 branches:
   only:
-  - master
-  - travis-ci
+    - master
+    - travis-ci
+
+# Not using `npm install --dev` because it is recursive. It will pull in the all
+# development dependencies for CoffeeScript. Way too much spew in the Travis CI
+# build output.
+
 before_install:
-- npm install
-- npm install istanbul coveralls
-before_script:
-- gem install s3sync
-after_success:
-- echo '[default]' > ~/.s3cfg
-- chmod 600 ~/.s3cfg
-- echo "access_key = $ARTIFACTS_AWS_ACCESS_KEY_ID" >> ~/.s3cfg
-- echo "secret_key = $ARTIFACTS_AWS_SECRET_ACCESS_KEY" >> ~/.s3cfg
-- s3cmd sync './coverage/' 's3://bigeasy/coverage/cadence/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/'
+  - npm install
+  - npm install istanbul coveralls
+
 env:
   global:
-  - secure: h8Xpvcaj2ysl6M8P2CJNVoYwNn0/9lSqkL2wl3Uv0KSVl4kIF/X7MdG3Ussfgr3fWk7g/pN3nUeVeyY+5fgjOTfrJXhOaqphOnkVs95ZkdSnVbnHJg5ZaXoUlepeVrg2YitkQQJ1CuGYP+znompldysmYH0iPnfHRNo+AN0mWdI=
-  - secure: JQNRWvbdepGo18XwooUx3EG9kR2qh9U+Q2NO2uog0S1QwvICKThivVga8T0wkSFhKjTcY9RiwPBcm8W/867oH8zqnwq1E5s9+GwYWfALb6uVZB6r8EczUgspz7V1kIuzOLeSo4/TXoesO4qLjRiWjEf2vPqGi6XWR7gO1FvcdzM=
   - secure: qENMEK5TnNDzNvrTY1diAEyo2Dgs4BDWAuHUAyHpWDunRMfQNoLeVUPIFb7omNceSOh20InrO20pBWlGlkI9UItaS9NfeAzWsoWkEfsOzfEf1+R0G3B2ieIwVqOIeB9LlMSWCaR2K79zuk6F+EuUmNXv8QXO9/hLEIzvzEv1I7c=
