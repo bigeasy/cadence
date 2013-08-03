@@ -23,7 +23,7 @@ if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
   mkdir -p tmp/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER
   (cd tmp && tar czvf ~/coverage.tar.gz $TRAVIS_REPO_SLUG)
   echo "$TRAVISTY_KEY" >> ~/.passphrase.txt
-  gpg --passphrase-file ~/.passphrase.txt --decrypt ~/git/ecma/cadence/t/id_travisty.gpg > ~/.ssh/id_travisty
+  gpg --passphrase-file ~/.passphrase.txt --decrypt t/id_travisty.gpg > ~/.ssh/id_travisty
   chmod 600 ~/.ssh/id_travisty
   ssh -i ~/.ssh/id_travisty alan@prettyrobots.com /home/alan/travisty < ~/coverage.tar.gz
 
