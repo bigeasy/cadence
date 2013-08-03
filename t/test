@@ -20,6 +20,13 @@ if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
   echo "submitting coverage to coveralls.io"
   cat coverage/lcov.info | node_modules/.bin/coveralls
 
+  echo '[default]' > ~/.s3cfg
+  chmod 600 ~/.s3cfg
+  echo "access_key = $ARTIFACTS_AWS_ACCESS_KEY_ID" >> ~/.s3cfg
+  echo "secret_key = $ARTIFACTS_AWS_SECRET_ACCESS_KEY" >> ~/.s3cfg
+  echo s3cmd sync './coverage/' 's3://bigeasy/coverage/cadence/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/'
+  s3cmd sync --verbose './coverage/' 's3://bigeasy/coverage/cadence/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/'
+
   echo ""
   echo "minified"
   echo ""
