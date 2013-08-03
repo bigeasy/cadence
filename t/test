@@ -24,9 +24,11 @@ if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
   chmod 600 ~/.s3cfg
   echo "access_key = $ARTIFACTS_AWS_ACCESS_KEY_ID" >> ~/.s3cfg
   echo "secret_key = $ARTIFACTS_AWS_SECRET_ACCESS_KEY" >> ~/.s3cfg
-  echo s3cmd sync './coverage/' 's3://bigeasy/coverage/cadence/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/'
+  export AWS_SECRET_ACCESS_KEY=$AWS_ACCESS_KEY_ID
+  export ARTIFACTS_AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+  echo s3sync './coverage/' 's3://bigeasy/coverage/cadence/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/'
   sed -i "1s/^/require 'delegate'/" ~/.rvm/gems/ruby*/gems/s3sync*/lib/HTTPStreaming.rb
-  s3cmd sync --verbose './coverage/' 's3://bigeasy/coverage/cadence/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/'
+  s3sync --verbose './coverage/' 's3://bigeasy/coverage/cadence/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/'
 
   echo ""
   echo "minified"
