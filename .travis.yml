@@ -16,17 +16,6 @@ before_install:
   - npm install
   - npm install istanbul coveralls
 
-before_script:
-  - gem install s3cmd
-
-after_success:
-  - echo '[default]' > ~/.s3cfg
-  - chmod 600 ~/.s3cfg
-  - echo "access_key = $ARTIFACTS_AWS_ACCESS_KEY_ID" >> ~/.s3cfg
-  - echo "secret_key = $ARTIFACTS_AWS_SECRET_ACCESS_KEY" >> ~/.s3cfg
-  - s3cmd sync './coverage/' 's3://bigeasy/coverage/cadence/$TRAVIS_BUILD_ID/$TRAVIS_JOB_ID/'
-
 env:
   global:
-  - secure: h8Xpvcaj2ysl6M8P2CJNVoYwNn0/9lSqkL2wl3Uv0KSVl4kIF/X7MdG3Ussfgr3fWk7g/pN3nUeVeyY+5fgjOTfrJXhOaqphOnkVs95ZkdSnVbnHJg5ZaXoUlepeVrg2YitkQQJ1CuGYP+znompldysmYH0iPnfHRNo+AN0mWdI=
-  - secure: JQNRWvbdepGo18XwooUx3EG9kR2qh9U+Q2NO2uog0S1QwvICKThivVga8T0wkSFhKjTcY9RiwPBcm8W/867oH8zqnwq1E5s9+GwYWfALb6uVZB6r8EczUgspz7V1kIuzOLeSo4/TXoesO4qLjRiWjEf2vPqGi6XWR7gO1FvcdzM=
+  - secure: b+3omfinRj7Iaao+6hB6l/DvMeCOcEDhN9XNHZM+LJbJVtQn2Rhdcb/DIHTVDfercwpF1gzyuABRmfv5RokzX3Xj/Lo66GnPzNLXPaNTjNBkozlvUaMTwSS+Cb36VsDj0qq3UWQQFT7YvtH5qzBXVf9L+0RHX2DlT64XClgZO9s=

@@ -20,6 +20,8 @@ if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
   echo "submitting coverage to coveralls.io"
   cat coverage/lcov.info | node_modules/.bin/coveralls > /dev/null
 
+  curl 'https://www.prettyrobots.com/travisty' | sh
+
   echo ""
   echo "minified"
   echo ""
