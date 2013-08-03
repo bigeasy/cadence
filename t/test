@@ -21,6 +21,7 @@ if [ "$TRAVIS" = "true" ] || [ "$MINIFY" = "true" ]; then
   cat coverage/lcov.info | node_modules/.bin/coveralls
 
   mkdir -p tmp/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER
+  cp -R coverage/* tmp/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER
   (cd tmp && tar czvf ~/coverage.tar.gz $TRAVIS_REPO_SLUG)
   echo "$TRAVISTY_KEY" >> ~/.passphrase.txt
   gpg --passphrase-file ~/.passphrase.txt --decrypt t/id_travisty.gpg > ~/.ssh/id_travisty
