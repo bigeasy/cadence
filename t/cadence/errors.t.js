@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(24, function (step, equal, ok) {
+require('proof')(22, function (step, equal, ok) {
     var fs = require('fs')
     var cadence = require('../..')
     var errors = []
@@ -53,12 +53,6 @@ require('proof')(24, function (step, equal, ok) {
 
     cadence([function (step) {
         step()(new Error('handled'))
-    }, 'handled', function (errors) {
-        equal(errors[0].message, 'handled', 'condtionally caught equality')
-    }])()
-
-    cadence([function (step) {
-        step()(new Error('handled'))
     }, /handle/, function (errors) {
         equal(errors[0].message, 'handled', 'condtionally caught regex')
     }])()
@@ -81,19 +75,13 @@ require('proof')(24, function (step, equal, ok) {
 
     cadence([function (step) {
         step()(new Error('handled'))
-    }, 'message', 'handled', function (errors) {
-        equal(errors[0].message, 'handled', 'condtionally caught named field equality')
-    }])()
-
-    cadence([function (step) {
-        step()(new Error('handled'))
     }, 'message', /handle/, function (errors) {
         equal(errors[0].message, 'handled', 'condtionally caught named field regex')
     }])()
 
     cadence([function (step) {
           step()(new Error('handled'))
-    }, 'message', 'bogus', function (errors) {
+    }, 'message', /bogus/, function (errors) {
         throw new Error('should not get here')
     }])(function (error) {
         equal(error.message, 'handled', 'condtionally caught failure')
