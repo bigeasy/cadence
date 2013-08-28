@@ -52,8 +52,8 @@ providing a standard issue Node.js error reporting callback.
 
 We call the series of functions a ***cadence***. We call an individual function
 in a cadence a ***step***. We use the `step` function to both define cadences
-and to create the callbacks that will take us from one step to another.
-Below is an example without the arguments:
+and to create the callbacks that will take us from one step to the next. Below
+is an example without the arguments:
 
 ```javascript
 // Use Cadence.
@@ -93,13 +93,12 @@ Cadence can express all manner of asynchronous operations, including:
 You can use Cadence in the browser too, because it is not Node.js dependent and
 it minzips to under 2k.
 
+Cadence is an example of syntax bashing: extending the syntax of a computer
+language using the existing syntax, latching onto meta-data such as type or
+class data.
 
-Cadence is an example of syntax bashing: extending the syntax of a
-computer language using the existing syntax, usually using metadata such as
-type or class data.
-
-Unlike method-chaining or other forms of syntax-bashing, cadence has a
-single `step` function with which you can define asynchronous parallel operations.
+Unlike method-chaining or other forms of syntax-bashing, cadence users a single
+`step` function with which you can define asynchronous parallel operations.
 
 The functions in a cadence are run in **serial**. A step inside a cadence can
 contain callbacks whose return values appear in the next step or sub-cadences.
@@ -112,6 +111,12 @@ but it avoids the temple of doom by keeping your callbacks in line, one after
 the other. It works hard so that indentation reflects a logical nesting of your
 program into parallel operations, instead of having a nesting for each and every
 callback.
+
+### TODO
+
+Note that it is simple to create sub-routines within your library using cadence.
+Instead of passing a callback, pass the step function. A sub-cadence in the step
+function will return to the next step in the caller's cadence.
 
 ### Sub-Cadences
 

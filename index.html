@@ -47,8 +47,8 @@ assign our cadence to a variable named <code>deleteIf</code>. We can now call <c
 providing a standard issue Node.js error reporting callback.</p>
 <p>We call the series of functions a <strong><em>cadence</em></strong>. We call an individual function
 in a cadence a <strong><em>step</em></strong>. We use the <code>step</code> function to both define cadences
-and to create the callbacks that will take us from one step to another.
-Below is an example without the arguments:</p>
+and to create the callbacks that will take us from one step to the next. Below
+is an example without the arguments:</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="c1">// Use Cadence.</span>
 <span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">)</span>
 <span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
@@ -85,11 +85,11 @@ Below is an example without the arguments:</p>
 </ul>
 <p>You can use Cadence in the browser too, because it is not Node.js dependent and
 it minzips to under 2k.</p>
-<p>Cadence is an example of syntax bashing: extending the syntax of a
-computer language using the existing syntax, usually using metadata such as
-type or class data.</p>
-<p>Unlike method-chaining or other forms of syntax-bashing, cadence has a
-single <code>step</code> function with which you can define asynchronous parallel operations.</p>
+<p>Cadence is an example of syntax bashing: extending the syntax of a computer
+language using the existing syntax, latching onto meta-data such as type or
+class data.</p>
+<p>Unlike method-chaining or other forms of syntax-bashing, cadence users a single
+<code>step</code> function with which you can define asynchronous parallel operations.</p>
 <p>The functions in a cadence are run in <strong>serial</strong>. A step inside a cadence can
 contain callbacks whose return values appear in the next step or sub-cadences.
 The callbacks and sub-cadences in a step are run in <strong>parallel</strong>, allowing you
@@ -100,6 +100,10 @@ but it avoids the temple of doom by keeping your callbacks in line, one after
 the other. It works hard so that indentation reflects a logical nesting of your
 program into parallel operations, instead of having a nesting for each and every
 callback.</p>
+<h3>TODO</h3>
+<p>Note that it is simple to create sub-routines within your library using cadence.
+Instead of passing a callback, pass the step function. A sub-cadence in the step
+function will return to the next step in the caller&#39;s cadence.</p>
 <h3>Sub-Cadences</h3>
 <p>Let&#39;s say that we want to get a <code>stat</code> object, but include the body of the file
 in the <code>stat</code> object. When we get our <code>stat</code> object, we can use a sub-cadence to
