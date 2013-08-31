@@ -2008,6 +2008,30 @@ you can pass `Error` when defining your callback with `step` and your next step
 can be an error-first callback. If you decide you do want to stop on the error,
 just throw it.
 
+### Error Propagation
+
+Running into a problem with Strata where if I throw an exception from within
+Strata, it is likely to get caught by the `validate`. I've already begun work to
+solve this problem here. How do you handle errors that are deeply nested, if
+you're using try/catch blocks to to convert exceptions into errors?
+
+In the case of Strata, it can call a user function, the user function raises an
+exception, and a `validate` wrapper catches it, but it was not an exception
+thrown by Strata. Types don't count because we want to catch an exception not
+based on type, but based on boundary. If it is raised in the Strata code, catch
+it, otherwise, propagate it. Thus, when we callback, and call out, we need to
+indicate the boundary.
+
+This ought to work. You wrap the exit in a try catch, and mark it as throwing,
+then if you catch the exception that is currently throwing, you rethrow. If
+you're calling internally, that is, let's say you're within Strata, and you call
+a function like `get()` a function also used by users, if it wraps it doesn't
+matter, because you've also wrapped the callback. It calls the callback. Any
+exception is intercepted and in the `validate` wrapper.
+
+I'm beginning to feel that I've put so much so much thought into Cadence, I
+don't know why I don't use it to build Strata.
+
 ## Prototypes and This
 
 There is room for expansion to add extended `this` support, where an array
