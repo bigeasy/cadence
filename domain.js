@@ -3,7 +3,7 @@ var __slice = [].slice
 
 module.exports = function () {
     var steps = __slice.call(arguments)
-    
+
     return function () {
         var vargs = __slice.call(arguments)
         var step = vargs[0]
