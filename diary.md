@@ -1733,8 +1733,8 @@ cadence(function () {
   });
 ```
 
-These are the answers. Challenge to get the errors to propogate all the way up
-to the catch block. Also, you can cancel, but cancelation doesn't mean that we
+These are the answers. Challenge to get the errors to propagate all the way up
+to the catch block. Also, you can cancel, but cancellation doesn't mean that we
 don't run finalizers.
 
 This is a garden of pure ideology. Increase in minified size doesn't matter.
@@ -1890,7 +1890,7 @@ is; does Cadence catch exceptions thrown by callbacks? Should it?
 
 What it shouldn't do is what it does now. It returns multiple errors for a
 callback. It needs to either return the first error encountered, or else it
-needs to return it's own error that contians a list of caught errors.
+needs to return it's own error that contains a list of caught errors.
 
 Currently, I'm favoring the first one, because exceptions are exceptions. They
 are exceptional, they are not supposed to happen. If the file system is full, or
@@ -1903,7 +1903,7 @@ we? How does the world really work?
 
 My examples keep coming back to the file system, going to though a directory
 listing in parallel. It may break at some point, say that a file is read
-protected, but the directory listings are occuring in parallel, there may be
+protected, but the directory listings are occurring in parallel, there may be
 many such files. How do we report them? Wait, why do we report them? What can we
 do with a detailed report of exceptional conditions? Worse, imagine that we've
 called our cadence function recursively, now we might have a tree of exceptional
@@ -1911,8 +1911,8 @@ conditions.
 
 That tree would require an `Error` that wraps other errors, you wouldn't be able
 to piggy back, because a Cadence might call a Cadence, who gets to ride
-piggyback? How is that structuered? Imagine that this builder is called by both
-a an abending `fs` function and an abending Cadence function. Maybe `fs` comes
+piggyback? How is that structured? Imagine that this builder is called by both
+an abending `fs` function and an abending Cadence function. Maybe `fs` comes
 first, or maybe it is the Cadence function. Different logic is require for
 either.
 
@@ -1939,7 +1939,7 @@ function gotMeAnError (instance, error) {
 }
 ```
 
-Obvious, but it means that any excpetion thrown by a function built with Cadence
+Obvious, but it means that any exception thrown by a function built with Cadence
 requires some sort of unwrappering, even if it is serial.
 
 Errors feel like a chink in the armor.
@@ -1956,7 +1956,7 @@ everywhere, so then I go back to thinking about gathering a tree of errors.
 Except that in my use of Cadence, I've never really wanted to gather up a bunch
 of errors into an error ball.
 
-Anothing thing about the error ball; parallelism, it shouldn't matter much. I
+Another thing about the error ball; parallelism, it shouldn't matter much. I
 find that I read in parallel, but I funnel into a step to do something drastic,
 to make a change. That commit doesn't take place until a parallel read has
 completed. I'm not seeing where I need more than the first error. If I do need
@@ -1965,7 +1965,7 @@ all the errors, then I need to perform the operation in serial, not in parallel.
 Oh! Oh! Oh!
 
 How about this: `[Error]` and errors are going to be gathered? How about them
-apples? You like? Or what if you are doing someting in parallel, that means you
+apples? You like? Or what if you are doing something in parallel, that means you
 get the parallel exception? Um, but `[Error]` that means it gets wrapped and
 propagated that way, or it means that an error handler will get all errors in an
 array? `[Error, "unable to shave yak"]`. Okay, something, something, but abend
@@ -2003,7 +2003,7 @@ Does this mean that some other sort of callback handler might be used with
 Cadence?
 
 It may be easier to document, so say, simply, sometimes you do want a chance to
-inspect an error, for an exception of some sort that is acceptble. In that case
+inspect an error, for an exception of some sort that is acceptable. In that case
 you can pass `Error` when defining your callback with `step` and your next step
 can be an error-first callback. If you decide you do want to stop on the error,
 just throw it.
