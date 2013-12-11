@@ -15,7 +15,7 @@ function cadence () {
             this, unfold(steps), 0,
             precede({ master: master }, [async].concat(vargs)),
         function (errors, finalizers) {
-            var vargs = [null].concat(__slice.call(arguments, 2))
+            var vargs = (arguments.length > 2) ? [null].concat(__slice.call(arguments, 2)) : []
             finalize.call(this, finalizers, 0, errors, function (errors) {
                 master.completed = true
                 if (errors.length) {
