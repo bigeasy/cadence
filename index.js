@@ -139,6 +139,10 @@ function cadence () {
             callback.truthiness = vargs.shift()
         }
 
+        if (typeof vargs[0] == 'string') {
+            callback.property = vargs.shift()
+        }
+
         if (!isNaN(parseInt(vargs[0], 10))) {
             callback.arity = +(vargs.shift())
         }
@@ -369,6 +373,9 @@ function cadence () {
                 if (!terminate) {
                     terminate = !!(cb.results.length && cb.results[0][0]) === !!(cb.truthiness)
                 }
+            }
+            if (cb.property) {
+                this[cb.property] = vargs[0].arrayed ? vargs[0].values : vargs[0].values[0]
             }
             arg += arity
             j = 0
