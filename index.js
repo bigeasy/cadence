@@ -135,6 +135,10 @@ function cadence () {
             vargs.shift()
         }
 
+        if (typeof vargs[0] == 'boolean') {
+            callback.truthiness = vargs.shift()
+        }
+
         if (!isNaN(parseInt(vargs[0], 10))) {
             callback.arity = +(vargs.shift())
         }
@@ -311,7 +315,7 @@ function cadence () {
         var callbacks = previous.callbacks
         var catcher, finalizers, errors
         var cb, arity, vargs = [], arg = 0, i, j, k
-        var step, result, hold
+        var step, result, hold, terminate
 
         if (previous.errors.length) {
             catcher = cadence.catchers[index - 1]
@@ -360,6 +364,12 @@ function cadence () {
                     vargs[arg + k].values.push(result[k + j])
                 }
             })
+            if ('truthiness' in cb) {
+                if (terminate == null) terminate = false
+                if (!terminate) {
+                    terminate = !!(cb.results.length && cb.results[0][0]) === !!(cb.truthiness)
+                }
+            }
             arg += arity
             j = 0
         }
@@ -374,7 +384,7 @@ function cadence () {
             cadence.finalizers[index].previous.callbacks = argue(vargs)
         }
 
-        if (cadence.steps.length == index) { // FIXME: can't be right, we're using MAX_VALUE above.
+        if (cadence.steps.length == index || terminate) { // FIXME: can't be right, we're using MAX_VALUE above.
             var finalizers = previous.finalizers.splice(0, previous.finalizers.length)
             callback.apply(this, [ [], finalizers ].concat(vargs))
             return
