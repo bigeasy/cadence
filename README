@@ -8,7 +8,7 @@ A Swiss Army asynchronous control flow function for JavaScript.
 
     Install:        `npm install cadence`
 
-    License:        MIT
+    License:        LGPL 3.0
 
 To learn everything you want to know about Cadence start here:
 
