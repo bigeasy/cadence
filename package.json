@@ -2,7 +2,7 @@
     "name":               "cadence",
     "description":        "A Swiss Army asynchronous control flow function for highly-parallel control flows.",
     "author":             "Alan Gutierrez <alan@prettyrobots.com>",
-    "version":            "0.0.30",
+    "version":            "0.0.31",
     "keywords":
     [
                           "async", "asynchronous", "control", "flow", "loop", "micro-js", "step", "callback"
