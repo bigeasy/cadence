@@ -9,8 +9,8 @@
     ],
     "licenses":
     [{
-                          "type": "Affero GPL 3.0 with linking exception.",
-                          "url": "http://github.com/bigeasy/cadence/raw/master/LINKING"
+                          "type": "MIT",
+                          "url": "http://github.com/bigeasy/cadence/raw/master/LICENSE"
     }],
     "homepage":           "http://bigeasy.github.com/cadence",
     "repository":         "git://github.com/bigeasy/cadence.git",
