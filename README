@@ -2,6 +2,8 @@ Cadence
 
 A Swiss Army asynchronous control flow function for JavaScript.
 
+    Discussion:     https://github.com/bigeasy/cadence/issues/1
+
     Documentation:  http://bigeasy.github.io/cadence
     Source:         http://github.com/bigeasy/cadence
     Issues:         http://github.com/bigeasy/cadence/issues
