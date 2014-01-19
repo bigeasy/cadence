@@ -51,6 +51,8 @@ From the above are the following questions...
  * What became of your changes for events? (Found 'em!)
  * Can I jump to a place in a parent?
  * Can I have fixups in callback invocations?
+ * Why not use arrays explicitly for returns?
+ * What could we do with `new step()`?
 
 ## A Bunch of Unrecorded Decisions
 
