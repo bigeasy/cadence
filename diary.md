@@ -2647,6 +2647,12 @@ Then what about immediate returns? Ah, just return true.
 if (!anygood) return step(tryagain) && 1
 ```
 
+## Returns
+
+If you return an array to indicate that it is the next value, then you can
+return a boolean to break from a loop at any point, or a label to indicate that
+you want to jump to that label.
+
 ## Zero to Many
 
 I creates support for zero-to-many calls of a callback, but implemented it
