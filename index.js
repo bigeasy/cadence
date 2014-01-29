@@ -319,7 +319,7 @@ function cadence () {
         var callbacks = previous.callbacks
         var catcher, finalizers, errors
         var cb, arity, vargs = [], arg = 0, i, j, k
-        var step, result, hold, terminate
+        var result, hold, terminate
 
         if (previous.errors.length) {
             catcher = cadence.catchers[index - 1]
