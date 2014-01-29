@@ -13,7 +13,7 @@ function cadence () {
         }
         invoke.call(
             this, unfold(steps), 0,
-            precede({ master: master }, [async].concat(vargs)),
+            precede({ master: master }, [step].concat(vargs)),
         function (errors, finalizers) {
             var vargs = (arguments.length > 2) ? [null].concat(__slice.call(arguments, 2)) : []
             finalize.call(this, finalizers, 0, errors, function (errors) {
@@ -39,7 +39,7 @@ function cadence () {
     //
     var invocations = []
 
-    function async () { return createHandler(false, __slice.call(arguments)) }
+    function step () { return createHandler(false, __slice.call(arguments)) }
 
     function unfold (steps) {
         var cadence = {
@@ -87,7 +87,7 @@ function cadence () {
     function createHandler (event, vargs) {
         var i = -1
 
-        // The caller as invoked the async function directly as an explicit early
+        // The caller as invoked the step function directly as an explicit early
         // return to exit the entire cadence.
         //
         // The rediculous callback count means that as callbacks complete, they
@@ -131,7 +131,7 @@ function cadence () {
 
         // TODO Callback can be empty.
         var callback = { errors: [], results: [] }
-        if (callback.fixup = (vargs[0] === async)) {
+        if (callback.fixup = (vargs[0] === step)) {
             vargs.shift()
         }
 
@@ -213,12 +213,12 @@ function cadence () {
                 callback.steps.unshift(function () {
                     var vargs = __slice.call(arguments)
                     if (whilst()) {
-                        async().apply(this, [null].concat(each ? [counter[count]] : vargs).concat([count]))
+                        step().apply(this, [null].concat(each ? [counter[count]] : vargs).concat([count]))
                     } else if (gather) {
-                        async.apply(this, [null].concat(vargs))
+                        step.apply(this, [null].concat(vargs))
                         callback.results = gather
                     } else {
-                        async.apply(this, [null].concat(vargs))
+                        step.apply(this, [null].concat(vargs))
                     }
                 })
 
@@ -226,7 +226,7 @@ function cadence () {
                     var vargs = __slice.call(arguments)
                     if (gather) gather.push(vargs)
                     invocations[0].args[1] = 0
-                    async().apply(this, [null].concat(vargs))
+                    step().apply(this, [null].concat(vargs))
                     count++
                 })
 
@@ -410,7 +410,7 @@ function cadence () {
         })
         invocations[0].args = [ cadence, index + 1, invocations[0], denouement ]
 
-        hold = async()
+        hold = step()
         try {
             result = cadence.steps[index].apply(this, vargs)
         } catch (errors) {
