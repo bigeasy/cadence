@@ -155,6 +155,19 @@ var bodyStat = cadence(function (step, file, condition) {
 
 ```
 
+### Here's a Tour Guide Function; Echo
+
+For the sake of our tour, let's implement an asynchronous function that we can
+use to exercise Cadence. All it does is wait a bit, then invoke our callback.
+
+```javascript
+function echo (parameter, callback) {
+    setImmediate(function () {
+        callback(null, parameter)
+    })
+}
+```
+
 ### Subsequent Arguments
 
 When you create callbacks in a Cadence step, the results are passed onto the
@@ -165,11 +178,8 @@ arguments.
 cadence(function () {
     step(function () {
 
-        var first = step()
-        var second = step()
-
-        second(null, 2)
-        first(null, 1)
+        echo(1, step())
+        echo(2, step())
 
     }, function (a, b) {
 

@@ -137,6 +137,16 @@ complete the <code>stat</code> object by reading the body.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
+<h3>Here&#39;s a Tour Guide Function; Echo</h3>
+<p>For the sake of our tour, let&#39;s implement an asynchronous function that we can
+use to exercise Cadence. All it does is wait a bit, then invoke our callback.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">function</span> <span class="nx">echo</span> <span class="p">(</span><span class="nx">parameter</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">setImmediate</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">parameter</span><span class="p">)</span>
+    <span class="p">})</span>
+<span class="p">}</span>
+</pre></div>
+</code></pre>
 <h3>Subsequent Arguments</h3>
 <p>When you create callbacks in a Cadence step, the results are passed onto the
 subsequent step. The order of the callbacks determines the order of of the
@@ -144,11 +154,8 @@ arguments.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
     <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
 
-        <span class="kd">var</span> <span class="nx">first</span> <span class="o">=</span> <span class="nx">step</span><span class="p">()</span>
-        <span class="kd">var</span> <span class="nx">second</span> <span class="o">=</span> <span class="nx">step</span><span class="p">()</span>
-
-        <span class="nx">second</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="nx">first</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="nx">echo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+        <span class="nx">echo</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
 
     <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
 
