@@ -17,7 +17,11 @@
                           "url": "http://github.com/bigeasy/cadence/raw/master/LICENSE"
     }],
     "homepage":           "http://bigeasy.github.com/cadence",
-    "repository":         "git://github.com/bigeasy/cadence.git",
+    "repository":
+    {
+                          "url": "git://github.com/bigeasy/cadence.git",
+                          "type": "git"
+    },
     "dependencies":
     {},
     "devDependencies":
