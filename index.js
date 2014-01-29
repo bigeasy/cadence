@@ -99,7 +99,7 @@ function cadence () {
             vargs[0] = vargs[0] ? [ vargs[0] ] : []
             vargs.splice(1, 0, invocations[0].finalizers.splice(0, invocations[0].finalizers.length))
             invocations[0].count = -Number.MAX_VALUE
-            invocations[0].callback.apply(null, vargs)
+            invocations[0].denouement.apply(null, vargs)
             return
         }
 
@@ -315,7 +315,7 @@ function cadence () {
 
     function argue (vargs) { return [{ results: [[invoke].concat(vargs)] }] }
 
-    function invoke (cadence, index, previous, callback) {
+    function invoke (cadence, index, previous, denouement) {
         var callbacks = previous.callbacks
         var catcher, finalizers, errors
         var cb, arity, vargs = [], arg = 0, i, j, k
@@ -329,14 +329,14 @@ function cadence () {
                   __push.apply(previous.finalizers, finalizers)
                   if (errors.length) {
                       arguments[1] = previous.finalizers
-                      callback.apply(this, __slice.call(arguments))
+                      denouement.apply(this, __slice.call(arguments))
                   } else {
                       previous.callbacks = argue(__slice.call(arguments, 2))
                       invoke.apply(previous.self, previous.args)
                   }
                 })
             } else {
-                callback.call(this, previous.errors, previous.finalizers.splice(0, previous.finalizers.length))
+                denouement.call(this, previous.errors, previous.finalizers.splice(0, previous.finalizers.length))
             }
             return
         }
@@ -393,7 +393,7 @@ function cadence () {
 
         if (cadence.steps.length == index || terminate) { // FIXME: can't be right, we're using MAX_VALUE above.
             var finalizers = previous.finalizers.splice(0, previous.finalizers.length)
-            callback.apply(this, [ [], finalizers ].concat(vargs))
+            denouement.apply(this, [ [], finalizers ].concat(vargs))
             return
         }
 
@@ -405,10 +405,10 @@ function cadence () {
             errors: [],
             finalizers: previous.finalizers,
             master: previous.master,
-            callback: callback,
+            denouement: denouement,
             caller: previous.caller
         })
-        invocations[0].args = [ cadence, index + 1, invocations[0], callback ]
+        invocations[0].args = [ cadence, index + 1, invocations[0], denouement ]
 
         hold = async()
         try {
