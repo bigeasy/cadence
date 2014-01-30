@@ -45,8 +45,6 @@ function cadence () {
         var cadence = {
             catchers: [],
             steps: [],
-        // TODO: DOCUMENT: Only one finalizer after each step. You cannot have two
-        // consecutive finalizers.
             finalizers: []
         }
         steps.forEach(function (step) {
