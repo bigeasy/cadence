@@ -1,5 +1,4 @@
-var __slice = [].slice
-var __push = [].push
+var __slice = [].slice, __push = [].push
 
 function cadence () {
     var steps = __slice.call(arguments)
