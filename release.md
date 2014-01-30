@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Rename `cb` to `callback` in `invoke`. #179.
  * Rename `invocation` to `frame`. #178.
  * Rename `async` to `step`. #177.
  * Rename `callback` to `denouement`. #176.

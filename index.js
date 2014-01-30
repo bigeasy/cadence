@@ -318,7 +318,7 @@ function cadence () {
     function invoke (cadence, index, previous, denouement) {
         var callbacks = previous.callbacks
         var catcher, finalizers, errors
-        var cb, arity, vargs = [], arg = 0, i, j, k
+        var callback, arity, vargs = [], arg = 0, i, j, k
         var result, hold, terminate
 
         if (previous.errors.length) {
@@ -348,34 +348,34 @@ function cadence () {
         }
 
         for (; i < callbacks.length; i++) {
-            cb = callbacks[i]
-            if (cb.arrayed) {
-                cb.results = cb.results.filter(function (vargs) { return vargs.length })
+            callback = callbacks[i]
+            if (callback.arrayed) {
+                callback.results = callback.results.filter(function (vargs) { return vargs.length })
             }
-            if ('arity' in cb) {
-                arity = cb.arity
+            if ('arity' in callback) {
+                arity = callback.arity
             } else {
-                arity = cb.arrayed ? 1 : 0
-                cb.results.forEach(function (result) {
+                arity = callback.arrayed ? 1 : 0
+                callback.results.forEach(function (result) {
                     arity = Math.max(arity, result.length - j)
                 })
             }
             for (k = 0; k < arity; k++) {
-                vargs.push({ values: [], arrayed: cb.arrayed })
+                vargs.push({ values: [], arrayed: callback.arrayed })
             }
-            cb.results.forEach(function (result) {
+            callback.results.forEach(function (result) {
                 for (k = 0; k < arity; k++) {
                     vargs[arg + k].values.push(result[k + j])
                 }
             })
-            if ('truthiness' in cb) {
+            if ('truthiness' in callback) {
                 if (terminate == null) terminate = false
                 if (!terminate) {
-                    terminate = !!(cb.results.length && cb.results[0][0]) === !!(cb.truthiness)
+                    terminate = !!(callback.results.length && callback.results[0][0]) === !!(callback.truthiness)
                 }
             }
-            if (cb.property) {
-                this[cb.property] = vargs[0].arrayed ? vargs[0].values : vargs[0].values[0]
+            if (callback.property) {
+                this[callback.property] = vargs[0].arrayed ? vargs[0].values : vargs[0].values[0]
             }
             arg += arity
             j = 0
