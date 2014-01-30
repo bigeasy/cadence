@@ -39,11 +39,7 @@ function cadence () {
     function step () { return createHandler(false, __slice.call(arguments)) }
 
     function unfold (steps) {
-        var cadence = {
-            catchers: [],
-            steps: [],
-            finalizers: []
-        }
+        var cadence = { catchers: [], steps: [], finalizers: [] }
         steps.forEach(function (step) {
             if (Array.isArray(step)) {
                 if (step.length == 1) {
