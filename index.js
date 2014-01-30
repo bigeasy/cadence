@@ -28,8 +28,8 @@ function cadence () {
     }
 
     // To use the same `step` function throughout while supporting reentrancy,
-    // we keep a stack of invocation objects. The stack is reversed; top is 0.
-    // The `step` function is synchronous and will return immediately.
+    // we keep a stack of frame objects. The stack is reversed; top is 0. The
+    // `step` function is synchronous and will return immediately.
     //
     // It is possible for the user to invoke `step` outside of a step in a
     // cadence, we can't prevent it, nor really even detect it. Imagine the user
@@ -37,7 +37,7 @@ function cadence () {
     // later, long after the cadence has ended. Mayhem, but what can you do?
 
     //
-    var invocations = []
+    var frames = []
 
     function step () { return createHandler(false, __slice.call(arguments)) }
 
@@ -97,9 +97,9 @@ function cadence () {
         // parallel operations to end, but ignore their results.
         if (vargs[0] === null || vargs[0] instanceof Error) {
             vargs[0] = vargs[0] ? [ vargs[0] ] : []
-            vargs.splice(1, 0, invocations[0].finalizers.splice(0, invocations[0].finalizers.length))
-            invocations[0].count = -Number.MAX_VALUE
-            invocations[0].denouement.apply(null, vargs)
+            vargs.splice(1, 0, frames[0].finalizers.splice(0, frames[0].finalizers.length))
+            frames[0].count = -Number.MAX_VALUE
+            frames[0].denouement.apply(null, vargs)
             return
         }
 
@@ -108,17 +108,17 @@ function cadence () {
         }
 
         if (vargs[0] instanceof Label) {
-            var invocation = invocations[0]
+            var frame = frames[0]
             var label = vargs.shift()
-            while (invocation.args) {
-                if (invocation.args[0].steps[0] === label.step) {
-                    invocation.args[1] = 1
-                    invocation.args[2].callbacks = invocations[0].callbacks
+            while (frame.args) {
+                if (frame.args[0].steps[0] === label.step) {
+                    frame.args[1] = 1
+                    frame.args[2].callbacks = frames[0].callbacks
                     if (!vargs.length) return true
                     return createHandler(false, vargs)
                 }
-                invocation.args[1] = invocation.args[0].steps.length
-                invocation = invocation.caller
+                frame.args[1] = frame.args[0].steps.length
+                frame = frame.caller
             }
         }
 
@@ -151,28 +151,28 @@ function cadence () {
             callback.arrayed = !! vargs.shift()
         }
 
-        invocations[0].callbacks.push(callback)
+        frames[0].callbacks.push(callback)
 
         unfold(vargs) // for the sake of error checking
         callback.steps = vargs
 
         if (callback.steps.length) {
-            if (!callback.fixup) return createCadence(invocations[0], callback)
+            if (!callback.fixup) return createCadence(frames[0], callback)
         }
 
         if (callback.arrayed) {
-            if (event) return createCallback(invocations[0], callback, -1)
-            else return createArray(invocations[0], callback)
+            if (event) return createCallback(frames[0], callback, -1)
+            else return createArray(frames[0], callback)
         }
 
-        return createCallback(invocations[0], callback, 0)
+        return createCallback(frames[0], callback, 0)
     }
 
     function Label (step) {
         this.step = step
     }
 
-    function createCadence (invocation, callback) {
+    function createCadence (frame, callback) {
         var index = 0
 
         if (!callback.arrayed) callback.starter = starter
@@ -184,10 +184,10 @@ function cadence () {
             var whilst, each, first
 
             if (callback.arrayed) {
-                return createCallback(invocation, callback, index++).apply(null, [null].concat(vargs))
+                return createCallback(frame, callback, index++).apply(null, [null].concat(vargs))
             } else if (vargs[0] === invoke) {
                 // A reminder; zero index because the result is not arrayed.
-                createCallback(invocation, callback, 0).call(null)
+                createCallback(frame, callback, 0).call(null)
             } else {
                 delete callback.starter
 
@@ -225,13 +225,13 @@ function cadence () {
                 callback.steps.push(function () {
                     var vargs = __slice.call(arguments)
                     if (gather) gather.push(vargs)
-                    invocations[0].args[1] = 0
+                    frames[0].args[1] = 0
                     step().apply(this, [null].concat(vargs))
                     count++
                 })
 
                 callback.starter = function () {
-                    createCallback(invocation, callback, 0).apply(null, [null].concat(vargs))
+                    createCallback(frame, callback, 0).apply(null, [null].concat(vargs))
                 }
 
                 return new Label(callback.steps[0])
@@ -241,52 +241,52 @@ function cadence () {
         return starter
     }
 
-    function createArray (invocation, callback) {
+    function createArray (frame, callback) {
         var index = 0
         return function () {
             var vargs = __slice.call(arguments)
-            return createCallback(invocation, callback, index++)
+            return createCallback(frame, callback, index++)
         }
     }
 
-    function createCallback (invocation, callback, index) {
-        if (-1 < index) invocation.count++
+    function createCallback (frame, callback, index) {
+        if (-1 < index) frame.count++
         return function () {
             var vargs = __slice.call(arguments, 0), error
             error = vargs.shift()
             if (error) {
-                invocation.errors.push(error)
+                frame.errors.push(error)
             } else {
                 if (index < 0) callback.results.push(vargs)
                 else callback.results[index] = vargs
                 if (callback.steps.length) {
-                  invocation.count++
-                  invoke.call(invocation.self, unfold(callback.steps), 0, precede(invocation, callback.results[index]), function (errors, finalizers) {
+                  frame.count++
+                  invoke.call(frame.self, unfold(callback.steps), 0, precede(frame, callback.results[index]), function (errors, finalizers) {
                       callback.results[index] = __slice.call(arguments, 2) // TODO: use argue
-                      __push.apply(invocation.errors, errors)
+                      __push.apply(frame.errors, errors)
 
                       if (callback.fixup) {
-                          __push.apply(invocation.finalizers, finalizers)
+                          __push.apply(frame.finalizers, finalizers)
                           denouement()
                       } else {
-                          finalize.call(this, finalizers, 0, invocation.errors, denouement)
+                          finalize.call(this, finalizers, 0, frame.errors, denouement)
                       }
 
                       function denouement () {
-                          if (-1 < index && ++invocation.called == invocation.count) {
-                              invoke.apply(invocation.self, invocation.args)
+                          if (-1 < index && ++frame.called == frame.count) {
+                              invoke.apply(frame.self, frame.args)
                           }
                       }
                   })
                 }
                 if (vargs[0] === invoke) {
-                    invocation.callbacks.forEach(function (callback) {
+                    frame.callbacks.forEach(function (callback) {
                         if (callback.starter) callback.starter(invoke)
                     })
                 }
             }
-            if (index < 0 ? invocation.errors.length : ++invocation.called == invocation.count) {
-                invoke.apply(invocation.self, invocation.args)
+            if (index < 0 ? frame.errors.length : ++frame.called == frame.count) {
+                invoke.apply(frame.self, frame.args)
             }
         }
     }
@@ -397,7 +397,7 @@ function cadence () {
             return
         }
 
-        invocations.unshift({
+        frames.unshift({
             self: this,
             callbacks: [],
             count: 0,
@@ -408,22 +408,22 @@ function cadence () {
             denouement: denouement,
             caller: previous.caller
         })
-        invocations[0].args = [ cadence, index + 1, invocations[0], denouement ]
+        frames[0].args = [ cadence, index + 1, frames[0], denouement ]
 
         hold = step()
         try {
             result = cadence.steps[index].apply(this, vargs)
         } catch (errors) {
-            if (invocations[0].master.completed) throw errors
+            if (frames[0].master.completed) throw errors
             if (errors === previous.caller.errors) {
-                invocations[0].errors.uncaught = errors.uncaught
+                frames[0].errors.uncaught = errors.uncaught
             } else {
                 errors = [ errors ]
             }
-            __push.apply(invocations[0].errors, errors)
-            invocations[0].called = invocations[0].count - 1
+            __push.apply(frames[0].errors, errors)
+            frames[0].called = frames[0].count - 1
         }
-        invocations.shift()
+        frames.shift()
         hold.apply(this, [ null, invoke ].concat(result === void(0) ? [] : [ result ]))
     }
 
