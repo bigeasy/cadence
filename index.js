@@ -291,14 +291,14 @@ function cadence () {
         }
     }
 
-    function finalize (finalizers, index, errors, callback) {
+    function finalize (finalizers, index, errors, denouement) {
         if (index == finalizers.length) {
-            callback.call(this, errors)
+            denouement.call(this, errors)
         } else {
             var finalizer = finalizers[index]
             invoke.call(this, unfold([ finalizer.step ]), 0, finalizer.previous, function (e) {
                 __push.apply(errors, e)
-                finalize.call(this, finalizers, index + 1, errors, callback)
+                finalize.call(this, finalizers, index + 1, errors, denouement)
             })
         }
     }
