@@ -5,15 +5,13 @@ function cadence () {
     var steps = __slice.call(arguments)
 
     function execute () {
-        var vargs = __slice.call(arguments, 0)
-        var callback = function (error) { if (error) throw error }
-        var master = {}
+        var vargs = __slice.call(arguments, 0),
+            callback = function (error) { if (error) throw error },
+            master = {}
         if (vargs.length) {
             callback = vargs.pop()
         }
-        invoke.call(
-            this, unfold(steps), 0,
-            precede({ master: master }, [step].concat(vargs)),
+        invoke.call(this, unfold(steps), 0, precede({ master: master }, [step].concat(vargs)),
         function (errors, finalizers) {
             var vargs = (arguments.length > 2) ? [null].concat(__slice.call(arguments, 2)) : []
             finalize.call(this, finalizers, 0, errors, function (errors) {
