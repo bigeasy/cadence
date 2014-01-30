@@ -267,12 +267,12 @@ function cadence () {
 
                       if (callback.fixup) {
                           __push.apply(invocation.finalizers, finalizers)
-                          done()
+                          denouement()
                       } else {
-                          finalize.call(this, finalizers, 0, invocation.errors, done)
+                          finalize.call(this, finalizers, 0, invocation.errors, denouement)
                       }
 
-                      function done () {
+                      function denouement () {
                           if (-1 < index && ++invocation.called == invocation.count) {
                               invoke.apply(invocation.self, invocation.args)
                           }
