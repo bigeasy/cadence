@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Pass `frame` to `createHandler`. #186.
  * Gathered loops returning before updating callback results. #185.
  * Rename `master` to `invocation`. #182.
  * Rename `cb` to `callback` in `invoke`. #179.
