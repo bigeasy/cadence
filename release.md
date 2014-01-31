@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Gathered loops returning before updating callback results. #185.
  * Rename `master` to `invocation`. #182.
  * Rename `cb` to `callback` in `invoke`. #179.
  * Rename `invocation` to `frame`. #178.

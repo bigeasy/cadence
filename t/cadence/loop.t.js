@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(20, function (equal, deepEqual) {
+require('proof')(20, function (step, equal, deepEqual) {
     var fs = require('fs')
     var cadence = require('../..')
 
@@ -100,23 +100,29 @@ require('proof')(20, function (equal, deepEqual) {
         equal(result, 10, 'reduced each loop')
     })
 
-    cadence(function (step) {
-        var count = 0
-        step(function (number) {
-            step()(null, ++count)
-        })([], 4)
-    })(function (error, result) {
-        if (error) throw error
+    function echo (value, callback) {
+        setImmediate(function () { callback(null, value) })
+    }
+
+    step(function () {
+        cadence(function (step) {
+            var count = 0
+            step(function (number) {
+                echo(++count, step())
+            })([], 4)
+        })(step())
+    }, function (result) {
         deepEqual(result, [ 1, 2, 3, 4 ], 'gathered counted loop')
     })
 
-    cadence(function (step) {
-        var sum = 0
-        step(function (number) {
-            step()(null, sum = sum + number)
-        })([], [ 1, 2, 3, 4 ])
-    })(function (error, result) {
-        if (error) throw error
+    step(function () {
+        cadence(function (step) {
+            var sum = 0
+            step(function (number) {
+                step()(null, sum = sum + number)
+            })([], [ 1, 2, 3, 4 ])
+        })(step())
+    }, function (result) {
         deepEqual(result, [ 1, 3, 6, 10 ], 'gathered each loop')
     })
 

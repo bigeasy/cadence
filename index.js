@@ -206,8 +206,10 @@ function cadence () {
                     if (whilst()) {
                         step().apply(this, [null].concat(each ? [counter[count]] : vargs).concat([count]))
                     } else if (gather) {
+                        var release = createHandler(frame, false, [0])
                         step.apply(this, [null].concat(vargs))
                         callback.results = gather
+                        release()
                     } else {
                         step.apply(this, [null].concat(vargs))
                     }
