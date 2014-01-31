@@ -307,24 +307,22 @@ function cadence () {
     function argue (vargs) { return [{ results: [[invoke].concat(vargs)] }] }
 
     function invoke (cadence, index, previous, denouement) {
-        var callbacks = previous.callbacks
-        var catcher, finalizers, errors
-        var callback, arity, vargs = [], arg = 0, i, j, k
-        var result, hold, terminate
+        var callbacks = previous.callbacks, vargs = [], arg = 0
+        var catcher, finalizers, errors, callback, arity, i, j, k, result, hold, terminate
 
         if (previous.errors.length) {
             catcher = cadence.catchers[index - 1]
             if (catcher) {
                 invoke.call(previous.self, unfold([ catcher ]), 0, precede(previous, [ previous.errors, previous.errors[0] ]), function (errors, finalizers) {
-                  previous.errors = []
-                  __push.apply(previous.finalizers, finalizers)
-                  if (errors.length) {
-                      arguments[1] = previous.finalizers
-                      denouement.apply(this, __slice.call(arguments))
-                  } else {
-                      previous.callbacks = argue(__slice.call(arguments, 2))
-                      invoke.apply(previous.self, previous.args)
-                  }
+                    previous.errors = []
+                    __push.apply(previous.finalizers, finalizers)
+                    if (errors.length) {
+                        arguments[1] = previous.finalizers
+                        denouement.apply(this, __slice.call(arguments))
+                    } else {
+                        previous.callbacks = argue(__slice.call(arguments, 2))
+                        invoke.apply(previous.self, previous.args)
+                    }
                 })
             } else {
                 denouement.call(this, previous.errors, previous.finalizers.splice(0, previous.finalizers.length))
@@ -332,6 +330,8 @@ function cadence () {
             return
         }
 
+        // One in callbacks means that there were no callbacks created, we're
+        // going to use the return value.
         if (callbacks.length == 1) {
             i = 0, j = 1
         } else {
@@ -382,7 +382,8 @@ function cadence () {
             cadence.finalizers[index].previous.callbacks = argue(vargs)
         }
 
-        if (cadence.steps.length == index || terminate) { // FIXME: can't be right, we're using MAX_VALUE above.
+        if (cadence.steps.length == index || terminate) {
+        // FIXME: can't be right, we're using MAX_VALUE above.
             var finalizers = previous.finalizers.splice(0, previous.finalizers.length)
             denouement.apply(this, [ [], finalizers ].concat(vargs))
             return
@@ -405,7 +406,9 @@ function cadence () {
         try {
             result = cadence.steps[index].apply(this, vargs)
         } catch (errors) {
-            if (frames[0].request.completed) throw errors
+            if (frames[0].request.completed) {
+                throw errors
+            }
             if (errors === previous.caller.errors) {
                 frames[0].errors.uncaught = errors.uncaught
             } else {
