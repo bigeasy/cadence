@@ -36,7 +36,7 @@ function cadence () {
     //
     var frames = []
 
-    function step () { return createHandler(false, __slice.call(arguments)) }
+    function step () { return createHandler(frames[0], false, __slice.call(arguments)) }
 
     function unfold (steps) {
         var cadence = { catchers: [], steps: [], finalizers: [] }
@@ -75,7 +75,7 @@ function cadence () {
         return cadence
     }
 
-    function createHandler (event, vargs) {
+    function createHandler (frame, event, vargs) {
         var i = -1
 
         // The caller as invoked the step function directly as an explicit early
@@ -88,33 +88,33 @@ function cadence () {
         // parallel operations to end, but ignore their results.
         if (vargs[0] === null || vargs[0] instanceof Error) {
             vargs[0] = vargs[0] ? [ vargs[0] ] : []
-            vargs.splice(1, 0, frames[0].finalizers.splice(0, frames[0].finalizers.length))
-            frames[0].count = -Number.MAX_VALUE
-            frames[0].denouement.apply(null, vargs)
+            vargs.splice(1, 0, frame.finalizers.splice(0, frame.finalizers.length))
+            frame.count = -Number.MAX_VALUE
+            frame.denouement.apply(null, vargs)
             return
         }
 
         if (vargs[0] === Error) {
-          return createHandler(true, [ 0, [] ].concat(vargs.slice(1)))
+          return createHandler(frame, true, [ 0, [] ].concat(vargs.slice(1)))
         }
 
         if (vargs[0] instanceof Label) {
-            var frame = frames[0]
+            var iterator = frame
             var label = vargs.shift()
-            while (frame.args) {
-                if (frame.args[0].steps[0] === label.step) {
-                    frame.args[1] = 1
-                    frame.args[2].callbacks = frames[0].callbacks
+            while (iterator.args) {
+                if (iterator.args[0].steps[0] === label.step) {
+                    iterator.args[1] = 1
+                    iterator.args[2].callbacks = frame.callbacks
                     if (!vargs.length) return true
-                    return createHandler(false, vargs)
+                    return createHandler(frame, false, vargs)
                 }
-                frame.args[1] = frame.args[0].steps.length
-                frame = frame.caller
+                iterator.args[1] = iterator.args[0].steps.length
+                iterator = iterator.caller
             }
         }
 
         if (vargs[0] === -1) {
-          var callback = createHandler(true, vargs.slice(1))
+          var callback = createHandler(frame, true, vargs.slice(1))
           return function () {
               return callback.apply(null, [ null ].concat(__slice.call(arguments)))
           }
@@ -142,7 +142,7 @@ function cadence () {
             callback.arrayed = !! vargs.shift()
         }
 
-        frames[0].callbacks.push(callback)
+        frame.callbacks.push(callback)
 
         unfold(vargs) // for the sake of error checking
         callback.steps = vargs
@@ -156,7 +156,7 @@ function cadence () {
             else return createArray(frames[0], callback)
         }
 
-        return createCallback(frames[0], callback, 0)
+        return createCallback(frame, callback, 0)
     }
 
     function Label (step) {
