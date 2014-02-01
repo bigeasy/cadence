@@ -11,8 +11,8 @@ function cadence () {
             callback = vargs.pop()
         }
         invoke.call(this, unfold(steps), 0, precede({ request: request }, [step].concat(vargs)),
-        function (errors, finalizers) {
-            var vargs = (arguments.length > 2) ? [null].concat(__slice.call(arguments, 2)) : []
+        function (errors, finalizers, results) {
+            var vargs = results.length ? [null].concat(results) : []
             finalize.call(this, finalizers, 0, errors, function (errors) {
                 request.completed = true
                 if (errors.length) {
@@ -87,10 +87,9 @@ function cadence () {
         // We callback explicitly to whoever called `invoke`, wait for our
         // parallel operations to end, but ignore their results.
         if (vargs[0] === null || vargs[0] instanceof Error) {
-            vargs[0] = vargs[0] ? [ vargs[0] ] : []
-            vargs.splice(1, 0, frame.finalizers.splice(0, frame.finalizers.length))
             frame.count = -Number.MAX_VALUE
-            frame.denouement.apply(null, vargs)
+            frame.denouement.call(null, vargs[0] ? [ vargs[0] ] : [],
+                frame.finalizers.splice(0, frame.finalizers.length), vargs.slice(1))
             return
         }
 
@@ -254,8 +253,8 @@ function cadence () {
                 else callback.results[index] = vargs
                 if (callback.steps.length) {
                   frame.count++
-                  invoke.call(frame.self, unfold(callback.steps), 0, precede(frame, callback.results[index]), function (errors, finalizers) {
-                      callback.results[index] = __slice.call(arguments, 2) // TODO: use argue
+                  invoke.call(frame.self, unfold(callback.steps), 0, precede(frame, callback.results[index]), function (errors, finalizers, results) {
+                      callback.results[index] = results
                       __push.apply(frame.errors, errors)
 
                       if (callback.fixup) {
@@ -315,19 +314,18 @@ function cadence () {
         if (previous.errors.length) {
             catcher = cadence.catchers[index - 1]
             if (catcher) {
-                invoke.call(previous.self, unfold([ catcher ]), 0, precede(previous, [ previous.errors, previous.errors[0] ]), function (errors, finalizers) {
+                invoke.call(previous.self, unfold([ catcher ]), 0, precede(previous, [ previous.errors, previous.errors[0] ]), function (errors, finalizers, results) {
                     previous.errors = []
                     __push.apply(previous.finalizers, finalizers)
                     if (errors.length) {
-                        arguments[1] = previous.finalizers
-                        denouement.apply(this, __slice.call(arguments))
+                        denouement.call(this, errors, previous.finalizers, results)
                     } else {
                         previous.callbacks = argue(__slice.call(arguments, 2))
                         invoke.apply(previous.self, previous.args)
                     }
                 })
             } else {
-                denouement.call(this, previous.errors, previous.finalizers.splice(0, previous.finalizers.length))
+                denouement.call(this, previous.errors, previous.finalizers.splice(0, previous.finalizers.length), [])
             }
             return
         }
@@ -386,8 +384,7 @@ function cadence () {
 
         if (cadence.steps.length == index || terminate) {
         // FIXME: can't be right, we're using MAX_VALUE above.
-            var finalizers = previous.finalizers.splice(0, previous.finalizers.length)
-            denouement.apply(this, [ [], finalizers ].concat(vargs))
+            denouement.call(this, [], previous.finalizers.splice(0, previous.finalizers.length), vargs)
             return
         }
 
