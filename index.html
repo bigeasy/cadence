@@ -57,9 +57,9 @@ is an example without the arguments:</p>
 <span class="kd">var</span> <span class="nx">cat</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
 
-        <span class="c1">//Note that in this line, we invoke step() as our callback</span>
-        <span class="c1">//which immediately &#39;steps into&#39; our callback function below,</span>
-        <span class="c1">//with the output of readFile() curried over.</span>
+        <span class="c1">// Note that in this line, we invoke step() as our callback which</span>
+        <span class="c1">// immediately &#39;steps into&#39; our callback function below,</span>
+        <span class="c1">//  with the output of readFile() curried over.</span>
         <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">__filename</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
 
     <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">body</span><span class="p">)</span> <span class="p">{</span>

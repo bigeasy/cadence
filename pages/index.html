@@ -64,9 +64,9 @@ var fs = require('fs')
 var cat = cadence(function (step) {
     step(function () {
 
-        //Note that in this line, we invoke step() as our callback
-        //which immediately 'steps into' our callback function below,
-        //with the output of readFile() curried over.
+        // Note that in this line, we invoke step() as our callback which
+        // immediately 'steps into' our callback function below,
+        //  with the output of readFile() curried over.
         fs.readFile(__filename, 'utf8', step())
 
     }, function (body) {
