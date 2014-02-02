@@ -236,7 +236,6 @@ function cadence () {
     function createArray (frame, callback) {
         var index = 0
         return function () {
-            var vargs = __slice.call(arguments)
             return createCallback(frame, callback, index++)
         }
     }

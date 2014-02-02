@@ -5,6 +5,7 @@
  * Pass results as array to denouement. #184.
  * Move change log to GitHub Releases. #183.
  * Rename `master` to `invocation`. #182.
+ * Tidy. #181.
  * Rename `cb` to `callback` in `invoke`. #179.
  * Rename `invocation` to `frame`. #178.
  * Rename `async` to `step`. #177.
