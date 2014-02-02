@@ -108,32 +108,34 @@ function will return to the next step in the caller&#39;s cadence.</p>
 <p>Let&#39;s say that we want to get a <code>stat</code> object, but include the body of the file
 in the <code>stat</code> object. When we get our <code>stat</code> object, we can use a sub-cadence to
 complete the <code>stat</code> object by reading the body.</p>
-<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">)</span>
-<span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">),</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
 
-<span class="c1">// Stat a file and add the file body to the stat.</span>
-<span class="kd">var</span> <span class="nx">bodyStat</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">,</span> <span class="nx">file</span><span class="p">,</span> <span class="nx">condition</span><span class="p">)</span> <span class="p">{</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">,</span> <span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-
         <span class="nx">fs</span><span class="p">.</span><span class="nx">stat</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
-
     <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
-
-        <span class="c1">// We create a sub-cadence here because we want to work with</span>
-        <span class="c1">// the `stat` object. The `stat` object is in scope for all</span>
-        <span class="c1">// the functions in the sub-cadence.</span>
-        <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-
-            <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
-
+        <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>    <span class="c1">// sub-cadence</span>
+            <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
         <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
-
             <span class="nx">stat</span><span class="p">.</span><span class="nx">body</span> <span class="o">=</span> <span class="nx">body</span>
-            <span class="k">return</span> <span class="nx">stat</span><span class="p">;</span> <span class="c1">// return value of both the sub-cadence and the</span>
-                         <span class="c1">// step that created the cadence. See more below.</span>
-
+            <span class="k">return</span> <span class="nx">stat</span><span class="p">;</span>
         <span class="p">})</span>
     <span class="p">})</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>In the above example, we create a sub-cadence so that we can read in the file
+body and add it to the <code>stat</code> object. The sub-cadence allows us to update the
+<code>stat</code> object asynchronously. It is in the scope of callback step invoked after
+we read the file body with <code>fs.readFile</code>.</p>
+<p>Here&#39;s how we would use this module.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">bodyStat</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./body-stat&#39;</span><span class="p">)</span>
+
+<span class="nx">bodyStat</span><span class="p">(</span><span class="nx">__filename</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Content-Length: &#39;</span> <span class="o">+</span> <span class="nx">stat</span><span class="p">.</span><span class="nx">size</span><span class="p">)</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="nx">conosle</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">stat</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
@@ -147,15 +149,35 @@ use to exercise Cadence. All it does is wait a bit, then invoke our callback.</p
 <span class="p">}</span>
 </pre></div>
 </code></pre>
+<p>Let&#39;s use echo to illustrate the many difference flows possible with cadence.</p>
 <h3>Subsequent Arguments</h3>
 <p>When you create callbacks in a Cadence step, the results are passed onto the
-subsequent step. The order of the callbacks determines the order of of the
-arguments.</p>
+subsequent step. If you create multiple callbacks, the subsequent step will
+receive the results in order.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
     <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
 
         <span class="nx">echo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
         <span class="nx">echo</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;first&#39;</span><span class="p">)</span>
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">b</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;second&#39;</span><span class="p">)</span>
+
+    <span class="p">})</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>The order of the callbacks determines the order of of the arguments.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="kd">var</span> <span class="nx">first</span> <span class="o">=</span> <span class="nx">step</span><span class="p">()</span>
+        <span class="kd">var</span> <span class="nx">second</span> <span class="o">=</span> <span class="nx">step</span><span class="p">()</span>
+
+        <span class="nx">echo</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nx">second</span><span class="p">)</span>
+        <span class="nx">echo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">first</span><span class="p">)</span>
 
     <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
 

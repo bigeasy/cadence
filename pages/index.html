@@ -125,34 +125,39 @@ in the `stat` object. When we get our `stat` object, we can use a sub-cadence to
 complete the `stat` object by reading the body.
 
 ```javascript
-var cadence = require('cadence')
-var fs = require('fs')
+var cadence = require('cadence'), fs = require('fs')
 
-// Stat a file and add the file body to the stat.
-var bodyStat = cadence(function (step, file, condition) {
+module.exports = cadence(function (step, file) {
     step(function () {
-
         fs.stat(file, step())
-
     }, function (stat) {
-
-        // We create a sub-cadence here because we want to work with
-        // the `stat` object. The `stat` object is in scope for all
-        // the functions in the sub-cadence.
-        step(function () {
-
-            fs.readFile(file, step())
-
+        step(function () {    // sub-cadence
+            fs.readFile(file, 'utf8', step())
         }, function (body) {
-
             stat.body = body
-            return stat; // return value of both the sub-cadence and the
-                         // step that created the cadence. See more below.
-
+            return stat;
         })
     })
 })
 
+```
+
+In the above example, we create a sub-cadence so that we can read in the file
+body and add it to the `stat` object. The sub-cadence allows us to update the
+`stat` object asynchronously. It is in the scope of callback step invoked after
+we read the file body with `fs.readFile`.
+
+Here's how we would use this module.
+
+```javascript
+var bodyStat = require('./body-stat')
+
+bodyStat(__filename, function (error, stat) {
+    if (error) throw error
+    console.log('Content-Length: ' + stat.size)
+    console.log('')
+    conosle.log(stat.body)
+})
 ```
 
 ### Here's a Tour Guide Function; Echo
@@ -168,11 +173,13 @@ function echo (parameter, callback) {
 }
 ```
 
+Let's use echo to illustrate the many difference flows possible with cadence.
+
 ### Subsequent Arguments
 
 When you create callbacks in a Cadence step, the results are passed onto the
-subsequent step. The order of the callbacks determines the order of of the
-arguments.
+subsequent step. If you create multiple callbacks, the subsequent step will
+receive the results in order.
 
 ```javascript
 cadence(function () {
@@ -180,6 +187,27 @@ cadence(function () {
 
         echo(1, step())
         echo(2, step())
+
+    }, function (a, b) {
+
+        equal(a, 1, 'first')
+        equal(b, 2, 'second')
+
+    })
+})
+```
+
+The order of the callbacks determines the order of of the arguments.
+
+```javascript
+cadence(function () {
+    step(function () {
+
+        var first = step()
+        var second = step()
+
+        echo(2, second)
+        echo(1, first)
 
     }, function (a, b) {
 
