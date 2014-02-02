@@ -320,7 +320,7 @@ function cadence () {
                     if (errors.length) {
                         denouement.call(this, errors, previous.finalizers, results)
                     } else {
-                        previous.callbacks = argue(__slice.call(arguments, 2))
+                        previous.callbacks = argue(results)
                         invoke.apply(previous.self, previous.args)
                     }
                 })
