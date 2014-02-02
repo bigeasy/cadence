@@ -57,6 +57,10 @@
   width: 80%;
 }
 /* vim: set ts=4 sw=4: */
+@font-face {
+  font-family: 'Crystal';
+  src: url('CRYSRG__.TTF');
+}
 html {
   background: #f7f7f7;
   font-size: 100%;
@@ -66,6 +70,7 @@ body {
   font-family: Helvetica;
   margin: 0 auto;
   padding: 0 0;
+  font-size: 75%;
 }
 img {
   max-width: 100%;
@@ -165,7 +170,9 @@ img {
   margin: 2em 0;
   padding: 1em;
   font-size: 1.15em;
-  font-family: 'Oxygen Mono', 'Monaco', 'Cutive Mono', 'Oxygen Mono', monospace;
+  font-size: 0.95em;
+  letter-spacing: -1px;
+  font-family: 'Monaco', 'Oxygen Mono', 'Crystal', 'Cutive Mono', 'Oxygen Mono', monospace;
 }
 .unit.sidebar {
   width: 25%;

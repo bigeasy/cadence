@@ -1,8 +1,13 @@
 @import "response";
-@import "../vendor/lesshat/lesshat";
+@import "../vendor/lesshat/build/lesshat";
 
 @logo-text: #000000;
 @body-text: lighten(#000000, 10%);
+
+@font-face {
+    font-family: 'Crystal';
+    src: url('CRYSRG__.TTF');
+}
 
 html {
     background: darken(#ffffff, 3%);
@@ -14,6 +19,7 @@ body {
     font-family: Helvetica;
     margin: 0 auto;
     padding: 0 0;
+    font-size: 75%;
 }
 
 img {
@@ -118,7 +124,9 @@ img {
         margin: 2em 0;
         padding: 1em;
         font-size: 1.15em;
-        font-family: 'Oxygen Mono', 'Monaco', 'Cutive Mono', 'Oxygen Mono', monospace;
+        font-size: 0.95em;
+        letter-spacing: -1px;
+        font-family: 'Monaco', 'Oxygen Mono', 'Crystal', 'Cutive Mono', 'Oxygen Mono', monospace;
     }
 }
 
