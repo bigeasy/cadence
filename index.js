@@ -190,7 +190,7 @@ function cadence () {
                         callback.arrayed = true
                         vargs.shift()
                     }
-                     counter = vargs.shift()
+                    counter = vargs.shift()
                     if (typeof counter == 'number') {
                         whilst = function () { return count != counter }
                     } else if (each = Array.isArray(counter)) {
