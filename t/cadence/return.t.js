@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(3, function (step, equal) {
+require('proof')(8, function (step, equal) {
     var fs = require('fs')
     var cadence = require('../..')
     var one = step()
@@ -24,5 +24,25 @@ require('proof')(3, function (step, equal) {
     })(function (error, number) {
         equal(number, 1, 'callback cadence')
         two()
+    })
+
+    cadence(function (step) {
+        return [ 1 ]
+    })(function (error, number) {
+        equal(number, 1, 'callback cadence arrayed')
+    })
+
+    cadence(function (step) {
+        return [ 1, 2 ]
+    })(function (error, one, two) {
+        equal(one, 1, 'callback cadence arrayed ordered one')
+        equal(two, 2, 'callback cadence arrayed ordered two')
+    })
+
+    cadence(function (step) {
+        return [ [ 1, 2 ] ]
+    })(function (error, array) {
+        equal(array[0], 1, 'callback cadence array ordered one')
+        equal(array[1], 2, 'callback cadence array ordered two')
     })
 })

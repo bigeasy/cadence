@@ -304,7 +304,8 @@ function cadence () {
         }
     }
 
-    function argue (vargs) { return [{ results: [[invoke].concat(vargs)] }] }
+    // When we explicitly set we always set the vargs as an array.
+    function argue (vargs) { return [{ results: [[invoke, vargs]] }] }
 
     function invoke (cadence, index, previous, denouement) {
         var callbacks = previous.callbacks, vargs = [], arg = 0
@@ -333,6 +334,10 @@ function cadence () {
         // going to use the return value.
         if (callbacks.length == 1) {
             i = 0, j = 1
+            var results = callbacks[0].results[0]
+            if (results.length == 2 && Array.isArray(results[1])) {
+                callbacks[0].results[0] = [ invoke ].concat(results[1])
+            }
         } else {
             i = 1, j = 0
         }
