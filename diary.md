@@ -2765,7 +2765,74 @@ creating a callback of some sort. I can try that for a few iterations.
 Also, add the ability to return from a jump, which makes it easier to break out
 of it with a one liner.
 
+ * **TODO**: Breaking up and out; yes, this needs more thought.
+
 ## Was Is
 
 It was supposed to be about control flow, jumping, but it's become to be all
 about parallelism.
+
+## Stepping Out
+
+One pattern that I've begun to see is along these lines...
+
+```javascript
+cadence(function () {
+    step(function () {
+        database.byId('person', 10, step())
+    }, function (person) {
+        if (!person) step(null)
+        else return person
+    }, function (person) {
+        // do complicated stuff with person
+    })
+})
+```
+
+Already, I create a special case where you can pass a boolean to indicate that
+you should return if the result is not true, but there is nothing that really
+indicates what the return value should be, if it is not supposed to be undefined
+or null.
+
+```javascript
+cadence(function () {
+    step(function () {
+        database.byId('person', 10, step(true))
+    }, function (person) {
+        // do complicated stuff with person
+    })
+})
+```
+
+Also, you kind of hide what is going on. Currently, I control flow a bit with
+angle brackets, they indicate flow in other ways, so maybe I could use them to
+say, escape if not true.
+
+```javascript
+cadence(function () {
+    step([true, function () {
+        database.byId('person', 10, step())
+    }], function (person) {
+        // do complicated stuff with person
+    })
+})
+```
+
+Also, it occurs to me that it may be enough that, with an undefined return
+value, I can use the previous return value. If I want to return undefined for
+real, then I can use `[]`.
+
+```javascript
+cadence(function () {
+    step(function () {
+        database.byId('person', 10, step())
+    }, function (person) {
+        if (!person) step(null, { id: -1 })
+    }, function (person) {
+        // do complicated stuff with person
+    })
+})
+```
+
+That is a return value, not a callback value. Declaring a callback means that
+you expect a callback return value.
