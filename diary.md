@@ -2859,3 +2859,18 @@ you're breaking to, ah, yes, you might want to break way out, though. Then,
 perhaps you return the label, you invoke the label and return to jump, and you
 pass the label to step to create a callback. Why does airity need to be
 specified?
+
+## Making Loop Parameters Explicit
+
+I'm now ready to go with the double parenthesis, which is not unlike invoking
+step then calling callback directly. Why?
+
+ * Because putting stuff in the Cadence is ugly, breaks.
+ * Because the super overloaded parens are super overloaded.
+ * Let's see, two argumetns array and array, or array and number, and we have a
+ gathering loop. Array is a for each loop. Number is a counted loop. Then how do
+ we pass in parameters? We chose null and an argument. What is wrong with this
+ exactly? It seems to work. When will I need to loop over and pass in arguments?
+
+My confidence might have been shaken by the loop breakage. Leave it for a while
+now that it works.
