@@ -2836,3 +2836,26 @@ cadence(function () {
 
 That is a return value, not a callback value. Declaring a callback means that
 you expect a callback return value.
+
+## Breaking Out, Breaking Up
+
+Here are some thoughts on breaking out.
+
+```javascript
+cadence(function (step) {
+    var count = 0
+    var retry = step(function (retry) {
+        if (retry) count++
+        else step(null, 10)
+    }, function () {
+        return retry(true)
+    })
+})
+```
+
+We kind of already have up and out, but I'm consider whether this is a better
+way to say `continue`. You say break by returning early, and you say where
+you're breaking to, ah, yes, you might want to break way out, though. Then,
+perhaps you return the label, you invoke the label and return to jump, and you
+pass the label to step to create a callback. Why does airity need to be
+specified?
