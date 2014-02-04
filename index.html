@@ -199,6 +199,61 @@ TK: Always use an initial sub-cadence in the <code>README.md</code> so people do
 thinking that it is something to be avoided.
 TK: In the sub-cadence example, talk about scope and closure.
 TK: Move up a section.</p>
+<p>Sometimes you don&#39;t have an asynchronous function to invoke. You can return a
+a value to be used as the arguments for the subsequent step.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">one</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">one</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;returned&#39;</span><span class="p">)</span>
+    <span class="p">})</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>This happens quite often actually. Sometimes you&#39;ve already invoked the
+asynchronous function and have a copy of the result. Other times you want to do
+some synchronous processing of the result of an asynchronous call. The example
+below illustrates both cases.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">),</span> <span class="nx">config</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">config</span><span class="p">)</span> <span class="k">return</span> <span class="nx">config</span>
+        <span class="k">else</span> <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;./config.json&#39;</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+        <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span>
+        <span class="p">})</span>
+    <span class="p">})</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>Returning an array is a special case. When you return an array the elements of
+the array are used as the arguments to the subsequent function.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="p">]</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">one</span><span class="p">,</span> <span class="nx">two</span><span class="p">,</span> <span class="nx">three</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">one</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;returned one&#39;</span><span class="p">)</span>
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">two</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;returned two&#39;</span><span class="p">)</span>
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">three</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;returned three&#39;</span><span class="p">)</span>
+    <span class="p">})</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>What if you want to return an array as the sole argument to the subsequent
+function? Then put the array in an array as the sole element.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="p">[</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span> <span class="p">]</span> <span class="p">]</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">array</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">array</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;element one&#39;</span><span class="p">)</span>
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">array</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;element two&#39;</span><span class="p">)</span>
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">array</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;element three&#39;</span><span class="p">)</span>
+    <span class="p">})</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
 <h3>Catching Errors</h3>
 <p>Cadence encourages parallelism, and because parallel operations can also
 fail in parallel and/or raise many exceptions in parallel (fun stuff),
