@@ -26,20 +26,20 @@ require('proof')(8, function (step, equal) {
         two()
     })
 
-    cadence(function (step) {
+    cadence(function () {
         return [ 1 ]
     })(function (error, number) {
         equal(number, 1, 'callback cadence arrayed')
     })
 
-    cadence(function (step) {
+    cadence(function () {
         return [ 1, 2 ]
     })(function (error, one, two) {
         equal(one, 1, 'callback cadence arrayed ordered one')
         equal(two, 2, 'callback cadence arrayed ordered two')
     })
 
-    cadence(function (step) {
+    cadence(function () {
         return [ [ 1, 2 ] ]
     })(function (error, array) {
         equal(array[0], 1, 'callback cadence array ordered one')
