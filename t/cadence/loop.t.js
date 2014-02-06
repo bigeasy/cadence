@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(20, function (step, equal, deepEqual) {
+require('proof')(19, function (step, equal, deepEqual) {
     var fs = require('fs')
     var cadence = require('../..')
 
@@ -13,20 +13,6 @@ require('proof')(20, function (step, equal, deepEqual) {
     function counter (count, callback) {
         callback(null, count < 3)
     }
-
-    cadence(function (step) {
-        var count = 0
-        step(function () {
-            step(function () {
-                counter(++count, step(false))
-            })()
-        }, function () {
-            return count
-        })
-    })(function (error, result) {
-        if (error) throw error
-        equal(result, 3, 'return on false')
-    })
 
     cadence(function (step) {
         var count = 0

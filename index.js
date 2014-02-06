@@ -127,10 +127,6 @@ function cadence () {
                 vargs.shift()
             }
 
-            if (typeof vargs[0] == 'boolean') {
-                callback.truthiness = vargs.shift()
-            }
-
             if (typeof vargs[0] == 'string') {
                 callback.property = vargs.shift()
             }
@@ -319,7 +315,7 @@ function cadence () {
 
     function invoke (cadence, index, previous, denouement) {
         var callbacks = previous.callbacks, vargs = [], arg = 0
-        var catcher, finalizers, errors, callback, arity, i, j, k, result, hold, terminate
+        var catcher, finalizers, errors, callback, arity, i, j, k, result, hold
 
         if (previous.errors.length) {
             catcher = cadence.catchers[index - 1]
@@ -373,12 +369,6 @@ function cadence () {
                     vargs[arg + k].values.push(result[k + j])
                 }
             })
-            if ('truthiness' in callback) {
-                if (terminate == null) terminate = false
-                if (!terminate) {
-                    terminate = !!(callback.results.length && callback.results[0][0]) === !!(callback.truthiness)
-                }
-            }
             if (callback.property) {
                 this[callback.property] = vargs[0].arrayed ? vargs[0].values : vargs[0].values[0]
             }
@@ -396,8 +386,7 @@ function cadence () {
             cadence.finalizers[index].previous.callbacks = argue(vargs)
         }
 
-        if (cadence.steps.length == index || terminate) {
-        // FIXME: can't be right, we're using MAX_VALUE above.
+        if (cadence.steps.length == index) {
             denouement.call(this, [], previous.finalizers.splice(0, previous.finalizers.length), vargs)
             return
         }
