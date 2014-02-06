@@ -431,7 +431,7 @@ function cadence () {
             frames[0].called = frames[0].count - 1
         }
         frames.shift()
-        hold.apply(this, [ null, invoke ].concat(result === void(0) ? [] : [ result ]))
+        hold.apply(this, [ null, invoke ].concat(result === void(0) ? vargs : [ result ]))
     }
 
     return execute

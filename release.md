@@ -12,4 +12,5 @@ explicit. When in doubt, wrap it up in an array.
 ### Issue by Issue
 
  * Implement promise handlers. #190.
+ * Undefined return and no callbacks means skip. #189.
  * Use the elements of a returned array as arguments to subsequent step. #188.
