@@ -121,24 +121,34 @@ function cadence () {
 
         // TODO Callback can be empty.
         var callback = { errors: [], results: [] }
-        if (callback.fixup = (vargs[0] === step)) {
-            vargs.shift()
-        }
 
-        if (typeof vargs[0] == 'boolean') {
-            callback.truthiness = vargs.shift()
-        }
+        if (vargs[0] != null) {
+            if (callback.fixup = (vargs[0] === step)) {
+                vargs.shift()
+            }
 
-        if (typeof vargs[0] == 'string') {
-            callback.property = vargs.shift()
-        }
+            if (typeof vargs[0] == 'boolean') {
+                callback.truthiness = vargs.shift()
+            }
 
-        if (!isNaN(parseInt(vargs[0], 10))) {
-            callback.arity = +(vargs.shift())
-        }
+            if (typeof vargs[0] == 'string') {
+                callback.property = vargs.shift()
+            }
 
-        if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
-            callback.arrayed = !! vargs.shift()
+            if (!isNaN(parseInt(vargs[0], 10))) {
+                callback.arity = +(vargs.shift())
+            }
+
+            if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
+                callback.arrayed = !! vargs.shift()
+            }
+
+            if (vargs[0] && typeof vargs[0].then == 'function') {
+                var promise = vargs.shift(), handler = step.apply(this, vargs)
+                return promise.then(function () {
+                    handler.apply(null, [null].concat(__slice.call(arguments)))
+                }, handler)
+            }
         }
 
         frame.callbacks.push(callback)
