@@ -2860,6 +2860,71 @@ perhaps you return the label, you invoke the label and return to jump, and you
 pass the label to step to create a callback. Why does airity need to be
 specified?
 
+I've fogotten about nested parameters. Here is a possible jump up.
+
+```javascript
+cadence(function (step) {
+    var count = 0
+    var retry = step(function (retry) {
+        if (retry) count++
+        else step(null, 10)
+    }, function () {
+        var inner = step(function () {
+          return [ retry(), true ]
+        })
+    })
+})
+```
+
+Here is a possible jump out.
+
+```javascript
+cadence(function (step) {
+    var count = 0
+    var retry = step(function (retry) {
+        if (retry) count++
+        else step(null, 10)
+    }, function () {
+        var inner = step(function () {
+          return [ retry, true ]
+        })
+    })
+})
+```
+
+Now our callbacks accept the label and always assume airty, you do not need to
+be explicit.
+
+```javascript
+cadence(function (step) {
+    var count = 0
+    var retry = step(function (retry) {
+        if (retry) count++
+        else step(null, 10)
+    }, function () {
+        var inner = step(function () {
+          echo(1, step(retry()))
+        })
+    })
+})
+```
+
+And out.
+
+```javascript
+cadence(function (step) {
+    var count = 0
+    var retry = step(function (retry) {
+        if (retry) count++
+        else step(null, 10)
+    }, function () {
+        var inner = step(function () {
+          echo(1, step(retry))
+        })
+    })
+})
+```
+
 ## Making Loop Parameters Explicit
 
 I'm now ready to go with the double parenthesis, which is not unlike invoking
