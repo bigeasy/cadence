@@ -2950,3 +2950,7 @@ which means to prime the loop, we need to provide something to offset for the
 airty, because on the subsequent go round, the result from the last step will be
 prepended to the argumets, the loop item or item and counter are going to be
 appended. They need to be prepended so that they are always in the same place.
+
+*Update*: Should there now be some special way of handling catch? No because
+you're catching, and that's how it works in the JavaScript langauge, you need to
+throw to propagage.
