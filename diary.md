@@ -2934,7 +2934,7 @@ step then calling callback directly. Why?
 
  * Because putting stuff in the Cadence is ugly, breaks.
  * Because the super overloaded parens are super overloaded.
- * Let's see, two argumetns array and array, or array and number, and we have a
+ * Let's see, two arguments array and array, or array and number, and we have a
  gathering loop. Array is a for each loop. Number is a counted loop. Then how do
  we pass in parameters? We chose null and an argument. What is wrong with this
  exactly? It seems to work. When will I need to loop over and pass in arguments?
@@ -2947,10 +2947,10 @@ correctly and I'm starting to use them. Loop parameters at the end of user
 parameters means that user parameters are going to shift, because often times
 the loop parameters are gathered, well, if they, then they are at the last step,
 which means to prime the loop, we need to provide something to offset for the
-airty, because on the subsequent go round, the result from the last step will be
-prepended to the argumets, the loop item or item and counter are going to be
+arity, because on the subsequent go round, the result from the last step will be
+prepended to the arguments, the loop item or item and counter are going to be
 appended. They need to be prepended so that they are always in the same place.
 
 *Update*: Should there now be some special way of handling catch? No because
-you're catching, and that's how it works in the JavaScript langauge, you need to
-throw to propagage.
+you're catching, and that's how it works in the JavaScript language, you need to
+throw to propagate.
