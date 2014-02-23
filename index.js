@@ -164,8 +164,9 @@ function cadence () {
         return createCallback(frame, callback, 0)
     }
 
-    function Label (step) {
+    function Label (step, offset) {
         this.step = step
+        this.offset = offset
     }
 
     function createCadence (frame, callback) {
@@ -236,7 +237,7 @@ function cadence () {
                     createCallback(frame, callback, 0).apply(null, [null].concat(vargs))
                 }
 
-                return new Label(callback.steps[0])
+                return new Label(callback.steps[0], callback.steps.length)
             }
         }
 
@@ -319,7 +320,7 @@ function cadence () {
 
     function invoke (cadence, index, previous, denouement) {
         var callbacks = previous.callbacks, vargs = [], arg = 0
-        var catcher, finalizers, errors, callback, arity, i, j, k, result, hold
+        var catcher, finalizers, errors, callback, arity, i, j, k, result, hold, jump
 
         if (previous.errors.length) {
             catcher = cadence.catchers[index - 1]
@@ -340,14 +341,29 @@ function cadence () {
             return
         }
 
+        var results = callbacks[0].results[0]
+        if (results.length == 2 && Array.isArray(results[1])) {
+            callbacks[0].results[0] = results = [ invoke ].concat(results[1])
+        }
+
+        if (results[1] instanceof Label) {
+            var iterator = previous
+            var label = results.splice(1, 1)[0]
+            while (iterator.args) {
+                if (iterator.args[0].steps[0] === label.step) {
+                    iterator.args[1] = label.offset
+                    iterator.args[2].callbacks = previous.callbacks
+                    return invoke.apply(this, iterator.args)
+                }
+                iterator.args[1] = iterator.args[0].steps.length
+                iterator = iterator.caller
+            }
+        }
+
         // One in callbacks means that there were no callbacks created, we're
         // going to use the return value.
         if (callbacks.length == 1) {
             i = 0, j = 1
-            var results = callbacks[0].results[0]
-            if (results.length == 2 && Array.isArray(results[1])) {
-                callbacks[0].results[0] = [ invoke ].concat(results[1])
-            }
         } else {
             i = 1, j = 0
         }

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(19, function (step, equal, deepEqual) {
+require('proof')(20, function (step, equal, deepEqual) {
     var fs = require('fs')
     var cadence = require('../..')
 
@@ -139,5 +139,25 @@ require('proof')(19, function (step, equal, deepEqual) {
     })(function (error, result) {
         if (error) throw error
         equal(result, 10, 'loop continue callbacked')
+    })
+
+    cadence(function (step) {
+        var count = 0
+        var outer = step(function () {
+            return 1
+        }, function (value) {
+            var inner = step(function () {
+                return [ value, 2 ]
+            }, function (one, two) {
+                return [ outer, one, two ]
+            }, function () {
+                throw new Error('should not be thrown')
+            })(1)
+        }, function (one, two) {
+            return [ one, two ]
+        })(1)
+    })(function (error, one, two) {
+        if (error) throw error
+        deepEqual([ one, two ], [ 1, 2 ], 'jump out')
     })
 })
