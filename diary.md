@@ -2692,6 +2692,10 @@ Then what about immediate returns? Ah, just return true.
 if (!anygood) return step(tryagain) && 1
 ```
 
+More Inbox:
+
+ * Prospect, intent, ordain, decree, destine, enjoin, resolute.
+
 ## Returns
 
 If you return an array to indicate that it is the next value, then you can
