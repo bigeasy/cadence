@@ -1,0 +1,35 @@
+{
+    "name":             "turnstile",
+    "version":          "9.9.9",
+    "author":           "Alan Gutierrez <alan@prettyrobots.com>",
+    "description":      "An evented event queue.",
+    "keywords":
+    [
+                        "queue", "events"
+    ],
+    "contributors":     [],
+    "homepage":         "https://github.com/bigeasy/skip",
+    "bugs":             "https://github.com/bigeasy/skip/issues",
+    "licenses":
+    [{
+                        "type": "MIT",
+                        "url": "http://github.com/bigeasy/skip/raw/master/LICENSE"
+    }],
+    "repository":
+    {
+                        "type": "git",
+                        "url": "http://github.com/bigeasy/skip.git"
+    },
+    "dependencies":
+    {
+                        "cadence":            "0.0.35"
+    },
+    "devDependencies":
+    {
+                        "proof":              "0.0.42"
+    },
+    "scripts":
+    {
+                        "test": "proof platform win32 && proof test */*/*.t.js || t/test"
+    }
+}
