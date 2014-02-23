@@ -64,7 +64,7 @@ require('proof')(19, function (step, equal, deepEqual) {
 
     cadence(function (step) {
         var outer = { count: 0, flag: true }
-        step(function (flag, count) {
+        step(function (count, flag) {
             equal(flag, outer.flag, 'got flag in counted loop ' + (count + 1))
             equal(count, outer.count++, 'got count in counted loop' + (count + 1))
             outer.flag = false

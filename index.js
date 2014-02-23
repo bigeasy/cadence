@@ -209,7 +209,11 @@ function cadence () {
                 callback.steps.unshift(function () {
                     var vargs = __slice.call(arguments)
                     if (whilst()) {
-                        step().apply(this, [null].concat(each ? [counter[count]] : vargs).concat([count]))
+                        if (counter) {
+                            step().apply(this, [].concat.apply([null], [ each ? counter[count] : [], count, vargs ]))
+                        } else {
+                            step().apply(this, [null].concat(vargs).concat([ count ]))
+                        }
                     } else if (gather) {
                         var release = createHandler(frame, false, [0])
                         step.apply(this, [null].concat(vargs))
