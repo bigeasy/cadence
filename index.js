@@ -97,32 +97,33 @@ function cadence () {
           return createHandler(frame, true, [ 0, [] ].concat(vargs.slice(1)))
         }
 
-        if (vargs[0] instanceof Label) {
-            var iterator = frame
-            var label = vargs.shift()
-            while (iterator.args) {
-                if (iterator.args[0].steps[0] === label.step) {
-                    iterator.args[1] = 1
-                    iterator.args[2].callbacks = frame.callbacks
-                    if (!vargs.length) return true
-                    return createHandler(frame, false, vargs)
-                }
-                iterator.args[1] = iterator.args[0].steps.length
-                iterator = iterator.caller
-            }
-        }
-
-        if (vargs[0] === -1) {
-          var callback = createHandler(frame, true, vargs.slice(1))
-          return function () {
-              return callback.apply(null, [ null ].concat(__slice.call(arguments)))
-          }
-        }
 
         // TODO Callback can be empty.
         var callback = { errors: [], results: [] }
 
         if (vargs[0] != null) {
+            if (vargs[0].invoke === invoke) {
+                var iterator = frame
+                var label = vargs.shift()
+                while (iterator.args) {
+                    if (iterator.args[0].steps[0] === label.step) {
+                        iterator.args[1] = 1
+                        iterator.args[2].callbacks = frame.callbacks
+                        if (!vargs.length) return true
+                        return createHandler(frame, false, vargs)
+                    }
+                    iterator.args[1] = iterator.args[0].steps.length
+                    iterator = iterator.caller
+                }
+            }
+
+            if (vargs[0] === -1) {
+              var callback = createHandler(frame, true, vargs.slice(1))
+              return function () {
+                  return callback.apply(null, [ null ].concat(__slice.call(arguments)))
+              }
+            }
+
             if (callback.fixup = (vargs[0] === step)) {
                 vargs.shift()
             }
@@ -162,11 +163,6 @@ function cadence () {
         }
 
         return createCallback(frame, callback, 0)
-    }
-
-    function Label (step, offset) {
-        this.step = step
-        this.offset = offset
     }
 
     function createCadence (frame, callback) {
@@ -237,7 +233,11 @@ function cadence () {
                     createCallback(frame, callback, 0).apply(null, [null].concat(vargs))
                 }
 
-                return new Label(callback.steps[0], callback.steps.length)
+                return {
+                    invoke: invoke,
+                    step: callback.steps[0],
+                    offset: callback.steps.length
+                }
             }
         }
 
@@ -346,7 +346,7 @@ function cadence () {
             callbacks[0].results[0] = results = [ invoke ].concat(results[1])
         }
 
-        if (results[1] instanceof Label) {
+        if (results[1] && results[1].invoke === invoke) {
             var iterator = previous
             var label = results.splice(1, 1)[0]
             while (iterator.args) {
