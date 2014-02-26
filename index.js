@@ -103,18 +103,7 @@ function cadence () {
 
         if (vargs[0] != null) {
             if (vargs[0].invoke === invoke) {
-                var iterator = frame
-                var label = vargs.shift()
-                while (iterator.args) {
-                    if (iterator.args[0].steps[0] === label.step) {
-                        iterator.args[1] = 1
-                        iterator.args[2].callbacks = frame.callbacks
-                        if (!vargs.length) return true
-                        return createHandler(frame, false, vargs)
-                    }
-                    iterator.args[1] = iterator.args[0].steps.length
-                    iterator = iterator.caller
-                }
+                frame.callbacks[0].results[0].push(vargs.shift())
             }
 
             if (vargs[0] === -1) {
@@ -431,6 +420,7 @@ function cadence () {
         frames[0].args = [ cadence, index + 1, frames[0], denouement ]
 
         hold = step()
+        var results = frames[0].callbacks[0].results[0] = [ null, invoke ]
         try {
             result = cadence.steps[index].apply(this, vargs)
         } catch (errors) {
@@ -446,7 +436,7 @@ function cadence () {
             frames[0].called = frames[0].count - 1
         }
         frames.shift()
-        hold.apply(this, [ null, invoke ].concat(result === void(0) ? vargs : [ result ]))
+        hold.apply(this, results.concat([ result === void(0) ? vargs : result ]))
     }
 
     return execute

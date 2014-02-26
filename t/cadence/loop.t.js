@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(21, function (step, equal, deepEqual) {
+require('proof')(20, function (step, equal, deepEqual) {
     var fs = require('fs')
     var cadence = require('../..')
 
@@ -114,27 +114,12 @@ require('proof')(21, function (step, equal, deepEqual) {
 
     cadence(function (step) {
         var count = 0
-        var retry = step([function (retry) {
+        var retry = step([function (_, retry) {
             if (retry) count++
             if (count != 10) throw new Error
             else step(null, 10)
         }, function () {
-            step()(null, true)
-            step(retry)
-        }])(1)
-    })(function (error, result) {
-        if (error) throw error
-        equal(result, 10, 'loop continue')
-    })
-
-    cadence(function (step) {
-        var count = 0
-        var retry = step([function (retry) {
-            if (retry) count++
-            if (count != 10) throw new Error
-            else step(null, 10)
-        }, function () {
-            step(retry, 1)(null, true)
+            step(retry(), 1)(null, true)
         }])(1)
     })(function (error, result) {
         if (error) throw error
