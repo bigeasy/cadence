@@ -233,11 +233,16 @@ function cadence () {
                     createCallback(frame, callback, 0).apply(null, [null].concat(vargs))
                 }
 
-                return {
-                    invoke: invoke,
-                    step: callback.steps[0],
-                    offset: callback.steps.length
+                var label = function () {
+                    label.offset = 0
+                    return label
                 }
+
+                label.invoke = invoke
+                label.step = callback.steps[0]
+                label.offset = callback.steps.length
+
+                return label
             }
         }
 
@@ -353,6 +358,7 @@ function cadence () {
                 if (iterator.args[0].steps[0] === label.step) {
                     iterator.args[1] = label.offset
                     iterator.args[2].callbacks = previous.callbacks
+                    iterator.args[2].errors.length = 0
                     return invoke.apply(this, iterator.args)
                 }
                 iterator.args[1] = iterator.args[0].steps.length
