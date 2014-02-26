@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Add `.todo.txt` to `.gitignore`. #202.
  * Upgrade Proof to 0.0.42. #201.
  * Remove unused `errors` variable. #200.
  * Test arrayed step property assignment. #199.
