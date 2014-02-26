@@ -314,7 +314,7 @@ function cadence () {
 
     function invoke (cadence, index, previous, denouement) {
         var callbacks = previous.callbacks, vargs = [], arg = 0
-        var catcher, finalizers, errors, callback, arity, i, j, k, result, hold, jump
+        var catcher, finalizers, callback, arity, i, j, k, result, hold, jump
 
         if (previous.errors.length) {
             catcher = cadence.catchers[index - 1]
