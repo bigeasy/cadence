@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Test arrayed step property assignment. #199.
  * Implement callbacked break out. #198.
  * Implement callbacked break up. #197.
  * Implement break up. #196.
