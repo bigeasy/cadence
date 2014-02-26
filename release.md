@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Remove unused `fs` from all tests. #203.
  * Add `.todo.txt` to `.gitignore`. #202.
  * Upgrade Proof to 0.0.42. #201.
  * Remove unused `errors` variable. #200.

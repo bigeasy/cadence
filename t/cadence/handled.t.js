@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 require('proof')(2, function (equal) {
-    var fs = require('fs')
     var cadence = require('../..')
 
     cadence(function () {
