@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Upgrade Proof to 0.0.42. #201.
  * Remove unused `errors` variable. #200.
  * Test arrayed step property assignment. #199.
  * Implement callbacked break out. #198.
