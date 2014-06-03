@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(21, function (step, equal, deepEqual) {
+require('proof')(26, function (step, equal, deepEqual) {
     var cadence = require('../..')
 
     cadence(function (step) {
@@ -83,6 +83,17 @@ require('proof')(21, function (step, equal, deepEqual) {
     })(function (error, result) {
         if (error) throw error
         equal(result, 10, 'reduced each loop')
+    })
+
+    cadence(function (step) {
+        var sum = 0, count = 0
+        step(function (array, index) {
+            equal(index, count++, 'reduced each loop of arrays index ' + index)
+            step()(null, sum = sum + array[0])
+        })([ [ 1 ], [ 2 ], [ 3 ], [ 4 ] ])
+    })(function (error, result) {
+        if (error) throw error
+        equal(result, 10, 'reduced each loop of arrays')
     })
 
     function echo (value, callback) {

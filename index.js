@@ -201,9 +201,9 @@
                         var vargs = __slice.call(arguments)
                         if (whilst()) {
                             if (counter) {
-                                step().apply(this, [].concat.apply([null], [ each ? counter[count] : [], count, vargs ]))
+                                step().apply(this, [ null ].concat(each ? [ counter[count] ] : [], count, vargs))
                             } else {
-                                step().apply(this, [null].concat(vargs).concat([ count ]))
+                                step().apply(this, [ null ].concat(vargs).concat(count))
                             }
                         } else if (gather) {
                             var release = createHandler(frame, false, [0])
