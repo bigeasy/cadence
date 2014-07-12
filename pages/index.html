@@ -17,12 +17,9 @@
 </div>
 <!-- todo: code font is too small for body text font -->
 <div class="unit description markdown">
-A Swiss Army asynchronous control flow function builder for Node.js and
-JavaScript that helps you create highly-parallel control flows.
-
-Cadence is a function builder. It helps you write asynchronous functions that
-accept an error/result callback. You create a Cadence by simply passing a series
-of functions to 'cadence'.
+Cadence is a function builder. It builds asynchrnouse functions with an
+error-first signature. It uses a single `step` method to express all the control
+flows you've come to expect from a control flow library.
 
 ```javascript
 // Use Cadence.
