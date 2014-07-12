@@ -87,15 +87,11 @@ Cadence can express all manner of asynchronous operations, including:
  * asynchronous try and catch exception handling
  * asynchronous finalizers for clean up
 
-You can use Cadence in the browser too, because it is not Node.js dependent and
-it minzips to under 2k.
+You can use Cadence in the browser too. It is not Node.js dependent and it
+minzips to ~2.2k.
 
-Cadence is an example of ***syntax bashing***: extending the syntax of a
-computer language using the existing syntax, latching onto meta-data such as
-type or class data.
+## Serial and Parallel
 
-Unlike method-chaining or other forms of syntax-bashing, cadence users a single
-`step` function with which you can define asynchronous parallel operations.
 
 The functions in a cadence are run in **serial**. A step inside a cadence can
 contain callbacks whose return values appear in the next step or sub-cadences.

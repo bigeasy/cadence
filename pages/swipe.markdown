@@ -29,3 +29,10 @@ and provide various utilities, like specifying "finalizer" functions, labeling
 functions for reuse in loops or other sub-cadences, or using a sub-cadence to
 sort of "pause" the control flow, execute a function, and then let Cadence
 continue.
+
+Cadence is an example of ***syntax bashing***: extending the syntax of a
+computer language using the existing syntax, latching onto meta-data such as
+type or class data.
+
+Unlike method-chaining or other forms of syntax-bashing, cadence users a single
+`step` function with which you can define asynchronous parallel operations.
