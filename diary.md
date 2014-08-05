@@ -2265,7 +2265,7 @@ The user might handle the error in the callback given to the whole cadence,
 handle it by displaying an error page, but now the file returns and we through a
 process terminating exception.
 
-The filpside is that the file might also error. Only the database error is
+The filp side is that the file might also error. Only the database error is
 reported, so the file read fails silently. The administrator reconnects the
 network, and now file system problems appear. Why couldn't the administrator
 know about all the problems before setting out to fix things? Why must these
@@ -2866,7 +2866,7 @@ perhaps you return the label, you invoke the label and return to jump, and you
 pass the label to step to create a callback. Why does airity need to be
 specified?
 
-I've fogotten about nested parameters. Here is a possible jump up.
+I've forgotten about nested parameters. Here is a possible jump up.
 
 ```javascript
 cadence(function (step) {
