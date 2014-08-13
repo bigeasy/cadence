@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(14, function (step, equal) {
+require('proof')(14, function (step, assert) {
     var cadence = require('../..')
     var one = step()
     var two = step()
@@ -8,55 +8,55 @@ require('proof')(14, function (step, equal) {
     cadence(function () {
         return 1
     }, function (number) {
-        equal(number, 1, 'return step')
+        assert(number, 1, 'return step')
     })()
 
     cadence(function () {
         return 1
     })(function (error, number) {
-        equal(number, 1, 'return cadence')
+        assert(number, 1, 'return cadence')
         one()
     })
 
     cadence(function (step) {
         step()(null, 1)
     })(function (error, number) {
-        equal(number, 1, 'callback cadence')
+        assert(number, 1, 'callback cadence')
         two()
     })
 
     cadence(function () {
         return [ 1 ]
     })(function (error, number) {
-        equal(number, 1, 'callback cadence arrayed')
+        assert(number, 1, 'callback cadence arrayed')
     })
 
     cadence(function () {
         return [ 1, 2 ]
     })(function (error, one, two) {
-        equal(one, 1, 'callback cadence arrayed ordered one')
-        equal(two, 2, 'callback cadence arrayed ordered two')
+        assert(one, 1, 'callback cadence arrayed ordered one')
+        assert(two, 2, 'callback cadence arrayed ordered two')
     })
 
     cadence(function () {
         return [ [ 1, 2 ] ]
     })(function (error, array) {
-        equal(array[0], 1, 'callback cadence array ordered one')
-        equal(array[1], 2, 'callback cadence array ordered two')
+        assert(array[0], 1, 'callback cadence array ordered one')
+        assert(array[1], 2, 'callback cadence array ordered two')
     })
 
     cadence(function (step) {
         step(function () {
             step()(null, 1, 2)
         }, function (one, two) {
-            equal(one, 1, 'return undefined ignore one')
-            equal(two, 2, 'return undefined ignore two')
+            assert(one, 1, 'return undefined ignore one')
+            assert(two, 2, 'return undefined ignore two')
         }, function (one, two) {
-            equal(one, 1, 'return undefined one')
-            equal(two, 2, 'return undefined two')
+            assert(one, 1, 'return undefined one')
+            assert(two, 2, 'return undefined two')
         })
     })(function (error, one, two) {
-        equal(one, 1, 'return propagate one')
-        equal(two, 2, 'return propagate two')
+        assert(one, 1, 'return propagate one')
+        assert(two, 2, 'return propagate two')
     })
 })
