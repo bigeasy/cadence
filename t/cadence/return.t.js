@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(14, function (step, assert) {
+require('proof')(15, function (step, assert) {
     var cadence = require('../..')
     var one = step()
     var two = step()
@@ -58,5 +58,13 @@ require('proof')(14, function (step, assert) {
     })(function (error, one, two) {
         assert(one, 1, 'return propagate one')
         assert(two, 2, 'return propagate two')
+    })
+
+    cadence(function (step) {
+        var loop = step(function () {
+            return [ loop, [ 1, 2 ] ]
+        })()
+    })(function (error, array) {
+        assert(array, [ 1, 2 ], 'break return array')
     })
 })

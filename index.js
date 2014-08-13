@@ -353,7 +353,8 @@
                 while (iterator.args) {
                     if (iterator.args[0].steps[0] === label.step) {
                         iterator.args[1] = label.offset
-                        iterator.args[2].callbacks = previous.callbacks
+                        iterator.args[2].callbacks = callbacks
+                        callbacks[0].results[0] = [ invoke, results.slice(1) ]
                         iterator.args[2].errors.length = 0
                         return invoke.apply(this, iterator.args)
                     }
