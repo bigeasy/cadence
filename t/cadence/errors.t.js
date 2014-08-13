@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(22, function (step, equal, ok) {
+require('proof')(23, function (step, equal, ok) {
     var cadence = require('../..')
     var errors = []
 
@@ -109,6 +109,18 @@ require('proof')(22, function (step, equal, ok) {
         throw errors
     }])(function (error) {
         equal(error.message, 'handled', 'uncaughtedness reset')
+    })
+
+    cadence(function (step) {
+        step([function () {
+            throw new Error
+        }, function () {
+            step(null)
+        }], function () {
+            throw new Error('branch called')
+        })
+    })(function (error) {
+        ok(!error, 'error was thrown')
     })
 
     var dirty = true

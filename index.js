@@ -93,7 +93,7 @@
             // parallel operations to end, but ignore their results.
             if (vargs[0] === null || vargs[0] instanceof Error) {
                 frame.count = -Number.MAX_VALUE
-                frame.denouement.call(null, vargs[0] ? [ vargs[0] ] : [],
+                frame.denouement.call('break', vargs[0] ? [ vargs[0] ] : [],
                     frame.finalizers.splice(0, frame.finalizers.length), vargs.slice(1))
                 return
             }
@@ -329,6 +329,8 @@
                         __push.apply(previous.finalizers, finalizers)
                         if (errors.length) {
                             denouement.call(this, errors, previous.finalizers, results)
+                        } else if (this == 'break') {
+                            denouement.call(this, [], previous.finalizers.splice(0, previous.finalizers.length), results)
                         } else {
                             previous.callbacks = argue(results)
                             invoke.apply(previous.self, previous.args)
