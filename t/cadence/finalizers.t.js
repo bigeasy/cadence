@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(23, function (equal, assert) {
+require('proof')(26, function (equal, assert) {
     var cadence = require('../..')
 
     var object = {}
@@ -145,5 +145,24 @@ require('proof')(23, function (equal, assert) {
     })(stopped = {}, function (error) {
         assert(error.message, 'errored', 'error raised')
         assert(!stopped.finallized, 'finalizer not registered if not reached')
+    })
+
+    // Finalizers run in the reverse order in which they are declared.
+    var stopped
+    cadence(function (step, object) {
+        step([function () {
+            assert(object.finalizer, 1, 'reverse order')
+            object.finalizer++
+        }], function () {
+            object.user = 1
+        }, [function () {
+            object.finalizer = 1
+        }], function () {
+            return object
+        })
+
+    })({}, function (error, object) {
+        assert(object.user, 1, 'user function invoked between finalizers')
+        assert(object.finalizer, 2, 'all finalizers invoked')
     })
 })

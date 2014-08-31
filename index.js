@@ -18,7 +18,7 @@
             invoke.call(this, unfold(steps), 0, precede({ request: request }, [step].concat(vargs)),
             function (errors, finalizers, results) {
                 var vargs = results.length ? [null].concat(results) : []
-                finalize.call(this, finalizers, 0, errors, function (errors) {
+                finalize.call(this, finalizers, finalizers.length - 1, errors, function (errors) {
                     request.completed = true
                     if (errors.length) {
                         callback(errors.uncaught || errors.shift())
@@ -270,7 +270,7 @@
                               __push.apply(frame.finalizers, finalizers)
                               denouement()
                           } else {
-                              finalize.call(this, finalizers, 0, frame.errors, denouement)
+                              finalize.call(this, finalizers, finalizers.length - 1, frame.errors, denouement)
                           }
 
                           function denouement () {
@@ -293,13 +293,13 @@
         }
 
         function finalize (finalizers, index, errors, denouement) {
-            if (index == finalizers.length) {
+            if (index == -1) {
                 denouement.call(this, errors)
             } else {
                 var finalizer = finalizers[index]
                 invoke.call(this, unfold([ finalizer.step ]), 0, finalizer.previous, function (e) {
                     __push.apply(errors, e)
-                    finalize.call(this, finalizers, index + 1, errors, denouement)
+                    finalize.call(this, finalizers, index - 1, errors, denouement)
                 })
             }
         }
