@@ -2958,3 +2958,28 @@ appended. They need to be prepended so that they are always in the same place.
 *Update*: Should there now be some special way of handling catch? No because
 you're catching, and that's how it works in the JavaScript language, you need to
 throw to propagate.
+
+## More Breaks
+
+Here are some thoughts on some more breaks.
+
+```
+var f = cadence(function (step, string) {
+    step(function () { // nested
+        var block = step(function () {
+            switch (value) {
+            case 'inner-return':
+                return [ step, 'exit current cadence' ]
+            case 'function-return-1':
+                return [ cadence, 'exit whole function' ]
+            case 'function-return-2':
+                return [ step(), 'exit whole function' ]
+            case 'block-exit':
+                return [ block, 'exit labeled block' ]
+            }
+        }) // <- (1) no longer necessary
+    }, function () {
+        console.log('next')
+    })
+})
+```
