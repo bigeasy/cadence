@@ -314,7 +314,7 @@
         }
 
         // When we explicitly set we always set the vargs as an array.
-        function argue (vargs) { return [{ results: [[invoke, vargs]] }] }
+        function argue (vargs) { return [{ results: [[vargs]] }] }
 
         function invoke (cadence, index, previous, denouement) {
             var callbacks = previous.callbacks, vargs = [], arg = 0
@@ -342,18 +342,18 @@
             }
 
             var results = callbacks[0].results[0]
-            if (results.length == 2 && Array.isArray(results[1])) {
-                callbacks[0].results[0] = results = [ invoke ].concat(results[1])
+            if (results.length == 1 && Array.isArray(results[0])) {
+                callbacks[0].results[0] = results = results[0]
             }
 
-            if (results[1] && results[1].invoke === invoke) {
+            if (results[0] && results[0].invoke === invoke) {
                 var iterator = previous
-                var label = results.splice(1, 1)[0]
+                var label = results.shift()
                 while (iterator.args) {
                     if (iterator.args[0].steps[0] === label.step) {
                         iterator.args[1] = label.offset
                         iterator.args[2].callbacks = callbacks
-                        callbacks[0].results[0] = [ invoke, results.slice(1) ]
+                        callbacks[0].results[0] = [ results ]
                         iterator.args[2].errors.length = 0
                         return invoke.apply(this, iterator.args)
                     }
@@ -365,7 +365,7 @@
             // One in callbacks means that there were no callbacks created, we're
             // going to use the return value.
             if (callbacks.length == 1) {
-                i = 0, j = 1
+                i = 0, j = 0
             } else {
                 i = 1, j = 0
             }
@@ -427,7 +427,7 @@
             frames[0].args = [ cadence, index + 1, frames[0], denouement ]
 
             hold = step()
-            var results = frames[0].callbacks[0].results[0] = [ null, invoke ]
+            var results = frames[0].callbacks[0].results[0] = [ null ]
             try {
                 result = cadence.steps[index].apply(this, vargs)
             } catch (errors) {
