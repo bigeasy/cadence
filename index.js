@@ -284,11 +284,6 @@
                           }
                       })
                     }
-                    if (vargs[0] === invoke) {
-                        frame.callbacks.forEach(function (callback) {
-                            if (callback.starter) callback.starter(invoke)
-                        })
-                    }
                 }
                 if (index < 0 ? frame.errors.length : ++frame.called == frame.count) {
                     invoke.apply(frame.self, frame.args)
@@ -447,7 +442,10 @@
                 __push.apply(frames[0].errors, errors)
                 frames[0].called = frames[0].count - 1
             }
-            frames.shift()
+            var frame = frames.shift()
+            frame.callbacks.forEach(function (callback) {
+                if (callback.starter) callback.starter(invoke)
+            })
             hold.apply(this, results.concat([ result === void(0) ? vargs : result ]))
         }
 
