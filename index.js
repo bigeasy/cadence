@@ -1,7 +1,7 @@
 ! function (definition) {
-  if (typeof window != "undefined") window.cadence = definition()
-  else if (typeof define == "function") define(definition)
-  else module.exports = definition()
+    if (typeof window != "undefined") window.cadence = definition()
+    else if (typeof define == "function") define(definition)
+    else module.exports = definition()
 } (function () {
     var __slice = [].slice, __push = [].push
 
@@ -358,6 +358,7 @@
             if (results[0] && results[0].invoke === invoke) {
                 var iterator = previous
                 var label = results.shift()
+                // fixme: what about finalizers? are they run? probably not.
                 while (iterator.args) {
                     if (iterator.args[0].steps[0] === label.step) {
                         iterator.args[1] = label.offset
