@@ -264,24 +264,24 @@
                     if (index < 0) callback.results.push(vargs)
                     else callback.results[index] = vargs
                     if (callback.steps.length) {
-                      frame.count++
-                      invoke.call(frame.self, unfold(callback.steps), 0, precede(frame, callback.results[index]), function (errors, finalizers, results) {
-                          callback.results[index] = results
-                          __push.apply(frame.errors, errors)
+                        frame.count++
+                        invoke.call(frame.self, unfold(callback.steps), 0, precede(frame, callback.results[index]), function (errors, finalizers, results) {
+                            callback.results[index] = results
+                            __push.apply(frame.errors, errors)
 
-                          if (callback.fixup) {
-                              __push.apply(frame.finalizers, finalizers)
-                              denouement()
-                          } else {
-                              finalize.call(this, finalizers, finalizers.length - 1, frame.errors, denouement)
-                          }
+                            if (callback.fixup) {
+                                __push.apply(frame.finalizers, finalizers)
+                                denouement()
+                            } else {
+                                finalize.call(this, finalizers, finalizers.length - 1, frame.errors, denouement)
+                            }
 
-                          function denouement () {
-                              if (-1 < index && ++frame.called == frame.count) {
-                                  invoke.apply(frame.self, frame.args)
-                              }
-                          }
-                      })
+                            function denouement () {
+                                if (-1 < index && ++frame.called == frame.count) {
+                                    invoke.apply(frame.self, frame.args)
+                                }
+                            }
+                        })
                     }
                 }
                 if (index < 0 ? frame.errors.length : ++frame.called == frame.count) {
