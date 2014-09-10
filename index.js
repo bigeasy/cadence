@@ -269,12 +269,12 @@
 
                             if (callback.fixup) {
                                 __push.apply(frame.finalizers, finalizers)
-                                denouement()
+                                consumer()
                             } else {
-                                finalize.call(this, finalizers, finalizers.length - 1, frame.errors, denouement)
+                                finalize.call(this, finalizers, finalizers.length - 1, frame.errors, consumer)
                             }
 
-                            function denouement () {
+                            function consumer () {
                                 if (-1 < index && ++frame.called == frame.count) {
                                     invoke.apply(frame.self, frame.args)
                                 }
@@ -288,14 +288,14 @@
             }
         }
 
-        function finalize (finalizers, index, errors, denouement) {
+        function finalize (finalizers, index, errors, consumer) {
             if (index == -1) {
-                denouement.call(this, errors)
+                consumer.call(this, errors)
             } else {
                 var finalizer = finalizers[index]
                 invoke.call(this, unfold([ finalizer.step ]), 0, finalizer.previous, function (e) {
                     __push.apply(errors, e)
-                    finalize.call(this, finalizers, index - 1, errors, denouement)
+                    finalize.call(this, finalizers, index - 1, errors, consumer)
                 })
             }
         }
@@ -313,7 +313,7 @@
         // When we explicitly set we always set the vargs as an array.
         function argue (vargs) { return [{ results: [[vargs]] }] }
 
-        function invoke (cadence, index, previous, denouement) {
+        function invoke (cadence, index, previous, consumer) {
             var callbacks = previous.callbacks, vargs = [], arg = 0
             var catcher, finalizers, callback, arity, i, j, k, result, hold, jump
 
@@ -324,14 +324,14 @@
                         previous.errors = []
                         __push.apply(previous.finalizers, finalizers)
                         if (errors.length) {
-                            denouement.call(this, errors, previous.finalizers, results)
+                            consumer.call(this, errors, previous.finalizers, results)
                         } else {
                             previous.callbacks = argue(results)
                             invoke.apply(previous.self, previous.args)
                         }
                     })
                 } else {
-                    denouement.call(this, previous.errors, previous.finalizers.splice(0, previous.finalizers.length), [])
+                    consumer.call(this, previous.errors, previous.finalizers.splice(0, previous.finalizers.length), [])
                 }
                 return
             }
@@ -414,7 +414,7 @@
             }
 
             if (cadence.steps.length == index) {
-                denouement.call(this, [], previous.finalizers.splice(0, previous.finalizers.length), vargs)
+                consumer.call(this, [], previous.finalizers.splice(0, previous.finalizers.length), vargs)
                 return
             }
 
@@ -426,10 +426,10 @@
                 errors: [],
                 catcher: previous.catcher,
                 finalizers: previous.finalizers,
-                denouement: denouement,
+                consumer: consumer,
                 caller: previous.caller
             })
-            frames[0].args = [ cadence, index + 1, frames[0], denouement ]
+            frames[0].args = [ cadence, index + 1, frames[0], consumer ]
 
             hold = step()
             var results = frames[0].callbacks[0].results[0] = [ null ]
