@@ -2983,3 +2983,17 @@ var f = cadence(function (step, string) {
     })
 })
 ```
+
+## Declaration
+
+I never, ever use the flow in Cadence that is built into the root, so I can use
+that for more configuration. An example would be to explicitly state the arity
+of the return value.
+
+But, I believe I already have a way to specify arity to `step`.
+
+```
+cadence(0, function (step) {
+    someOtherFunctionWithResultsWeDoNotWant(step())
+})
+```
