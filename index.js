@@ -10,16 +10,14 @@
 
         function execute () {
             var vargs = __slice.call(arguments, 0),
-                callback = function (error) { if (error) throw error },
-                request = {}
+                callback = function (error) { if (error) throw error }
             if (vargs.length) {
                 callback = vargs.pop()
             }
-            invoke.call(this, unfold(steps), 0, precede({ request: request }, [step].concat(vargs)),
+            invoke.call(this, unfold(steps), 0, precede({}, [step].concat(vargs)),
             function (errors, finalizers, results) {
                 var vargs = results.length ? [null].concat(results) : []
                 finalize.call(this, finalizers, finalizers.length - 1, errors, function (errors) {
-                    request.completed = true
                     if (errors.length) {
                         callback(errors.uncaught || errors.shift())
                     } else {
@@ -306,7 +304,6 @@
             return {
                 caller: caller,
                 catcher: catcher,
-                request: caller.request,
                 callbacks: argue(vargs),
                 errors: [],
                 finalizers: []
@@ -431,7 +428,6 @@
                 errors: [],
                 catcher: previous.catcher,
                 finalizers: previous.finalizers,
-                request: previous.request,
                 denouement: denouement,
                 caller: previous.caller
             })
@@ -442,9 +438,6 @@
             try {
                 result = cadence.steps[index].apply(this, vargs)
             } catch (errors) {
-                if (frames[0].request.completed) {
-                    throw errors
-                }
                 if (errors === previous.caller.errors) {
                     frames[0].errors.uncaught = errors.uncaught
                 } else {
