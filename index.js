@@ -240,6 +240,10 @@
                 }
             }
 
+            starter.invoke = invoke
+            starter.step = callback.steps[0]
+            starter.offset = callback.steps.length
+
             return starter
         }
 
