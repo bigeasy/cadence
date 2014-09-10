@@ -5,13 +5,11 @@ require('proof')(2, function (step, ok, equal) {
     var one = step(), two = step()
 
     cadence(function (step) {
-
-        step(null, 1)
-
-    }, function () {
-
-        ok(false, 'should not be called')
-
+        step(function () {
+            return [ step, 1 ]
+        }, function () {
+            ok(false, 'should not be called')
+        })
     })(function (error, number) {
 
         if (error) throw error
@@ -21,13 +19,11 @@ require('proof')(2, function (step, ok, equal) {
     })
 
     cadence(function (step) {
-
-        step(new Error('abend'))
-
-    }, function () {
-
-        ok(false, 'should not be called')
-
+        step(function () {
+            throw new Error('abend')
+        }, function () {
+            ok(false, 'should not be called')
+        })
     })(function (error) {
 
         if (error.message != 'abend') throw error

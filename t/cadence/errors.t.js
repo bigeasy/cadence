@@ -115,7 +115,7 @@ require('proof')(23, function (step, equal, ok) {
         step([function () {
             throw new Error
         }, function () {
-            step(null)
+            return [ step ]
         }], function () {
             throw new Error('branch called')
         })
@@ -130,7 +130,7 @@ require('proof')(23, function (step, equal, ok) {
                 dirty = false
             }], function () {
                 step(function () {
-                    step(null)
+                    return [ step ]
                 })
                 throw Error('propagated')
             }, function () {
@@ -158,7 +158,7 @@ require('proof')(23, function (step, equal, ok) {
                 step(function () {
                     process.nextTick(step())
                 }, function () {
-                    step(null)
+                    return [ step ]
                 }, function () {
                     console.log('should not get here')
                     process.exit(1)

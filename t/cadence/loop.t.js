@@ -18,7 +18,7 @@ require('proof')(26, function (step, equal, deepEqual) {
         step(function () {
             count++
         }, function () {
-            if (count == 10) step(null, count)
+            if (count == 10) return [ step, count ]
         })()
     })(function (error, result) {
         if (error) throw error
@@ -28,7 +28,7 @@ require('proof')(26, function (step, equal, deepEqual) {
     cadence(function (step) {
         var count = 0
         step(function (more) {
-            if (!more) step(null, count)
+            if (!more) return [ step, count ]
         }, function () {
             step()(null, ++count < 10)
         })(null, true)
@@ -42,7 +42,7 @@ require('proof')(26, function (step, equal, deepEqual) {
         var starter = step(function () {
             count++
         }, function () {
-            if (count == 10) step(null, count)
+            if (count == 10) return [ step, count ]
         })
         starter()
         starter()
@@ -71,7 +71,7 @@ require('proof')(26, function (step, equal, deepEqual) {
         })(2, true)
     })(function (error, result) {
         if (error) throw error
-        equal(result, false, 'counted loop with argumet')
+        equal(result, false, 'counted loop with argument')
     })
 
     cadence(function (step) {
@@ -138,7 +138,7 @@ require('proof')(26, function (step, equal, deepEqual) {
         var retry = step([function (_, retry) {
             if (retry) count++
             if (count != 10) throw new Error
-            else step(null, 10)
+            else return [ step, 10 ]
         }, function () {
             step(retry(), 1)(null, true)
         }])(1)
@@ -152,7 +152,7 @@ require('proof')(26, function (step, equal, deepEqual) {
         var retry = step([function (_, retry) {
             if (retry) count++
             if (count != 10) throw new Error
-            else step(null, 10)
+            else return [ step, 10 ]
         }, function () {
             return [ retry(), true ]
         }])(1)

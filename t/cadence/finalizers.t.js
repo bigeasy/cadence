@@ -55,7 +55,7 @@ require('proof')(26, function (equal, assert) {
             assert(!object.closed, 'on exit open')
             object.used = true
         }, function () {
-            step(null, object)
+            return [ object ]
         })
 
     })({}, function (error, object) {

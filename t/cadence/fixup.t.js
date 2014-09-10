@@ -52,7 +52,7 @@ require('proof')(6, function (step, equal, deepEqual) {
         step(function () {
 
             echo(1, step(step, function (number) {
-                 step(new Error('errored'))
+                 throw new Error('errored')
             }))
 
         }, function () {

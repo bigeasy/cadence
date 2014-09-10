@@ -92,10 +92,7 @@
             // We callback explicitly to whoever called `invoke`, wait for our
             // parallel operations to end, but ignore their results.
             if (vargs[0] === null || vargs[0] instanceof Error) {
-                frame.count = -Number.MAX_VALUE
-                frame.denouement.call('break', vargs[0] ? [ vargs[0] ] : [],
-                    frame.finalizers.splice(0, frame.finalizers.length), vargs.slice(1))
-                return
+                throw new Error // removed
             }
 
             if (vargs[0] === Error) {
@@ -206,12 +203,14 @@
                                 step().apply(this, [ null ].concat(vargs).concat(count))
                             }
                         } else if (gather) {
-                            var release = createHandler(frame, false, [0])
-                            step.apply(this, [null].concat(vargs))
-                            callback.results = gather
-                            release()
+                            //var release = createHandler(frame, false, [0])
+                            //return [ step ].concat(vargs)
+                            //callback.results = gather
+                            //release()
+                            callback.results = [ null ].concat(gather)
+                            return [ step ]
                         } else {
-                            step.apply(this, [null].concat(vargs))
+                            return [ step ].concat(vargs)
                         }
                     })
 
@@ -303,9 +302,10 @@
             }
         }
 
-        function precede (caller, vargs) {
+        function precede (caller, vargs, catcher) {
             return {
                 caller: caller,
+                catcher: catcher,
                 request: caller.request,
                 callbacks: argue(vargs),
                 errors: [],
@@ -323,7 +323,7 @@
             if (previous.errors.length) {
                 catcher = cadence.catchers[index - 1]
                 if (catcher) {
-                    invoke.call(previous.self, unfold([ catcher ]), 0, precede(previous, [ previous.errors, previous.errors[0] ]), function (errors, finalizers, results) {
+                    invoke.call(previous.self, unfold([ catcher ]), 0, precede(previous, [ previous.errors, previous.errors[0] ], true), function (errors, finalizers, results) {
                         previous.errors = []
                         __push.apply(previous.finalizers, finalizers)
                         if (errors.length) {
@@ -347,10 +347,11 @@
             }
 
             if (results[0] === step && previous.caller.args) {
+                var iterator = previous.catcher ? previous.caller : previous
                 results[0] = {
                     invoke: invoke,
-                    step: previous.args[0].steps[0],
-                    offset: previous.args[0].steps.length
+                    step: iterator.args[0].steps[0],
+                    offset: iterator.args[0].steps.length
                 }
             }
 
@@ -427,6 +428,7 @@
                 count: 0,
                 called: 0,
                 errors: [],
+                catcher: previous.catcher,
                 finalizers: previous.finalizers,
                 request: previous.request,
                 denouement: denouement,
