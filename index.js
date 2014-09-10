@@ -325,8 +325,6 @@
                         __push.apply(previous.finalizers, finalizers)
                         if (errors.length) {
                             denouement.call(this, errors, previous.finalizers, results)
-                        } else if (this == 'break') {
-                            denouement.call(this, [], previous.finalizers.splice(0, previous.finalizers.length), results)
                         } else {
                             previous.callbacks = argue(results)
                             invoke.apply(previous.self, previous.args)
