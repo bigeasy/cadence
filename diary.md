@@ -2997,3 +2997,21 @@ cadence(0, function (step) {
     someOtherFunctionWithResultsWeDoNotWant(step())
 })
 ```
+
+## Loops Again
+
+Let's say we make gathered arrays go away.
+
+```javacript
+var f = cadence(function (step) {
+    var loop = step(function (str) {
+        if (str.length > 10) return [ loop, str ]
+        else return [ str + str ]
+    })("x")
+})
+```
+Gathered loops can be specified by passing an array to step. Argument to loops
+can, hmm...
+
+Okay, I'm feeling like the leading argument is the counter, and if you don't
+want one the leading argument can be null. Following arguments are parameters.
