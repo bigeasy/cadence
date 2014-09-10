@@ -346,6 +346,14 @@
                 callbacks[0].results[0] = results = results[0]
             }
 
+            if (results[0] === step && previous.caller.args) {
+                results[0] = {
+                    invoke: invoke,
+                    step: previous.args[0].steps[0],
+                    offset: previous.args[0].steps.length
+                }
+            }
+
             if (results[0] && results[0].invoke === invoke) {
                 var iterator = previous
                 var label = results.shift()
