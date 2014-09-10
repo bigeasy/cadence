@@ -3015,3 +3015,8 @@ can, hmm...
 
 Okay, I'm feeling like the leading argument is the counter, and if you don't
 want one the leading argument can be null. Following arguments are parameters.
+
+## Outgoing
+
+I'm not using arrays much. I've never used them, actually. They are parallel.
+I'm more likely to use a `forEach` to do something in parallel.
