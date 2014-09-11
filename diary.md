@@ -235,6 +235,78 @@ cadence(function (step) {
     // and so on
 
   })], function () {
+
+    // Using the beastiary, what about nested?
+    var label = step(function () {
+        if (Date.now() % 2) return [ label, 0 ]
+        fn(step())
+    }, function (value) {
+        return [ value + 1 ]
+    })
+
+    // Loops stay, but gathered is an empty leading array.
+    step([], function (number) {
+        return [ number ]
+    })(5)
+
+
+    // End of step fixup. Nmonic, well, we use `[ step ]` to exit so we can use
+    // `step(step, function () {})` to append.
+
+    step(step, [function () {}])
+
+    // I never use this.
+
+    var arrayed = step([])
+
+    var arrayed = step([], function (item) {
+        return [ item ]
+    })
+
+    // Each invocation appends to the generated array.
+
+    arrayed(1)
+
+    // So you can easily do this.
+
+    array.forEach(step([], function (item) {
+        return [ item * 2 ]
+    }))
+
+    // Fixups are rare, but they are nice, currently.
+    db.open(step(step, [function (db) { db.close(step())   }]))
+
+    // Turn a sub-cadence into a fixup by invoking it with `step`?
+    db.open(step([function (db) {
+        db.close(step())
+    }], function () {
+        db.pooling = true
+    })(step))
+
+    // Turn a sub-cadence into a fixup by creating a callbak by passing it to
+    // `step`?
+    db.open(step(step([function (db) {
+        db.close(step())
+    }], function () {
+        db.pooling = true
+    })))
+
+    // Other constuctions.
+    step(step)(function () {
+    })
+
+    // Construction options.
+
+    step([function () {}]) // Treat as special case finalizer.
+    step(step, function () {})
+    step(step(function () {}))
+    step(function () {})(step)
+    step(step)(function () {})
+
+    // Other options, extensibility.
+    step(on, ee)('data', [])
+    step(on, ee)('end')
+    step(on, ee)(Error)
   });
 
   // Signatures.
@@ -3034,6 +3106,10 @@ cadence(function (step) {
         step(child.stdout, 'data', [])
         step(child.stdout, 'end')
         step(child.stdout, Error)
-    }, function (data)
+    }, function (data) {
+        step(step([function () { }]))
+        step(step, [function () {
+        }])(step)
+    })
 })
 ```
