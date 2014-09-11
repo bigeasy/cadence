@@ -303,10 +303,37 @@ cadence(function (step) {
     step(function () {})(step)
     step(step)(function () {})
 
+    // Follow up, mnemonic: a cadence that runs after this step completes, which
+    // is why it comes after `step` its declartion.
+    step(step)(function () {})
+
+    // Follow up, mnemonic: hmm... same as above, this step, followed by.
+    step(step, function () {})
+
+    // Looks like this, break after step, so insert into step.
+    return [ step, 1 ]
+
+    // Fixup: mnemonic: no good mnemonic, but it looks functiony, maybe one step
+    // inside another shows that this is something to do later.
+    step(step)(function () {})
+
+    // Fixup: you want to filter it somehow, I know, horrible.
+    step(/./, function () {})
+
+    // All around bad, because parens after a cadence start a loop.
+    step(function () {})(step)
+
+
     // Other options, extensibility.
     step(on, ee)('data', [])
     step(on, ee)('end')
     step(on, ee)(Error)
+
+    // Now that I have `null` back, `null` can mean no error, so we can keep
+    // shifted event handlers.
+    ee.on('data', step(null, []))
+    ee.on('end', step(null))
+    ee.on('error', step(Error))
   });
 
   // Signatures.
