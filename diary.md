@@ -3020,3 +3020,20 @@ want one the leading argument can be null. Following arguments are parameters.
 
 I'm not using arrays much. I've never used them, actually. They are parallel.
 I'm more likely to use a `forEach` to do something in parallel.
+
+## Events Again
+
+This is how I feel.
+
+```javascript
+cadence(function (step) {
+    step(function () {
+        var ee = new events.EventEmitter
+        step(ee, 'data', [])
+        step(ee, Error)
+        step(child.stdout, 'data', [])
+        step(child.stdout, 'end')
+        step(child.stdout, Error)
+    }, function (data)
+})
+```
