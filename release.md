@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Implement trampoline. #231.
  * Remove request property of an invocation. #228.
  * Remove leading `invoke` from returned results. #225.
  * Start sub-cadences from `invoke`. #224.

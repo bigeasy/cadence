@@ -257,13 +257,14 @@
                             function consumer () {
                                 if (-1 < index && ++frame.called == frame.count) {
                                     invoke(frame)
+                            //        frame.join()
                                 }
                             }
                         }
                     }
                 }
                 if (index < 0 ? frame.errors.length : ++frame.called == frame.count) {
-                    invoke(frame)
+                    frame.join()
                 }
             }
         }
@@ -295,6 +296,11 @@
         function argue (vargs) { return [{ results: [[vargs]] }] }
 
         function invoke (frame) {
+            var f = _invoke(frame)
+            while (f) f = f()
+        }
+
+        function _invoke (frame) {
             var callbacks = frame.callbacks, vargs = [], arg = 0
             var catcher, finalizers, callback, arity, i, j, k, result, hold, jump
             var steps = frame.steps
@@ -343,7 +349,7 @@
                         iterator.callbacks = callbacks
                         callbacks[0].results[0] = [ results ]
                         iterator.errors.length = 0
-                        return invoke(iterator)
+                        return function () { invoke(iterator) }
                     }
                     iterator = iterator.caller
                 }
@@ -395,12 +401,15 @@
                 count: 0,
                 called: 0,
                 index: frame.nextIndex,
-                nextIndex: frame.nextIndex + 1
+                nextIndex: frame.nextIndex + 1,
+                sync: false,
+                join: function () { frame.sync = true }
             })
 
             if (steps.length == frame.index) {
-                frame.consumer.call(frame.self, [], frame.finalizers.splice(0, frame.finalizers.length), vargs)
-                return
+                return function () {
+                    frame.consumer.call(frame.self, [], frame.finalizers.splice(0, frame.finalizers.length), vargs)
+                }
             }
 
             var s = frame.steps[frame.index], fn
@@ -457,6 +466,12 @@
                 if (callback.starter) callback.starter(invoke)
             })
             hold.apply(frame.self, results.concat([ result === void(0) ? vargs : result ]))
+
+            if (frame.sync) {
+                return function () { invoke(frame) }
+            } else {
+                frame.join = function () { invoke(frame) }
+            }
         }
 
         return execute
