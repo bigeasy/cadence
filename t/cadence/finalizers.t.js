@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(26, function (equal, assert) {
+require('proof')(28, function (equal, assert) {
     var cadence = require('../..')
 
     var object = {}
@@ -112,6 +112,23 @@ require('proof')(26, function (equal, assert) {
         assert(me.used, 'this was used')
         assert(!me.opened, 'this was closed')
 
+    })
+
+    cadence(function (step, object) {
+        var block = step(function () {
+            step(function () {
+                step([function () {
+                    object.done = true
+                }], function () {
+                    return [ block, object ]
+                }, function () {
+                    throw new Error('should not run')
+                })
+            })
+        })
+    })({ value: 0 }, function (error, result) {
+        assert(result.value, 0, 'returned at break')
+        assert(result.done, 'finalized after break')
     })
 
     // Finalizers report their errors.

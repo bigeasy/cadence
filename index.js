@@ -5,6 +5,10 @@
 } (function () {
     var __slice = [].slice, __push = [].push
 
+    function consume (to, from) {
+        to.push.apply(to, from.splice(0, from.length))
+    }
+
     function cadence () {
         var steps = __slice.call(arguments)
 
@@ -342,6 +346,7 @@
             if (results[0] && results[0].invoke === invoke) {
                 var iterator = frame
                 var label = results.shift()
+                var finalizers = []
                 // fixme: what about finalizers? are they run? probably not.
                 while (!iterator.root) {
                     if (iterator.steps[0] === label.step) {
@@ -349,8 +354,10 @@
                         iterator.callbacks = callbacks
                         callbacks[0].results[0] = [ results ]
                         iterator.errors.length = 0
+                        consume(iterator.finalizers, finalizers)
                         return function () { invoke(iterator) }
                     }
+                    consume(finalizers, iterator.finalizers)
                     iterator = iterator.caller
                 }
             }
