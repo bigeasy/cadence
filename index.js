@@ -81,7 +81,6 @@
               return createHandler(frame, true, [ 0, [] ].concat(vargs.slice(1)))
             }
 
-
             // TODO Callback can be empty.
             var callback = { errors: [], results: [] }
 
