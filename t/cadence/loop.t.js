@@ -137,7 +137,7 @@ require('proof')(26, function (step, equal, deepEqual) {
         var count = 0
         var retry = step([function (_, retry) {
             if (retry) count++
-            if (count != 10) throw new Error
+            if (count != 10) throw new Error('x')
             else return [ step, 10 ]
         }, function () {
             step(retry(), 1)(null, true)

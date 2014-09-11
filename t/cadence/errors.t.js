@@ -147,7 +147,7 @@ require('proof')(23, function (step, equal, ok) {
     var domain = require('domain').create(), wait = step()
     domain.on('error', function (e) {
         ok(!dirty, 'finalizer ran')
-        equal(e.message, 'propagated', 'propagated')
+        equal(e.message, 'propagated', 'domain propagated')
         wait()
     })
     domain.run(function () {

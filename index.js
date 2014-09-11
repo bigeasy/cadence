@@ -8,14 +8,31 @@
     function cadence () {
         var steps = __slice.call(arguments)
 
+        function enframe (self, consumer, steps, index, caller, callbacks, catcher) {
+            return {
+                self: self,
+                consumer: consumer,
+                steps: steps,
+                index: index,
+                nextIndex: index + 1,
+                caller: caller,
+                catcher: catcher,
+                callbacks: callbacks,
+                errors: [],
+                finalizers: []
+            }
+        }
+
         function execute () {
             var vargs = __slice.call(arguments, 0),
                 callback = function (error) { if (error) throw error }
             if (vargs.length) {
                 callback = vargs.pop()
             }
-            invoke.call(this, unfold(steps), 0, precede({}, [step].concat(vargs)),
-            function (errors, finalizers, results) {
+
+            invoke(enframe(this, consumer, steps, -1, { root: true }, argue([ step ].concat(vargs))))
+
+            function consumer (errors, finalizers, results) {
                 var vargs = results.length ? [null].concat(results) : []
                 finalize.call(this, finalizers, finalizers.length - 1, errors, function (errors) {
                     if (errors.length) {
@@ -24,7 +41,7 @@
                         callback.apply(null, vargs)
                     }
                 })
-            })
+            }
         }
 
         // To use the same `step` function throughout while supporting reentrancy,
@@ -41,43 +58,6 @@
 
         function step () { return createHandler(frames[0], false, __slice.call(arguments)) }
 
-        function unfold (steps) {
-            var cadence = { catchers: [], steps: [], finalizers: [] }
-            steps.forEach(function (step) {
-                if (Array.isArray(step)) {
-                    if (step.length == 1) {
-                        cadence.finalizers[cadence.steps.length] = { step: step[0] }
-                    } else {
-                        cadence.steps.push(step[0])
-                        cadence.catchers[cadence.steps.length - 1] = function (errors, error) {
-                            var uncaught = []
-                            errors.forEach(function (error) {
-                                var caught = true
-                                if (step.length == 4) {
-                                    caught = step[2].test(error[step[1]])
-                                } else if (step.length == 3) {
-                                    var value = error.code || error.message
-                                    caught = step[1].test(value)
-                                }
-                                if (!caught && !errors.uncaught) errors.uncaught = error
-                                return caught
-                            })
-                            if (!errors.uncaught) {
-                                return step[step.length - 1].call(this, errors, errors[0])
-                            } else {
-                                throw errors
-                            }
-                        }
-                    }
-                } else if (typeof step == 'function') {
-                    cadence.steps.push(step)
-                } else {
-                    throw new Error('invalid arguments')
-                }
-            })
-            return cadence
-        }
-
         function createHandler (frame, event, vargs) {
             var i = -1
 
@@ -90,7 +70,7 @@
             // We callback explicitly to whoever called `invoke`, wait for our
             // parallel operations to end, but ignore their results.
             if (vargs[0] === null || vargs[0] instanceof Error) {
-                throw new Error // removed
+                throw new Error('outgoing') // removed
             }
 
             if (vargs[0] === Error) {
@@ -130,7 +110,7 @@
                 }
 
                 if (vargs[0] && typeof vargs[0].then == 'function') {
-                    var promise = vargs.shift(), handler = step.apply(this, vargs)
+                    var promise = vargs.shift(), handler = step.apply(frame.self, vargs)
                     return promise.then(function () {
                         handler.apply(null, [null].concat(__slice.call(arguments)))
                     }, handler)
@@ -139,7 +119,6 @@
 
             frame.callbacks.push(callback)
 
-            unfold(vargs) // for the sake of error checking
             callback.steps = vargs
 
             if (callback.steps.length) {
@@ -196,9 +175,9 @@
                         var vargs = __slice.call(arguments)
                         if (whilst()) {
                             if (counter) {
-                                step().apply(this, [ null ].concat(each ? [ counter[count] ] : [], count, vargs))
+                                step().apply(frame.self, [ null ].concat(each ? [ counter[count] ] : [], count, vargs))
                             } else {
-                                step().apply(this, [ null ].concat(vargs).concat(count))
+                                step().apply(frame.self, [ null ].concat(vargs).concat(count))
                             }
                         } else if (gather) {
                             //var release = createHandler(frame, false, [0])
@@ -215,8 +194,8 @@
                     callback.steps.push(function () {
                         var vargs = __slice.call(arguments)
                         if (gather) gather.push(vargs)
-                        frames[0].args[1] = 0
-                        step().apply(this, [null].concat(vargs))
+                        frames[0].nextIndex = 0
+                        step().apply(frame.self, [null].concat(vargs))
                         count++
                     })
 
@@ -263,7 +242,8 @@
                     else callback.results[index] = vargs
                     if (callback.steps.length) {
                         frame.count++
-                        invoke.call(frame.self, unfold(callback.steps), 0, precede(frame, callback.results[index]), function (errors, finalizers, results) {
+                        invoke(enframe(frame.self, consumer, callback.steps, -1, frame, argue(callback.results[index])))
+                        function consumer (errors, finalizers, results) {
                             callback.results[index] = results
                             __push.apply(frame.errors, errors)
 
@@ -271,21 +251,32 @@
                                 __push.apply(frame.finalizers, finalizers)
                                 consumer()
                             } else {
-                                finalize.call(this, finalizers, finalizers.length - 1, frame.errors, consumer)
+                                finalize.call(frame.self, finalizers, finalizers.length - 1, frame.errors, consumer)
                             }
 
                             function consumer () {
                                 if (-1 < index && ++frame.called == frame.count) {
-                                    invoke.apply(frame.self, frame.args)
+                                    invoke(frame)
                                 }
                             }
-                        })
+                        }
                     }
                 }
                 if (index < 0 ? frame.errors.length : ++frame.called == frame.count) {
-                    invoke.apply(frame.self, frame.args)
+                    invoke(frame)
                 }
             }
+        }
+
+        function subClass (base, override) {
+            var object = {}
+            for (var key in base) {
+                object[key] = base[key]
+            }
+            for (var key in override) {
+                object[key] = override[key]
+            }
+            return object
         }
 
         function finalize (finalizers, index, errors, consumer) {
@@ -293,45 +284,37 @@
                 consumer.call(this, errors)
             } else {
                 var finalizer = finalizers[index]
-                invoke.call(this, unfold([ finalizer.step ]), 0, finalizer.previous, function (e) {
+                invoke(enframe(this, function (e) {
                     __push.apply(errors, e)
                     finalize.call(this, finalizers, index - 1, errors, consumer)
-                })
-            }
-        }
-
-        function precede (caller, vargs, catcher) {
-            return {
-                caller: caller,
-                catcher: catcher,
-                callbacks: argue(vargs),
-                errors: [],
-                finalizers: []
+                }, [ finalizer.f ], -1, finalizer.caller, argue(finalizer.vargs)))
             }
         }
 
         // When we explicitly set we always set the vargs as an array.
         function argue (vargs) { return [{ results: [[vargs]] }] }
 
-        function invoke (cadence, index, previous, consumer) {
-            var callbacks = previous.callbacks, vargs = [], arg = 0
+        function invoke (frame) {
+            var callbacks = frame.callbacks, vargs = [], arg = 0
             var catcher, finalizers, callback, arity, i, j, k, result, hold, jump
+            var steps = frame.steps
 
-            if (previous.errors.length) {
-                catcher = cadence.catchers[index - 1]
+            if (frame.errors.length) {
+                catcher = frame._catcher
                 if (catcher) {
-                    invoke.call(previous.self, unfold([ catcher ]), 0, precede(previous, [ previous.errors, previous.errors[0] ], true), function (errors, finalizers, results) {
-                        previous.errors = []
-                        __push.apply(previous.finalizers, finalizers)
+                    invoke(enframe(frame.self, _consumer, [ catcher ], -1, frame, argue([ frame.errors, frame.errors[0] ]), true))
+                    function _consumer (errors, finalizers, results) {
+                        frame.errors = []
+                        __push.apply(frame.finalizers, finalizers)
                         if (errors.length) {
-                            consumer.call(this, errors, previous.finalizers, results)
+                            frame.consumer.call(frame.self, errors, frame.finalizers, results)
                         } else {
-                            previous.callbacks = argue(results)
-                            invoke.apply(previous.self, previous.args)
+                            frame.callbacks = argue(results)
+                            invoke(frame)
                         }
-                    })
+                    }
                 } else {
-                    consumer.call(this, previous.errors, previous.finalizers.splice(0, previous.finalizers.length), [])
+                    frame.consumer.call(frame.self, frame.errors, frame.finalizers.splice(0, frame.finalizers.length), [])
                 }
                 return
             }
@@ -341,28 +324,27 @@
                 callbacks[0].results[0] = results = results[0]
             }
 
-            if (results[0] === step && previous.caller.args) {
-                var iterator = previous.catcher ? previous.caller : previous
+            if (results[0] === step && !frame.caller.root) {
+                var iterator = frame.catcher ? frame.caller : frame
                 results[0] = {
                     invoke: invoke,
-                    step: iterator.args[0].steps[0],
-                    offset: iterator.args[0].steps.length
+                    step: iterator.steps[0],
+                    offset: iterator.steps.length
                 }
             }
 
             if (results[0] && results[0].invoke === invoke) {
-                var iterator = previous
+                var iterator = frame
                 var label = results.shift()
                 // fixme: what about finalizers? are they run? probably not.
-                while (iterator.args) {
-                    if (iterator.args[0].steps[0] === label.step) {
-                        iterator.args[1] = label.offset
-                        iterator.args[2].callbacks = callbacks
+                while (!iterator.root) {
+                    if (iterator.steps[0] === label.step) {
+                        iterator.nextIndex = label.offset
+                        iterator.callbacks = callbacks
                         callbacks[0].results[0] = [ results ]
-                        iterator.args[2].errors.length = 0
-                        return invoke.apply(this, iterator.args)
+                        iterator.errors.length = 0
+                        return invoke(iterator)
                     }
-                    iterator.args[1] = iterator.args[0].steps.length
                     iterator = iterator.caller
                 }
             }
@@ -397,7 +379,7 @@
                     }
                 })
                 if (callback.property) {
-                    this[callback.property] = vargs[0].arrayed ? vargs[0].values : vargs[0].values[0]
+                    frame.self[callback.property] = vargs[0].arrayed ? vargs[0].values : vargs[0].values[0]
                 }
                 arg += arity
                 j = 0
@@ -407,36 +389,62 @@
                 return vargs.arrayed ? vargs.values : vargs.values.shift()
             })
 
-            if (cadence.finalizers[index]) {
-                previous.finalizers.push(cadence.finalizers[index])
-                cadence.finalizers[index].previous = previous
-                cadence.finalizers[index].previous.callbacks = argue(vargs)
-            }
+            frame = subClass(frame, {
+                callbacks: [],
+                errors: [],
+                count: 0,
+                called: 0,
+                index: frame.nextIndex,
+                nextIndex: frame.nextIndex + 1
+            })
 
-            if (cadence.steps.length == index) {
-                consumer.call(this, [], previous.finalizers.splice(0, previous.finalizers.length), vargs)
+            if (steps.length == frame.index) {
+                frame.consumer.call(frame.self, [], frame.finalizers.splice(0, frame.finalizers.length), vargs)
                 return
             }
 
-            frames.unshift({
-                self: this,
-                callbacks: [],
-                count: 0,
-                called: 0,
-                errors: [],
-                catcher: previous.catcher,
-                finalizers: previous.finalizers,
-                consumer: consumer,
-                caller: previous.caller
-            })
-            frames[0].args = [ cadence, index + 1, frames[0], consumer ]
+            var s = frame.steps[frame.index], fn
+            if (Array.isArray(s)) {
+                if (s.length == 1) {
+                    frame.finalizers.push({ f: s[0], vargs: vargs, caller: frame.caller })
+                    fn = function () {}
+                } else {
+                    s = s.slice()
+                    fn = s[0]
+                    frame._catcher = function (errors, error) {
+                        var uncaught = []
+                        errors.forEach(function (error) {
+                            var caught = true
+                            if (s.length == 4) {
+                                caught = s[2].test(error[s[1]])
+                            } else if (s.length == 3) {
+                                var value = error.code || error.message
+                                caught = s[1].test(value)
+                            }
+                            if (!caught && !errors.uncaught) errors.uncaught = error
+                            return caught
+                        })
+                        if (!errors.uncaught) {
+                            return s[s.length - 1].call(this, errors, errors[0])
+                        } else {
+                            throw errors
+                        }
+                    }
+                }
+            } else if (typeof s == 'function') {
+                fn = s
+            } else {
+                throw new Error('invalid arguments')
+            }
+
+            frames.unshift(frame)
 
             hold = step()
             var results = frames[0].callbacks[0].results[0] = [ null ]
             try {
-                result = cadence.steps[index].apply(this, vargs)
+                result = fn.apply(frame.self, vargs)
             } catch (errors) {
-                if (errors === previous.caller.errors) {
+                if (errors === frame.caller.errors) {
                     frames[0].errors.uncaught = errors.uncaught
                 } else {
                     errors = [ errors ]
@@ -444,11 +452,11 @@
                 __push.apply(frames[0].errors, errors)
                 frames[0].called = frames[0].count - 1
             }
-            var frame = frames.shift()
+            frame = frames.shift()
             frame.callbacks.forEach(function (callback) {
                 if (callback.starter) callback.starter(invoke)
             })
-            hold.apply(this, results.concat([ result === void(0) ? vargs : result ]))
+            hold.apply(frame.self, results.concat([ result === void(0) ? vargs : result ]))
         }
 
         return execute
