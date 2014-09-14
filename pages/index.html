@@ -17,29 +17,60 @@
 </div>
 <!-- todo: code font is too small for body text font -->
 <div class="unit description markdown">
-Cadence is a function builder. It builds asynchrnouse functions with an
-error-first signature. It uses a single `step` method to express all the control
-flows you've come to expect from a control flow library.
+Cadence builds you an asynchronous function with an error-first signature. It
+uses a single `step` method to express all the control flows you've come to
+expect from a control flow library.
+
+Here's a function that will delete a file if it exists.
 
 ```javascript
-// Use Cadence.
 var cadence = require('cadence')
 var fs = require('fs')
+var path = require('path')
 
-// Delete a file if the condition is true.
-var deleteIf = cadence(function (step, file, condition) {
+var deleteIf = cadence(function (step, file) {
     step(function () {
-        fs.stat(file, step())
-    }, function (stat) {
-        if (condition(stat)) fs.unlink(step())
+        fs.readdir(path.dirname(file), step())
+    }, function (files) {
+        if (!files.some(function (f) { return f == file }).length) {
+            return [ step, false ]
+        }
+        fs.unlink(file, step())
+    }, function () {
+        return [ true ]
     })
 })
 
-// Test to see if a file is empty.
-function empty (stat) { return stat.size == 0 }
+deleteIf('junk.txt', function (error, deleted) {
+    if (error) console.log(error)
+    console.log('junk.txt: was deleted ' + deleted)
+})
+```
 
-// Delete a file if it is empty.
-deleteIf(__filename, empty, function (error) { if (error) throw error })
+A better way of doing this would be to try to delete the file, but catch an
+`ENOENT` error if it doesn't exist.
+
+Here's
+
+```javascript
+var cadence = require('cadence')
+var fs = require('fs')
+var path = require('path')
+
+var deleteIf = cadence(function (step, file) {
+    step([function () {
+        fs.unlink(file, step())
+    }, /^ENOENT$/, function () {
+        return [ step, false ]
+    }], function () {
+        return [ true ]
+    })
+})
+
+deleteIf('junk.txt', function (error, deleted) {
+    if (error) console.log(error)
+    console.log('junk.txt: was deleted ' + deleted)
+})
 ```
 
 In the above example we create a function that will asynchronously stat a file,
