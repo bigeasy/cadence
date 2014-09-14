@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Upgrade Proof to 0.0.47. #238.
  * Use `null` to indicated event handler. #233.
  * Implement trampoline. #231.
  * Remove request property of an invocation. #228.
