@@ -8,7 +8,7 @@ require('proof')(6, function (step, equal, deepEqual) {
         step(function () {
             (function (callback) {
                 callback(null, 1)
-            })(step(step, function (number) {
+            })(step(step)(function (number) {
                 return number + 1
             }))
         }, function (value) {
@@ -22,7 +22,7 @@ require('proof')(6, function (step, equal, deepEqual) {
         step(function () {
             (function (callback) {
                 callback(new Error('errored'), 1)
-            })(step(step, function () {
+            })(step(step)(function () {
                 throw new Error('should not be called')
             }))
         }, function () {
@@ -35,7 +35,7 @@ require('proof')(6, function (step, equal, deepEqual) {
 
     cadence(function (step) {
 
-        echo(1, step(step, function (number) {
+        echo(1, step(step)(function (number) {
             echo(- number, step())
         }))
 
@@ -51,7 +51,7 @@ require('proof')(6, function (step, equal, deepEqual) {
 
         step(function () {
 
-            echo(1, step(step, function (number) {
+            echo(1, step(step)(function (number) {
                  throw new Error('errored')
             }))
 
@@ -69,7 +69,7 @@ require('proof')(6, function (step, equal, deepEqual) {
 
     cadence(function (step) {
 
-        echo(1, step(step, function (number) {
+        echo(1, step(step)(function (number) {
             throw new Error('thrown')
             echo(- number, step())
         }))
@@ -80,7 +80,7 @@ require('proof')(6, function (step, equal, deepEqual) {
 
     cadence(function (step) {
 
-        var numbers = step(step, [], function (number) { return - number })
+        var numbers = step(step)([], function (number) { return - number })
 
         ; [ 1, 2, 3 ].forEach(function (number) {
             echo(number, numbers())

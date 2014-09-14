@@ -29,7 +29,7 @@ require('proof')(28, function (equal, assert) {
         step(function () {
             ! function (callback) {
                 callback(null, object)
-            } (step(step, [function (object) { object.closed = true }]))
+            } (step(step)([function (object) { object.closed = true }]))
         }, function (object) {
             assert(!object.closed, 'leading finalizer open')
             object.used = true
@@ -50,7 +50,7 @@ require('proof')(28, function (equal, assert) {
         step(function () {
             ! function (callback) {
                 callback(null, object)
-            } (step(step, [function (object) { object.closed = true }]))
+            } (step(step)([function (object) { object.closed = true }]))
         }, function (object) {
             assert(!object.closed, 'on exit open')
             object.used = true
@@ -73,7 +73,7 @@ require('proof')(28, function (equal, assert) {
         step(function () {
             ! function (callback) {
                 callback(null, 1)
-            } (step(step, [function (number) {
+            } (step(step)([function (number) {
                 assert(self === this, 'self is this')
                 this.closed = number
             }]))
@@ -137,7 +137,7 @@ require('proof')(28, function (equal, assert) {
         step(function () {
             ! function (callback) {
                 callback(null, object)
-            } (step(step, [function (object) { step()(new Error('finalizer')) }]))
+            } (step(step)([function (object) { step()(new Error('finalizer')) }]))
         }, function (object) {
             assert(!object.closed, 'leading finalizer open')
             return object

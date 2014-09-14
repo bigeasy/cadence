@@ -61,29 +61,33 @@
         //
         var frames = []
 
-        function step () { return _step(frames[0], false, __slice.call(arguments)) }
+        function step () {
+            return _step(frames[0], { errors: [], results: [] }, false, __slice.call(arguments))
+        }
 
-        function _step (frame, event, vargs) {
-            var callback = { errors: [], results: [] }
-
+        function _step (frame, callback, event, vargs) {
             if (vargs.length) {
-                if (vargs[0] === Error) {
-                    return _step(frame, true, [ 0, [] ].concat(vargs.slice(1)))
+                if (vargs[0] === step) {
+                    callback.fixup = !! vargs.shift()
+                    if (!vargs.length) return function () {
+                        return _step(frame, callback, false, __slice.call(arguments))
+                    }
+                    throw new Error('relocating')
                 }
 
-                if (vargs[0] && vargs[0].invoke === invoke) {
-                    frame.callbacks[0].results[0].push(vargs.shift())
+                if (vargs[0] === Error) {
+                    return _step(frame, callback, true, [ 0, [] ].concat(vargs.slice(1)))
                 }
 
                 if (vargs[0] === null) {
-                  var callback = _step(frame, true, vargs.slice(1))
+                  var callback = _step(frame, callback, true, vargs.slice(1))
                   return function () {
                         return callback.apply(null, [ null ].concat(__slice.call(arguments)))
                   }
                 }
 
-                if (callback.fixup = (vargs[0] === step)) {
-                    vargs.shift()
+                if (vargs[0] && vargs[0].invoke === invoke) {
+                    frame.callbacks[0].results[0].push(vargs.shift())
                 }
 
                 if (typeof vargs[0] == 'string') {

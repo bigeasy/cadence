@@ -100,12 +100,12 @@ require('proof')(15, function (step, deepEqual, equal, ok) {
     cadence(function (step) {
 
         step(function () {
-            step(step, 1, function (numbers) {
+            step(step)(1, function (numbers) {
                 numbers.forEach(step(1, [], function (number) {
                     step()(null, number, number + 1)
                 }))
             })(null, [ 1, 2, 3 ])
-            step(step, function (number) { return number + 1 })(null, 2)
+            step(step)(function (number) { return number + 1 })(null, 2)
         }, function (one, two) {
             deepEqual(one, [ 1, 2, 3 ], 'fixed-up step inferred one')
             equal(two, 3, 'fixed-up step specified two')

@@ -5,7 +5,7 @@ require('proof')(3, function (step, ok, equal) {
     var object = {}
     object.method = cadence(function (step) {
         step(function () {
-            step(step, function () {
+            step(step)(function () {
                 ok(this === object, 'inside')
                 this.value = 1
                 return this
