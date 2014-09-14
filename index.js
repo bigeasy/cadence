@@ -68,7 +68,7 @@
 
             if (vargs.length) {
                 if (vargs[0] === Error) {
-                  return _step(frame, true, [ 0, [] ].concat(vargs.slice(1)))
+                    return _step(frame, true, [ 0, [] ].concat(vargs.slice(1)))
                 }
 
                 if (vargs[0] && vargs[0].invoke === invoke) {
@@ -78,7 +78,7 @@
                 if (vargs[0] === null) {
                   var callback = _step(frame, true, vargs.slice(1))
                   return function () {
-                      return callback.apply(null, [ null ].concat(__slice.call(arguments)))
+                        return callback.apply(null, [ null ].concat(__slice.call(arguments)))
                   }
                 }
 
