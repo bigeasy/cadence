@@ -22,6 +22,7 @@
                 caller: caller,
                 catcher: catcher,
                 callbacks: callbacks,
+                cleanup: [],
                 errors: [],
                 finalizers: []
             }
@@ -98,15 +99,24 @@
                     callback.arity = +(vargs.shift())
                 }
 
-                if (Array.isArray(vargs[0]) && vargs[0].length == 0) {
-                    callback.arrayed = !! vargs.shift()
-                }
-
                 if (vargs[0] && typeof vargs[0].then == 'function') {
                     var promise = vargs.shift(), handler = step.apply(frame.self, vargs)
                     return promise.then(function () {
                         handler.apply(null, [null].concat(__slice.call(arguments)))
                     }, handler)
+                }
+
+                if (Array.isArray(vargs[0])) {
+                    if (vargs[0].length == 0) {
+                        callback.arrayed = !! vargs.shift()
+                    } else if (!callback.fixup
+                            && vargs.length == 1
+                            && vargs[0].length == 1
+                            && typeof vargs[0][0] == 'function') {
+                        throw new Error('reserved')
+                        frame.cleanup.push(vargs.shift().shift())
+                        return
+                    }
                 }
             }
 
@@ -318,6 +328,16 @@
                 return
             }
 
+            if (frame.cleanup.length) {
+                return function () {
+                    invoke(enframe(frame.self, function (errors, finalizers, results) {
+                        consume(frame.errors, errors)
+                        consume(frame.finalizers, finalizers)
+                        invoke(frame)
+                    }, [ frame.cleanup.pop() ], -1, frame, argue([])))
+                }
+            }
+
             var results = callbacks[0].results[0]
             if (results.length == 1 && Array.isArray(results[0])) {
                 callbacks[0].results[0] = results = results[0]
@@ -392,6 +412,7 @@
             })
 
             frame = subClass(frame, {
+                cleanup: [],
                 callbacks: [],
                 errors: [],
                 count: 0,
