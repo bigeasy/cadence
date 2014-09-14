@@ -64,8 +64,6 @@
         function step () { return createHandler(frames[0], false, __slice.call(arguments)) }
 
         function createHandler (frame, event, vargs) {
-            var i = -1
-
             if (vargs[0] === Error) {
               return createHandler(frame, true, [ 0, [] ].concat(vargs.slice(1)))
             }
