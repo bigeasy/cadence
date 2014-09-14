@@ -64,14 +64,13 @@
         function step () { return createHandler(frames[0], false, __slice.call(arguments)) }
 
         function createHandler (frame, event, vargs) {
-            if (vargs[0] === Error) {
-              return createHandler(frame, true, [ 0, [] ].concat(vargs.slice(1)))
-            }
-
-            // TODO Callback can be empty.
             var callback = { errors: [], results: [] }
 
             if (vargs.length) {
+                if (vargs[0] === Error) {
+                  return createHandler(frame, true, [ 0, [] ].concat(vargs.slice(1)))
+                }
+
                 if (vargs[0] && vargs[0].invoke === invoke) {
                     frame.callbacks[0].results[0].push(vargs.shift())
                 }
