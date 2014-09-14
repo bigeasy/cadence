@@ -61,14 +61,14 @@
         //
         var frames = []
 
-        function step () { return createHandler(frames[0], false, __slice.call(arguments)) }
+        function step () { return _step(frames[0], false, __slice.call(arguments)) }
 
-        function createHandler (frame, event, vargs) {
+        function _step (frame, event, vargs) {
             var callback = { errors: [], results: [] }
 
             if (vargs.length) {
                 if (vargs[0] === Error) {
-                  return createHandler(frame, true, [ 0, [] ].concat(vargs.slice(1)))
+                  return _step(frame, true, [ 0, [] ].concat(vargs.slice(1)))
                 }
 
                 if (vargs[0] && vargs[0].invoke === invoke) {
@@ -76,7 +76,7 @@
                 }
 
                 if (vargs[0] === null) {
-                  var callback = createHandler(frame, true, vargs.slice(1))
+                  var callback = _step(frame, true, vargs.slice(1))
                   return function () {
                       return callback.apply(null, [ null ].concat(__slice.call(arguments)))
                   }
@@ -169,7 +169,7 @@
                                 step().apply(frame.self, [ null ].concat(vargs).concat(count))
                             }
                         } else if (gather) {
-                            //var release = createHandler(frame, false, [0])
+                            //var release = _step(frame, false, [0])
                             //return [ step ].concat(vargs)
                             //callback.results = gather
                             //release()
