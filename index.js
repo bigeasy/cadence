@@ -30,6 +30,7 @@
         function execute () {
             var vargs = __slice.call(arguments, 0),
                 callback = function (error) { if (error) throw error }
+
             if (vargs.length) {
                 callback = vargs.pop()
             }
