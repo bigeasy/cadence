@@ -9,8 +9,8 @@ require('proof')(7, function (equal, ok, step, deepEqual) {
 
     cadence(function (step, ee) {
         step(function () {
-            ee.on('data', step(-1, []))
-            ee.on('end', step(-1))
+            ee.on('data', step(null, []))
+            ee.on('end', step(null))
         }, function (data) {
             deepEqual(data, [ 1, 2, 3 ], 'events')
         })
@@ -27,7 +27,7 @@ require('proof')(7, function (equal, ok, step, deepEqual) {
     cadence(function (step, ee) {
         step(function () {
             ee.on('error', step(Error))
-            ee.on('end', step(-1))
+            ee.on('end', step(null))
         })
     })(ee, function (error) {
         equal(error.message, 'error', 'error event')
@@ -40,7 +40,7 @@ require('proof')(7, function (equal, ok, step, deepEqual) {
     cadence(function (step, ees) {
       step(function () {
           ee.on('error', step(Error))
-          ee.on('end', step(-1))
+          ee.on('end', step(null))
       }, function (end) {
           equal(end, 'ended', 'error ignored')
       })
@@ -52,8 +52,8 @@ require('proof')(7, function (equal, ok, step, deepEqual) {
 
     cadence(function (step, ee) {
         step(function () {
-            ee.on('data', step(-1, []))
-            ee.on('end', step(-1))
+            ee.on('data', step(null, []))
+            ee.on('end', step(null))
         }, function (data, ended) {
             deepEqual(data, [], 'arrayed event with no values')
             equal(ended, 'ended', 'arrayed event with no values ended')
@@ -66,8 +66,8 @@ require('proof')(7, function (equal, ok, step, deepEqual) {
 
     cadence(function (step, ee) {
         step(function () {
-            ee.on('data', step(-1, 2, []))
-            ee.on('end', step(-1))
+            ee.on('data', step(null, 2, []))
+            ee.on('end', step(null))
         }, function (first, second, ended) {
             deepEqual(second, [], 'arrayed event with specific arity')
             equal(ended, 'ended', 'arrayed event with specific arity ended')

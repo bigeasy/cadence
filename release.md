@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Use `null` to indicated event handler. #233.
  * Implement trampoline. #231.
  * Remove request property of an invocation. #228.
  * Remove leading `invoke` from returned results. #225.

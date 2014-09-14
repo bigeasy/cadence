@@ -65,18 +65,6 @@
         function createHandler (frame, event, vargs) {
             var i = -1
 
-            // The caller as invoked the step function directly as an explicit early
-            // return to exit the entire cadence.
-            //
-            // The rediculous callback count means that as callbacks complete, they
-            // never trigger the next step.
-            //
-            // We callback explicitly to whoever called `invoke`, wait for our
-            // parallel operations to end, but ignore their results.
-            if (vargs[0] === null || vargs[0] instanceof Error) {
-                throw new Error('outgoing') // removed
-            }
-
             if (vargs[0] === Error) {
               return createHandler(frame, true, [ 0, [] ].concat(vargs.slice(1)))
             }
@@ -84,12 +72,12 @@
             // TODO Callback can be empty.
             var callback = { errors: [], results: [] }
 
-            if (vargs[0] != null) {
-                if (vargs[0].invoke === invoke) {
+            if (vargs.length) {
+                if (vargs[0] && vargs[0].invoke === invoke) {
                     frame.callbacks[0].results[0].push(vargs.shift())
                 }
 
-                if (vargs[0] === -1) {
+                if (vargs[0] === null) {
                   var callback = createHandler(frame, true, vargs.slice(1))
                   return function () {
                       return callback.apply(null, [ null ].concat(__slice.call(arguments)))
