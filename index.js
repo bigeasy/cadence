@@ -113,7 +113,6 @@
                             && vargs.length == 1
                             && vargs[0].length == 1
                             && typeof vargs[0][0] == 'function') {
-                        throw new Error('reserved')
                         frame.cleanup.push(vargs.shift().shift())
                         return
                     }
