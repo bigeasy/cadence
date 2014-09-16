@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(6, function (step, equal, deepEqual) {
+require('proof')(6, function (step, assert) {
     var cadence = require('../..')
 
     cadence(function (step) {
@@ -12,7 +12,7 @@ require('proof')(6, function (step, equal, deepEqual) {
                 return number + 1
             }))
         }, function (value) {
-            equal(value, 2, 'fixup direct')
+            assert(value, 2, 'fixup direct')
         })
 
     })(step())
@@ -30,7 +30,7 @@ require('proof')(6, function (step, equal, deepEqual) {
         })
 
     })(function (error) {
-        equal(error.message, 'errored', 'fixup short circuit')
+        assert(error.message, 'errored', 'fixup short circuit')
     })
 
     cadence(function (step) {
@@ -41,7 +41,7 @@ require('proof')(6, function (step, equal, deepEqual) {
 
     }, function (items) {
 
-        deepEqual(items, -1, 'fixup cadence')
+        assert(items, -1, 'fixup cadence')
 
     })(step())
 
@@ -63,7 +63,7 @@ require('proof')(6, function (step, equal, deepEqual) {
 
     })(function (error) {
 
-        equal(error.message, 'errored', 'inner error')
+        assert(error.message, 'errored', 'inner error')
 
     })
 
@@ -75,7 +75,7 @@ require('proof')(6, function (step, equal, deepEqual) {
         }))
 
     })(function (error) {
-        equal(error.message, 'thrown', 'errors')
+        assert(error.message, 'thrown', 'errors')
     })
 
     cadence(function (step) {
@@ -88,7 +88,7 @@ require('proof')(6, function (step, equal, deepEqual) {
 
     }, function (numbers) {
 
-        deepEqual(numbers, [ -1, -2, -3 ], 'fixup array cadence')
+        assert(numbers, [ -1, -2, -3 ], 'fixup array cadence')
 
     })(step())
 })

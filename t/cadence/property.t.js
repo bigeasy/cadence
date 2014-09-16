@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(4, function (step, equal, deepEqual) {
+require('proof')(4, function (step, assert) {
     var cadence = require('../..')
     var object = {}
 
@@ -15,12 +15,12 @@ require('proof')(4, function (step, equal, deepEqual) {
     })
 
     object.scalar(1, function (error, result)  {
-        equal(result, 1, 'result')
-        equal(object.value, 1, 'property')
+        assert(result, 1, 'result')
+        assert(object.value, 1, 'property')
     })
 
     object.arrayed(1, function (error, result)  {
-        deepEqual(result, [ 1, 2, 3 ], 'result')
-        deepEqual(object.values, [ 1, 2, 3 ], 'property')
+        assert(result, [ 1, 2, 3 ], 'result')
+        assert(object.values, [ 1, 2, 3 ], 'property')
     })
 })

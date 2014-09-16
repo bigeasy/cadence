@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(1, function (step, deepEqual) {
+require('proof')(1, function (step, assert) {
     var cadence = require('../..')
 
     cadence(function (step) {
@@ -9,7 +9,7 @@ require('proof')(1, function (step, deepEqual) {
 
     }, function (number) {
 
-        deepEqual(number, 1, 'step')
+        assert(number, 1, 'step')
 
     })(step())
 })

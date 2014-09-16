@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(2, function (equal) {
+require('proof')(2, function (assert) {
     var cadence = require('../..')
 
     cadence(function () {
@@ -8,7 +8,7 @@ require('proof')(2, function (equal) {
         throw new Error('thrown')
 
     })(function (error) {
-        equal(error.message, 'thrown', 'handled throw')
+        assert(error.message, 'thrown', 'handled throw')
     })
 
     cadence(function (step) {
@@ -16,7 +16,7 @@ require('proof')(2, function (equal) {
         step()(new Error('handed'))
 
     })(function (error) {
-        equal(error.message, 'handed', 'unhandled error')
+        assert(error.message, 'handed', 'unhandled error')
     })
 
 })

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(12, function (step, equal, ok) {
+require('proof')(12, function (step, assert) {
     var cadence = require('../..')
 
     cadence(function (step) {
@@ -12,13 +12,13 @@ require('proof')(12, function (step, equal, ok) {
 
     }, function (letters, numbers) {
 
-        equal(letters[0], 'a', 'letter one')
-        equal(letters[1], 'b', 'letter two')
-        equal(letters[2], 'c', 'letter three')
+        assert(letters[0], 'a', 'letter one')
+        assert(letters[1], 'b', 'letter two')
+        assert(letters[2], 'c', 'letter three')
 
-        equal(numbers[0], 1, 'number one')
-        equal(numbers[1], 2, 'number two')
-        equal(numbers[2], 3, 'number three')
+        assert(numbers[0], 1, 'number one')
+        assert(numbers[1], 2, 'number two')
+        assert(numbers[2], 3, 'number three')
 
     })(step())
 
@@ -35,14 +35,14 @@ require('proof')(12, function (step, equal, ok) {
 
     }, function (letters, numbers) {
 
-        equal(letters.length, 2, 'some undefineds letters count')
-        equal(letters.length, 2, 'some undefineds numbers count')
+        assert(letters.length, 2, 'some undefineds letters count')
+        assert(letters.length, 2, 'some undefineds numbers count')
 
-        equal(letters[0], 'a', 'some undefines letter one')
-        equal(letters[1], 'b', 'some undefines letter two')
+        assert(letters[0], 'a', 'some undefines letter one')
+        assert(letters[1], 'b', 'some undefines letter two')
 
-        ok(numbers[0] === undefined, 'some undefines numbers one')
-        equal(numbers[1], 2, 'some undefines numbers two')
+        assert(numbers[0] === undefined, 'some undefines numbers one')
+        assert(numbers[1], 2, 'some undefines numbers two')
 
     })()
 })

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(10, function (step, deepEqual) {
+require('proof')(10, function (step, assert) {
     var cadence = require('../..')
 
     cadence(function (step) {
@@ -10,8 +10,8 @@ require('proof')(10, function (step, deepEqual) {
 
     })(function (error, one, two) {
 
-        deepEqual(one, 1, 'step')
-        deepEqual(two, 2, 'two step')
+        assert(one, 1, 'step')
+        assert(two, 2, 'two step')
 
     })
 
@@ -27,7 +27,7 @@ require('proof')(10, function (step, deepEqual) {
 
     })(function (error) {
 
-        deepEqual(error.message, 'errored', 'error')
+        assert(error.message, 'errored', 'error')
 
     })
 
@@ -40,7 +40,7 @@ require('proof')(10, function (step, deepEqual) {
                 step()(new Error('errored'))
             })
         }, function (_, error) {
-            deepEqual(error.message, 'errored', 'error caught')
+            assert(error.message, 'errored', 'error caught')
         }])
 
     })(step())
@@ -55,7 +55,7 @@ require('proof')(10, function (step, deepEqual) {
 
     }, function (items) {
 
-        deepEqual(items, [ -1, -2, -3 ], 'step arrayed')
+        assert(items, [ -1, -2, -3 ], 'step arrayed')
 
     })(step())
 
@@ -68,8 +68,8 @@ require('proof')(10, function (step, deepEqual) {
 
     }, function (first, second) {
 
-        deepEqual(first, [ 1, 2 ], 'arrayed multi return one')
-        deepEqual(second, [ 2, 3 ], 'arrayed multi return two')
+        assert(first, [ 1, 2 ], 'arrayed multi return one')
+        assert(second, [ 2, 3 ], 'arrayed multi return two')
 
     })(step())
 
@@ -83,7 +83,7 @@ require('proof')(10, function (step, deepEqual) {
 
     }, function (items) {
 
-        deepEqual(items, [], 'step arrayed empty')
+        assert(items, [], 'step arrayed empty')
 
     })(step())
 
@@ -96,7 +96,7 @@ require('proof')(10, function (step, deepEqual) {
 
     }, function (items) {
 
-        deepEqual(items, [ 1, 3 ], 'step arrayed missing')
+        assert(items, [ 1, 3 ], 'step arrayed missing')
 
     })(step())
 
@@ -108,7 +108,7 @@ require('proof')(10, function (step, deepEqual) {
 
     }, function (items) {
 
-        deepEqual(items, [ 1 ], 'step arrayed single')
+        assert(items, [ 1 ], 'step arrayed single')
 
     })(step())
 

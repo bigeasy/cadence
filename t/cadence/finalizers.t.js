@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(28, function (equal, assert) {
+require('proof')(28, function (assert) {
     var cadence = require('../..')
 
     var object = {}

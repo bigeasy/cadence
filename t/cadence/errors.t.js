@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 
-require('proof')(23, function (step, equal, ok) {
+require('proof')(23, function (step, assert) {
     var cadence = require('../..')
     var errors = []
 
     cadence(function () {
         throw new Error('thrown')
     })(function (error) {
-        equal(error.message, 'thrown', 'intercepted throw')
+        assert(error.message, 'thrown', 'intercepted throw')
     })
 
     var self = {}
     cadence([function (step) {
         step()(new Error('handled'))
     }, function (errors) {
-        ok(self === this)
-        equal(errors[0].message, 'handled', 'intercepted passed along')
+        assert(self === this)
+        assert(errors[0].message, 'handled', 'intercepted passed along')
     }]).call(self)
 
     cadence([function (step) {
@@ -23,7 +23,7 @@ require('proof')(23, function (step, equal, ok) {
     }, function (error) {
         throw new Error('should not be called')
     }], function () {
-        ok(true, 'no error')
+        assert(true, 'no error')
     })()
 
     cadence([function (step) {
@@ -31,15 +31,15 @@ require('proof')(23, function (step, equal, ok) {
         step()(new Error('two'))
         step()()
     }, function (errors, error) {
-        equal(errors.length, 2, 'got all errors')
-        equal(errors[0].message, error.message, 'first error is second argument')
+        assert(errors.length, 2, 'got all errors')
+        assert(errors[0].message, error.message, 'first error is second argument')
     }])()
 
     cadence([function (step) {
         step()(null, 1)
     }, function () {
     }], function (number) {
-        equal(number, 1, 'no error with value')
+        assert(number, 1, 'no error with value')
     })()
 
     try {
@@ -47,13 +47,13 @@ require('proof')(23, function (step, equal, ok) {
             throw new Error('exceptional')
         })()
     } catch (e) {
-        equal(e.message, 'exceptional', 'default error handler')
+        assert(e.message, 'exceptional', 'default error handler')
     }
 
     cadence([function (step) {
         step()(new Error('handled'))
     }, /handle/, function (errors) {
-        equal(errors[0].message, 'handled', 'condtionally caught regex')
+        assert(errors[0].message, 'handled', 'condtionally caught regex')
     }])()
 
     cadence([function (step) {
@@ -61,7 +61,7 @@ require('proof')(23, function (step, equal, ok) {
     }, function (error) {
         return 1
     }], function (number) {
-        equal(number, 1, 'handled and value changed')
+        assert(number, 1, 'handled and value changed')
     })()
 
     cadence([function (step) {
@@ -69,13 +69,13 @@ require('proof')(23, function (step, equal, ok) {
         error.code = 'ENOENT'
         step()(error)
     }, /ENOENT/, function (errors) {
-        equal(errors[0].message, 'handled', 'condtionally caught code regex')
+        assert(errors[0].message, 'handled', 'condtionally caught code regex')
     }])()
 
     cadence([function (step) {
         step()(new Error('handled'))
     }, 'message', /handle/, function (errors) {
-        equal(errors[0].message, 'handled', 'condtionally caught named field regex')
+        assert(errors[0].message, 'handled', 'condtionally caught named field regex')
     }])()
 
     cadence([function (step) {
@@ -83,7 +83,7 @@ require('proof')(23, function (step, equal, ok) {
     }, 'message', /bogus/, function (errors) {
         throw new Error('should not get here')
     }])(function (error) {
-        equal(error.message, 'handled', 'condtionally caught failure')
+        assert(error.message, 'handled', 'condtionally caught failure')
     })
 
     cadence([function (step) {
@@ -92,7 +92,7 @@ require('proof')(23, function (step, equal, ok) {
     }, 'message', /^(handled)$/, function (errors) {
         throw new Error('should not get here')
     }])(function (error) {
-        equal(error.message, 'unhandled', 'condtionally caught did not catch all')
+        assert(error.message, 'unhandled', 'condtionally caught did not catch all')
     })
 
     cadence([function (step) {
@@ -103,12 +103,12 @@ require('proof')(23, function (step, equal, ok) {
             throw new Error('should not get here')
         }])
     }, function (errors) {
-        equal(errors.length, 2, 'got all errors')
-        equal(errors[0].message, 'handled', 'errors still in order one')
-        equal(errors[1].message, 'unhandled', 'errors still in order two')
+        assert(errors.length, 2, 'got all errors')
+        assert(errors[0].message, 'handled', 'errors still in order one')
+        assert(errors[1].message, 'unhandled', 'errors still in order two')
         throw errors
     }])(function (error) {
-        equal(error.message, 'handled', 'uncaughtedness reset')
+        assert(error.message, 'handled', 'uncaughtedness reset')
     })
 
     cadence(function (step) {
@@ -120,7 +120,7 @@ require('proof')(23, function (step, equal, ok) {
             throw new Error('branch called')
         })
     })(function (error) {
-        ok(!error, 'error was thrown')
+        assert(!error, 'error was thrown')
     })
 
     var dirty = true
@@ -140,14 +140,14 @@ require('proof')(23, function (step, equal, ok) {
             if (error) throw error
         })
     } catch (e) {
-        ok(!dirty, 'finalizer ran')
-        equal(e.message, 'propagated', 'propagated')
+        assert(!dirty, 'finalizer ran')
+        assert(e.message, 'propagated', 'propagated')
     }
 
     var domain = require('domain').create(), wait = step()
     domain.on('error', function (e) {
-        ok(!dirty, 'finalizer ran')
-        equal(e.message, 'propagated', 'domain propagated')
+        assert(!dirty, 'finalizer ran')
+        assert(e.message, 'propagated', 'domain propagated')
         wait()
     })
     domain.run(function () {

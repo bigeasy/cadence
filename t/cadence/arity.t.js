@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(15, function (step, deepEqual, equal, ok) {
+require('proof')(15, function (step, assert) {
     var cadence = require('../..')
 
     cadence(function (step) {
@@ -9,7 +9,7 @@ require('proof')(15, function (step, deepEqual, equal, ok) {
             step()(null)
             step()(null, 1)
         }, function (x) {
-            equal(x, 1, 'default is zero')
+            assert(x, 1, 'default is zero')
         })
 
     })(step())
@@ -21,8 +21,8 @@ require('proof')(15, function (step, deepEqual, equal, ok) {
                 step()(null, 1, 2)
             })
         }, function (one, two) {
-            equal(one, 1, 'sub-cadence inferred one')
-            equal(two, 2, 'sub-cadence inferred two')
+            assert(one, 1, 'sub-cadence inferred one')
+            assert(two, 2, 'sub-cadence inferred two')
         })
 
     })(step())
@@ -35,8 +35,8 @@ require('proof')(15, function (step, deepEqual, equal, ok) {
             })
             step()(null, 3)
         }, function (one, two) {
-            equal(one, 1, 'sub-cadence specified one')
-            equal(two, 3, 'sub-cadence specified two')
+            assert(one, 1, 'sub-cadence specified one')
+            assert(two, 3, 'sub-cadence specified two')
         })
 
     })(step())
@@ -48,8 +48,8 @@ require('proof')(15, function (step, deepEqual, equal, ok) {
                 step()(null, number, number + 1)
             }))
         }, function (one, two) {
-            deepEqual(one, [ 1, 2, 3 ], 'arrayed sub-cadence step inferred one')
-            deepEqual(two, [ 2, 3, 4 ], 'arrayed sub-cadence step inferred two')
+            assert(one, [ 1, 2, 3 ], 'arrayed sub-cadence step inferred one')
+            assert(two, [ 2, 3, 4 ], 'arrayed sub-cadence step inferred two')
         })
 
     })(step())
@@ -62,8 +62,8 @@ require('proof')(15, function (step, deepEqual, equal, ok) {
             }))
             step(1)(null, 2)
         }, function (one, two) {
-            deepEqual(one, [ 1, 2, 3 ], 'arrayed sub-cadence specified one')
-            equal(two, 2, 'arrayed sub-cadence specified two')
+            assert(one, [ 1, 2, 3 ], 'arrayed sub-cadence specified one')
+            assert(two, 2, 'arrayed sub-cadence specified two')
         })
 
     })(step())
@@ -76,8 +76,8 @@ require('proof')(15, function (step, deepEqual, equal, ok) {
                 items()(null, number, number + 1)
             })
         }, function (one, two) {
-            deepEqual(one, [ 1, 2, 3 ], 'arrayed step inferred one')
-            deepEqual(two, [ 2, 3, 4 ], 'arrayed step inferred two')
+            assert(one, [ 1, 2, 3 ], 'arrayed step inferred one')
+            assert(two, [ 2, 3, 4 ], 'arrayed step inferred two')
         })
 
     })(step())
@@ -91,8 +91,8 @@ require('proof')(15, function (step, deepEqual, equal, ok) {
             })
             step()(null, 2)
         }, function (one, two) {
-            deepEqual(one, [ 1, 2, 3 ], 'arrayed step inferred one')
-            equal(two, 2, 'arrayed step specified two')
+            assert(one, [ 1, 2, 3 ], 'arrayed step inferred one')
+            assert(two, 2, 'arrayed step specified two')
         })
 
     })(step())
@@ -107,8 +107,8 @@ require('proof')(15, function (step, deepEqual, equal, ok) {
             })(null, [ 1, 2, 3 ])
             step(step)(function (number) { return number + 1 })(null, 2)
         }, function (one, two) {
-            deepEqual(one, [ 1, 2, 3 ], 'fixed-up step inferred one')
-            equal(two, 3, 'fixed-up step specified two')
+            assert(one, [ 1, 2, 3 ], 'fixed-up step inferred one')
+            assert(two, 3, 'fixed-up step specified two')
         })
 
     })(step())

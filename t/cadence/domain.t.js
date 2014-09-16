@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(2, function (step, equal, ok) {
+require('proof')(2, function (step, assert) {
     var cadence = require('../..')
     var domain = require('../../domain')
     var events = require('events')
@@ -10,7 +10,7 @@ require('proof')(2, function (step, equal, ok) {
             new events.EventEmitter().emit('error', new Error('emitted'))
         })
     }))(function (error) {
-        equal(error.message, 'emitted', 'error emitted')
+        assert(error.message, 'emitted', 'error emitted')
     })
 
     cadence(domain(function (step) {
@@ -20,6 +20,6 @@ require('proof')(2, function (step, equal, ok) {
             new events.EventEmitter().emit('error', new Error('emitted'))
         })
     }))(function (error) {
-        equal(error.message, 'emitted', 'error emitted')
+        assert(error.message, 'emitted', 'error emitted')
     })
 })

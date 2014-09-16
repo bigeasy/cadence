@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(7, function (equal, ok, step, deepEqual) {
+require('proof')(7, function (step, assert) {
     var EventEmitter = require('events').EventEmitter
     var cadence = require('../..')
     var ee
@@ -12,7 +12,7 @@ require('proof')(7, function (equal, ok, step, deepEqual) {
             ee.on('data', step(null, []))
             ee.on('end', step(null))
         }, function (data) {
-            deepEqual(data, [ 1, 2, 3 ], 'events')
+            assert(data, [ 1, 2, 3 ], 'events')
         })
     })(ee, step())
 
@@ -30,7 +30,7 @@ require('proof')(7, function (equal, ok, step, deepEqual) {
             ee.on('end', step(null))
         })
     })(ee, function (error) {
-        equal(error.message, 'error', 'error event')
+        assert(error.message, 'error', 'error event')
     })
 
     ee.emit('error', new Error('error'))
@@ -42,7 +42,7 @@ require('proof')(7, function (equal, ok, step, deepEqual) {
           ee.on('error', step(Error))
           ee.on('end', step(null))
       }, function (end) {
-          equal(end, 'ended', 'error ignored')
+          assert(end, 'ended', 'error ignored')
       })
     })([ ee, new EventEmitter, new EventEmitter ], step())
 
@@ -55,8 +55,8 @@ require('proof')(7, function (equal, ok, step, deepEqual) {
             ee.on('data', step(null, []))
             ee.on('end', step(null))
         }, function (data, ended) {
-            deepEqual(data, [], 'arrayed event with no values')
-            equal(ended, 'ended', 'arrayed event with no values ended')
+            assert(data, [], 'arrayed event with no values')
+            assert(ended, 'ended', 'arrayed event with no values ended')
         })
     })(ee, step())
 
@@ -69,8 +69,8 @@ require('proof')(7, function (equal, ok, step, deepEqual) {
             ee.on('data', step(null, 2, []))
             ee.on('end', step(null))
         }, function (first, second, ended) {
-            deepEqual(second, [], 'arrayed event with specific arity')
-            equal(ended, 'ended', 'arrayed event with specific arity ended')
+            assert(second, [], 'arrayed event with specific arity')
+            assert(ended, 'ended', 'arrayed event with specific arity ended')
         })
     })(ee, step())
 
