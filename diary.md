@@ -3140,3 +3140,97 @@ cadence(function (step) {
     })
 })
 ```
+
+## Gathering Again
+
+Gathering a sub-cadence. What I use a lot is actual serial looping. What I use
+almost never is the parallel looping that comes from using an arrayed callback.
+
+The problem is that using an array as a signifier makes it into a gathered
+callback, one where a new callback is generated for each invocation of the
+array. I use this very rarely though, but I do use it to implement gathering of
+`'data'` events from event emitters. I also use it to generate an `Error` event
+handler for an event emitter. Those uses are pretty much internal, however.
+
+I want to say that a gathered loop is indicated by passing an array to the
+`step` that defines the sub-cadence, but I don't know that this is right. As I
+write about it, I'd say that it does not belong where it sits in the invocation
+of the loop, the loop invocation is getting so complex and difficult to
+document. What should I do? Have a go at documentation?
+
+What I find is that I rarely use parallel operations in practice. The
+parallelism comes from embedding a module in a server. Each request has a thread
+of execution.
+
+Thus, I believe that loops are common, parallel operations are rare. Parallel
+operations require gathering, while loops do not always require gathering, so
+maybe gathered loops are also rare. I'd say parallel loops are almost never used
+by myself.
+
+Yet, I don't like the look of using an array in the cadence to indicate
+gathering.
+
+```
+// One thing that I'm not using yet is `Array`.
+step(function (value) {
+    db.fetch({ key: value })
+}, function (record) {
+    if (record.status == 'frobinated') {
+        return [ record ]
+    }
+    frobinate(record, step())
+})(Array, values)
+
+// Starting to double up function calls.
+step(function (value) {
+    db.fetch({ key: value })
+}, function (record) {
+    if (record.status == 'frobinated') {
+        return [ record ]
+    }
+    frobinate(record, step())
+})(values)([])
+
+// Starting to double up function calls.
+step(function (value) {
+    db.fetch({ key: value })
+}, function (record) {
+    if (record.status == 'frobinated') {
+        return [ record ]
+    }
+    frobinate(record, step())
+})(other)([])
+
+// Not going to ever see this.
+step(function () {
+})([])([])
+
+// Would always have values, or be a variable.
+step(function () {
+
+})([ 1, 2, 3 ])([])
+
+// Could see this.
+step(function () {
+
+})(4)([])
+
+step(function () {
+
+})(4)([])
+
+// Another way would be a significate language change.
+
+var arrayed = step([])()
+
+array.forEach(step([])(function () {
+    // Parralel.
+}))
+
+// Except you can't tell the difference between this and the above.
+step([])(function () {
+})(array)
+
+step(function () {
+})
+```
