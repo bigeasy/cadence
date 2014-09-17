@@ -16,37 +16,93 @@
 <h1>Cadence</h1>
 </div>
 <!-- todo: code font is too small for body text font -->
-<div class="unit description markdown"><p>Cadence is a function builder. It builds asynchrnouse functions with an
-error-first signature. It uses a single <code>step</code> method to express all the control
-flows you&#39;ve come to expect from a control flow library.</p>
-<pre><code class="lang-javascript"><div class="highlight"><pre><span class="c1">// Use Cadence.</span>
-<span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">)</span>
+<div class="unit description markdown"><p>Cadence builds you an asynchronous function with an error-first signature. It
+uses a single <code>step</code> method to express all the control flows you&#39;ve come to
+expect from a control flow library.</p>
+<p>Here&#39;s a function that will delete a file if it exists.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">)</span>
 <span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+<span class="kd">var</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">)</span>
 
-<span class="c1">// Delete a file if the condition is true.</span>
-<span class="kd">var</span> <span class="nx">deleteIf</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">,</span> <span class="nx">file</span><span class="p">,</span> <span class="nx">condition</span><span class="p">)</span> <span class="p">{</span>
+<span class="kd">var</span> <span class="nx">deleteIf</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">,</span> <span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-        <span class="nx">fs</span><span class="p">.</span><span class="nx">stat</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
-    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">condition</span><span class="p">(</span><span class="nx">stat</span><span class="p">))</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">unlink</span><span class="p">(</span><span class="nx">step</span><span class="p">())</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readdir</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">dirname</span><span class="p">(</span><span class="nx">file</span><span class="p">),</span> <span class="nx">step</span><span class="p">())</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">files</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">files</span><span class="p">.</span><span class="nx">some</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">f</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">f</span> <span class="o">==</span> <span class="nx">file</span> <span class="p">}).</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="p">[</span> <span class="nx">step</span><span class="p">,</span> <span class="kc">false</span> <span class="p">]</span>
+        <span class="p">}</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">unlink</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="kc">true</span> <span class="p">]</span>
     <span class="p">})</span>
 <span class="p">})</span>
 
-<span class="c1">// Test to see if a file is empty.</span>
-<span class="kd">function</span> <span class="nx">empty</span> <span class="p">(</span><span class="nx">stat</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">stat</span><span class="p">.</span><span class="nx">size</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">}</span>
-
-<span class="c1">// Delete a file if it is empty.</span>
-<span class="nx">deleteIf</span><span class="p">(</span><span class="nx">__filename</span><span class="p">,</span> <span class="nx">empty</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span> <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span> <span class="p">})</span>
+<span class="nx">deleteIf</span><span class="p">(</span><span class="s1">&#39;junk.txt&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">deleted</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;junk.txt: was deleted &#39;</span> <span class="o">+</span> <span class="nx">deleted</span><span class="p">)</span>
+<span class="p">})</span>
 </pre></div>
 </code></pre>
-<p>In the above example we create a function that will asynchronously stat a file,
-then if a test function passes, it will asynchronously delete the file. We
-assign our cadence to a variable named <code>deleteIf</code>. We can now call <code>deleteIf</code>
-providing a standard issue Node.js error reporting callback.</p>
+<p>A better way of doing this would be to try to delete the file, but catch an
+<code>ENOENT</code> error if it doesn&#39;t exist.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">),</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+
+<span class="kd">var</span> <span class="nx">deleteIf</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">,</span> <span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">unlink</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+    <span class="p">},</span> <span class="sr">/^ENOENT$/</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="nx">step</span><span class="p">,</span> <span class="kc">false</span> <span class="p">]</span>
+    <span class="p">}],</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="kc">true</span> <span class="p">]</span>
+    <span class="p">})</span>
+<span class="p">})</span>
+
+<span class="nx">deleteIf</span><span class="p">(</span><span class="s1">&#39;junk.txt&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">deleted</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;junk.txt: was deleted &#39;</span> <span class="o">+</span> <span class="nx">deleted</span><span class="p">)</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>In the above we use a catch block to catch an <code>ENOENT</code> error and return false,
+otherwise return true. If an error other than <code>ENOENT</code> is raised, the the error
+will be passed as the first argument.</p>
+<p>Note that for the simple examples, the simple solution is often as simple as
+Cadence, but not simpiler.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+
+<span class="kd">function</span> <span class="nx">deleteIf</span> <span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">fs</span><span class="p">.</span><span class="nx">unlink</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">code</span> <span class="o">==</span> <span class="s1">&#39;ENOENT&#39;</span><span class="p">)</span> <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+            <span class="k">else</span> <span class="nx">callback</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">true</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">})</span>
+<span class="p">}</span>
+
+<span class="nx">deleteIf</span><span class="p">(</span><span class="s1">&#39;junk.txt&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">deleted</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;junk.txt: was deleted &#39;</span> <span class="o">+</span> <span class="nx">deleted</span><span class="p">)</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>Cadence can express all manner of asynchronous operations, including:</p>
+<ul>
+<li>serial asynchronous operations, natch</li>
+<li>parallel operations</li>
+<li>while loops, do..while loops, or counted loops</li>
+<li>each loops that can either map or reduce an array</li>
+<li>single, streaming events and error event handlers</li>
+<li>asynchronous try and catch exception handling</li>
+<li>asynchronous finalizers for clean up</li>
+</ul>
+<p>You can use Cadence in the browser too. It is not Node.js dependent and it
+minzips to ~2.25k.</p>
+<h3>Cadence Basics</h3>
 <p>We call the series of functions a <strong><em>cadence</em></strong>. We call an individual function
 in a cadence a <strong><em>step</em></strong>. We use the <code>step</code> function to both define cadences
-and to create the callbacks that will take us from one step to the next. Below
-is an example without the arguments:</p>
+and to create the callbacks that will take us from one step to the next.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="c1">// Use Cadence.</span>
 <span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">)</span>
 <span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
@@ -54,16 +110,12 @@ is an example without the arguments:</p>
 <span class="c1">// Create an asynchronous function.</span>
 <span class="kd">var</span> <span class="nx">cat</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-
-        <span class="c1">// Note that in this line, we invoke step() as our callback which</span>
-        <span class="c1">// immediately &#39;steps into&#39; our callback function below,</span>
-        <span class="c1">//  with the output of readFile() curried over.</span>
+        <span class="c1">// Use `step()` to create a callback.</span>
         <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">__filename</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
-
     <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
-
+        <span class="c1">// Any error is propagted to the caller, so our next step is only</span>
+        <span class="c1">// invoked if everything is okay.</span>
         <span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span>
-
     <span class="p">})</span>
 <span class="p">})</span>
 
@@ -71,24 +123,39 @@ is an example without the arguments:</p>
 <span class="nx">cat</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span> <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span> <span class="p">})</span>
 </pre></div>
 </code></pre>
-<p>Cadence can express all manner of asynchronous operations, including:</p>
-<ul>
-<li>serial asynchronous operations, natch</li>
-<li>heterogenous and homongenous parallel operations</li>
-<li>while loops, do..while loops, or counted loops</li>
-<li>each loops that can either map or reduce an array</li>
-<li>events, streaming events and error events</li>
-<li>asynchronous try and catch exception handling</li>
-<li>asynchronous finalizers for clean up</li>
-</ul>
-<p>You can use Cadence in the browser too. It is not Node.js dependent and it
-minzips to ~2.2k.</p>
+<p>The result of the callback invoked by <code>step()</code> is passed to the next step in the
+cadence. The next step does not expect an error as its first argument. If there
+is an error, the error is propagated up and out to caller&#39;s callback.</p>
 <h2>Serial and Parallel</h2>
-<p>The functions in a cadence are run in <strong>serial</strong>. A step inside a cadence can
-contain callbacks whose return values appear in the next step or sub-cadences.
-The callbacks and sub-cadences in a step are run in <strong>parallel</strong>, allowing you
-to mix and match cadences and sub-cadences to direct the flow of your
-asynchronous program.</p>
+<p>A simple distinction between serial and parallel. The functions in a cadence are
+run in <strong>serial</strong>. The callbacks build by calling <code>step()</code> withing a cadence are
+invoked in <strong>parallel</strong>.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;db&#39;</span><span class="p">),</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+
+<span class="kd">var</span> <span class="nx">initialize</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">,</span> <span class="nx">conf</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="c1">// These two operations happen in parallel.</span>
+        <span class="nx">db</span><span class="p">.</span><span class="nx">connect</span><span class="p">(</span><span class="nx">step</span><span class="p">())</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">conf</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">conn</span><span class="p">,</span> <span class="nx">conf</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// The next step is called when both operations complete.</span>
+        <span class="nx">conf</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">conf</span><span class="p">)</span>
+        <span class="nx">conn</span><span class="p">.</span><span class="nx">encoding</span> <span class="o">=</span> <span class="nx">conf</span><span class="p">.</span><span class="nx">encoding</span> <span class="o">||</span> <span class="s1">&#39;UTF-8&#39;</span>
+        <span class="nx">conn</span><span class="p">.</span><span class="nx">lang</span> <span class="o">=</span> <span class="nx">conf</span><span class="p">.</span><span class="nx">lang</span> <span class="o">||</span> <span class="s1">&#39;en_US&#39;</span>
+        <span class="k">return</span> <span class="nx">conn</span> <span class="c1">// return an initialized connection.</span>
+    <span class="p">})</span>
+<span class="p">})</span>
+
+<span class="nx">initialize</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">connection</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span>
+    <span class="nx">run</span><span class="p">(</span><span class="nx">connection</span><span class="p">)</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>A step inside a cadence can contain callbacks whose return values appear in the
+next step or sub-cadences. The callbacks and sub-cadences in a step are run in
+<strong>parallel</strong>, allowing you to mix and match cadences and sub-cadences to direct
+the flow of your asynchronous program.</p>
 <p>Note that Cadence is as terse as it can be. Yes, you must still use callbacks,
 but it avoids the temple of doom by keeping your callbacks in line, one after
 the other. It works hard so that indentation reflects a logical nesting of your
@@ -98,7 +165,9 @@ callback.</p>
 <p>Note that it is simple to create sub-routines within your library using cadence.
 Instead of passing a callback, pass the step function. A sub-cadence in the step
 function will return to the next step in the caller&#39;s cadence.</p>
-<h3>Sub-Cadences</h3>
+<h3>Cadences Within Steps Within Cadences</h3>
+<p>You can define a cadence within a step. This let&#39;s you work with results of an
+asynchronous call.</p>
 <p>Let&#39;s say that we want to get a <code>stat</code> object, but include the body of the file
 in the <code>stat</code> object. When we get our <code>stat</code> object, we can use a sub-cadence to
 complete the <code>stat</code> object by reading the body.</p>

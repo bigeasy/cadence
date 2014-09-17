@@ -50,12 +50,8 @@ deleteIf('junk.txt', function (error, deleted) {
 A better way of doing this would be to try to delete the file, but catch an
 `ENOENT` error if it doesn't exist.
 
-Here's
-
 ```javascript
-var cadence = require('cadence')
-var fs = require('fs')
-var path = require('path')
+var cadence = require('cadence'), fs = require('fs')
 
 var deleteIf = cadence(function (step, file) {
     step([function () {
@@ -73,15 +69,51 @@ deleteIf('junk.txt', function (error, deleted) {
 })
 ```
 
-In the above example we create a function that will asynchronously stat a file,
-then if a test function passes, it will asynchronously delete the file. We
-assign our cadence to a variable named `deleteIf`. We can now call `deleteIf`
-providing a standard issue Node.js error reporting callback.
+In the above we use a catch block to catch an `ENOENT` error and return false,
+otherwise return true. If an error other than `ENOENT` is raised, the the error
+will be passed as the first argument.
+
+Note that for the simple examples, the simple solution is often as simple as
+Cadence, but not simpiler.
+
+```javascript
+var fs = require('fs')
+
+function deleteIf (file, callback) {
+    fs.unlink(file, function (error) {
+        if (error) {
+            if (error.code == 'ENOENT') callback(null, false)
+            else callback(error)
+        } else {
+            callback(null, true)
+        }
+    })
+}
+
+deleteIf('junk.txt', function (error, deleted) {
+    if (error) console.log(error)
+    console.log('junk.txt: was deleted ' + deleted)
+})
+```
+
+Cadence can express all manner of asynchronous operations, including:
+
+ * serial asynchronous operations, natch
+ * parallel operations
+ * while loops, do..while loops, or counted loops
+ * each loops that can either map or reduce an array
+ * single, streaming events and error event handlers
+ * asynchronous try and catch exception handling
+ * asynchronous finalizers for clean up
+
+You can use Cadence in the browser too. It is not Node.js dependent and it
+minzips to ~2.25k.
+
+### Cadence Basics
 
 We call the series of functions a ***cadence***. We call an individual function
 in a cadence a ***step***. We use the `step` function to both define cadences
-and to create the callbacks that will take us from one step to the next. Below
-is an example without the arguments:
+and to create the callbacks that will take us from one step to the next.
 
 ```javascript
 // Use Cadence.
@@ -91,16 +123,12 @@ var fs = require('fs')
 // Create an asynchronous function.
 var cat = cadence(function (step) {
     step(function () {
-
-        // Note that in this line, we invoke step() as our callback which
-        // immediately 'steps into' our callback function below,
-        //  with the output of readFile() curried over.
+        // Use `step()` to create a callback.
         fs.readFile(__filename, 'utf8', step())
-
     }, function (body) {
-
+        // Any error is propagted to the caller, so our next step is only
+        // invoked if everything is okay.
         process.stdout.write(body)
-
     })
 })
 
@@ -108,27 +136,43 @@ var cat = cadence(function (step) {
 cat(function (error) { if (error) throw error })
 ```
 
-Cadence can express all manner of asynchronous operations, including:
-
- * serial asynchronous operations, natch
- * heterogenous and homongenous parallel operations
- * while loops, do..while loops, or counted loops
- * each loops that can either map or reduce an array
- * events, streaming events and error events
- * asynchronous try and catch exception handling
- * asynchronous finalizers for clean up
-
-You can use Cadence in the browser too. It is not Node.js dependent and it
-minzips to ~2.2k.
+The result of the callback invoked by `step()` is passed to the next step in the
+cadence. The next step does not expect an error as its first argument. If there
+is an error, the error is propagated up and out to caller's callback.
 
 ## Serial and Parallel
 
+A simple distinction between serial and parallel. The functions in a cadence are
+run in **serial**. The callbacks build by calling `step()` withing a cadence are
+invoked in **parallel**.
 
-The functions in a cadence are run in **serial**. A step inside a cadence can
-contain callbacks whose return values appear in the next step or sub-cadences.
-The callbacks and sub-cadences in a step are run in **parallel**, allowing you
-to mix and match cadences and sub-cadences to direct the flow of your
-asynchronous program.
+```javascript
+var db = require('db'), fs = require('fs')
+
+var initialize = cadence(function (step, conf) {
+    step(function () {
+        // These two operations happen in parallel.
+        db.connect(step())
+        fs.readFile(conf, 'utf8', step())
+    }, function (conn, conf) {
+        // The next step is called when both operations complete.
+        conf = JSON.parse(conf)
+        conn.encoding = conf.encoding || 'UTF-8'
+        conn.lang = conf.lang || 'en_US'
+        return conn // return an initialized connection.
+    })
+})
+
+initialize(function (error, connection) {
+    if (error) throw error
+    run(connection)
+})
+```
+
+A step inside a cadence can contain callbacks whose return values appear in the
+next step or sub-cadences. The callbacks and sub-cadences in a step are run in
+**parallel**, allowing you to mix and match cadences and sub-cadences to direct
+the flow of your asynchronous program.
 
 Note that Cadence is as terse as it can be. Yes, you must still use callbacks,
 but it avoids the temple of doom by keeping your callbacks in line, one after
@@ -142,7 +186,10 @@ Note that it is simple to create sub-routines within your library using cadence.
 Instead of passing a callback, pass the step function. A sub-cadence in the step
 function will return to the next step in the caller's cadence.
 
-### Sub-Cadences
+### Cadences Within Steps Within Cadences
+
+You can define a cadence within a step. This let's you work with results of an
+asynchronous call.
 
 Let's say that we want to get a `stat` object, but include the body of the file
 in the `stat` object. When we get our `stat` object, we can use a sub-cadence to
