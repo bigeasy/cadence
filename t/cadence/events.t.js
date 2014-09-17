@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
-require('proof')(7, function (step, assert) {
+require('proof')(11, function (step, assert) {
     var EventEmitter = require('events').EventEmitter
     var cadence = require('../..')
     var ee
+
+    var ev = require('../../event').configure({ on: 'on' })
 
     ee = new EventEmitter()
 
@@ -73,6 +75,38 @@ require('proof')(7, function (step, assert) {
             assert(ended, 'ended', 'arrayed event with specific arity ended')
         })
     })(ee, step())
+
+    ee.emit('end', 'ended')
+
+    ee = new EventEmitter()
+
+    cadence(function (step, ee) {
+        step(function () {
+            step(ev, ee).on('data', []).on('end').on(Error)
+        }, function (data, ended) {
+            assert(data, [ 1, 2, 3 ], 'builder data')
+            assert(ended, 'ended', 'builder ended')
+        })
+    })(ee, step())
+
+    ee.emit('data', 1)
+    ee.emit('data', 2)
+    ee.emit('data', 3)
+
+    ee.emit('end', 'ended')
+
+    cadence(function (step, ee) {
+        step(function () {
+            step(ev, ee, 'data', []).on('end').on('error', Error)
+        }, function (data, ended) {
+            assert(data, [ 1, 2, 3 ], 'builder intializer data')
+            assert(ended, 'ended', 'builder intializer ended')
+        })
+    })(ee, step())
+
+    ee.emit('data', 1)
+    ee.emit('data', 2)
+    ee.emit('data', 3)
 
     ee.emit('end', 'ended')
 })

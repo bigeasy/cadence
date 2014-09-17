@@ -111,11 +111,15 @@
                     }
                 }
 
-                if (vargs[0] && typeof vargs[0].then == 'function') {
-                    var promise = vargs.shift(), handler = step.apply(frame.self, vargs)
-                    return promise.then(function () {
-                        handler.apply(null, [null].concat(__slice.call(arguments)))
-                    }, handler)
+                if (vargs.length) {
+                    if (typeof vargs[0].step == 'function') {
+                        return vargs.shift().step(step, vargs)
+                    } else if (typeof vargs[0].then == 'function') {
+                        var promise = vargs.shift(), handler = step.apply(frame.self, vargs)
+                        return promise.then(function () {
+                            handler.apply(null, [null].concat(__slice.call(arguments)))
+                        }, handler)
+                    }
                 }
             }
 
