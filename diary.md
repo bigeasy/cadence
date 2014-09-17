@@ -3233,4 +3233,20 @@ step([])(function () {
 
 step(function () {
 })
+
+// Oops! Already using `()` for continue.
+step(function () { })(values)([])
+
+// Here's a new option.
+step([])(function () {})(values)
+
+// Which means, uh, but, no ambiguous.
+array.forEach(step([])(function () {
+}))
+
+// Arrayed, which will be rarely used.
+var arrayed = step([])
+var individual = arrayed()
+
+// So, we can reuse that, can't we?
 ```
