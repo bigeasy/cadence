@@ -99,13 +99,6 @@
                     callback.arity = +(vargs.shift())
                 }
 
-                if (vargs[0] && typeof vargs[0].then == 'function') {
-                    var promise = vargs.shift(), handler = step.apply(frame.self, vargs)
-                    return promise.then(function () {
-                        handler.apply(null, [null].concat(__slice.call(arguments)))
-                    }, handler)
-                }
-
                 if (Array.isArray(vargs[0])) {
                     if (vargs[0].length == 0) {
                         callback.arrayed = !! vargs.shift()
@@ -116,6 +109,13 @@
                         frame.cleanup.push(vargs.shift().shift())
                         return
                     }
+                }
+
+                if (vargs[0] && typeof vargs[0].then == 'function') {
+                    var promise = vargs.shift(), handler = step.apply(frame.self, vargs)
+                    return promise.then(function () {
+                        handler.apply(null, [null].concat(__slice.call(arguments)))
+                    }, handler)
                 }
             }
 
