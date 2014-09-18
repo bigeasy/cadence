@@ -3250,3 +3250,67 @@ var individual = arrayed()
 
 // So, we can reuse that, can't we?
 ```
+
+## Loops: Not Too Shabby
+
+As I go to implement the new looping construct, I start to realize that I like
+the old construct just fine.
+
+```javascript
+cadence(function (step) {
+    // The only reasonable thing left.
+    step([])(function () {
+        // operations.
+    })(array)
+
+    // What we got now.
+    step(function () {
+        // operations.
+    })([], array)
+
+    // Counted arrays.
+    step(function () {
+        // operations.
+    })([], 8)
+
+    // Forever arrays.
+    step(function () {
+        // operations.
+    })([], null)
+
+    // Basically, anything unreachable.
+    step(function () {
+        // operations.
+    })([], -1)
+
+    // Unreachable.
+    step(function () {
+        // operations.
+    })([], Infinity)
+
+    // So that this is shorthand for...
+    step(function () {
+        // operations.
+    })()
+
+    // ...this.
+    step(function () {
+        // operations.
+    })(Infinity)
+})
+```
+
+And so, we have one ambiguity, if the user would like to loop over an array, but
+pass in an array as an extra, first parameter.
+
+There are a two ways to resolve this ambiguity. First, gather the results, but
+ignore them, set arity to `0`. Second, the user can pass the array as a
+subsequent parameter. If the user is handling a variable and they don't know
+what's in it, they can put an ignored value between it and the mystery variable.
+
+Semantically, you're going to see the `[]` in the code, which is the sigil for
+gathered operations. When implementing an each loop, it is not going to be
+common to see two literals next to each other. The `[]` is terse, which
+according to the aesthetics of Cadence is more pleasing.
+
+In fact, if arity is zero, we can skip gathering.
