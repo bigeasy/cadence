@@ -3,7 +3,7 @@
     else if (typeof define == "function") define(definition)
     else module.exports = definition()
 } (function () {
-    var __slice = [].slice, __push = [].push
+    var __slice = [].slice
 
     function consume (to, from) {
         to.push.apply(to, from.splice(0, from.length))
@@ -251,10 +251,10 @@
                         invoke(enframe(frame.self, consumer, callback.steps, -1, frame, argue(callback.results[index])))
                         function consumer (errors, finalizers, results) {
                             callback.results[index] = results
-                            __push.apply(frame.errors, errors)
+                            consume(frame.errors, errors)
 
                             if (callback.fixup) {
-                                __push.apply(frame.finalizers, finalizers)
+                                consume(frame.finalizers, finalizers)
                                 consumer()
                             } else {
                                 finalize.call(frame.self, finalizers, finalizers.length - 1, frame.errors, consumer)
@@ -292,7 +292,7 @@
             } else {
                 var finalizer = finalizers[index]
                 invoke(enframe(this, function (e) {
-                    __push.apply(errors, e)
+                    consume(errors, e)
                     finalize.call(this, finalizers, index - 1, errors, consumer)
                 }, [ finalizer.f ], -1, finalizer.caller, argue(finalizer.vargs)))
             }
@@ -317,7 +317,7 @@
                     invoke(enframe(frame.self, _consumer, [ catcher ], -1, frame, argue([ frame.errors, frame.errors[0] ]), true))
                     function _consumer (errors, finalizers, results) {
                         frame.errors = []
-                        __push.apply(frame.finalizers, finalizers)
+                        consume(frame.finalizers, finalizers)
                         if (errors.length) {
                             frame.consumer.call(frame.self, errors, frame.finalizers, results)
                         } else {
@@ -478,7 +478,7 @@
                 } else {
                     errors = [ errors ]
                 }
-                __push.apply(frames[0].errors, errors)
+                consume(frames[0].errors, errors)
                 frames[0].called = frames[0].count - 1
             }
             frame = frames.shift()
