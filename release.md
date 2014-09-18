@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Upgrade Proof to 0.0.48. #243.
  * Bouncier trampoline. #242.
  * Use `assert` in tests. #240.
  * Upgrade Proof to 0.0.47. #238.
