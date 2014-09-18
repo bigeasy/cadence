@@ -151,9 +151,11 @@
                 var whilst, each, first
 
                 if (callback.arrayed) {
+                    // Parallel loop.
                     return createCallback(frame, callback, index++).apply(null, [null].concat(vargs))
                 } else if (vargs[0] === invoke) {
-                    // A reminder; zero index because the result is not arrayed.
+                    // Start an unstarted plain cadence. A reminder; zero index
+                    // because the result is not arrayed.
                     createCallback(frame, callback, 0).call(null)
                 } else {
                     delete callback.starter
@@ -186,10 +188,6 @@
                                 step().apply(frame.self, [ null ].concat(vargs).concat(count))
                             }
                         } else if (gather) {
-                            //var release = _step(frame, false, [0])
-                            //return [ step ].concat(vargs)
-                            //callback.results = gather
-                            //release()
                             callback.results = [ null ].concat(gather)
                             return [ step ]
                         } else {
