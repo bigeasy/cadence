@@ -128,12 +128,12 @@
             callback.steps = vargs
 
             if (callback.steps.length) {
-                if (!callback.fixup) return createCadence(frames[0], callback)
+                if (!callback.fixup) return createCadence(frame, callback)
             }
 
             if (callback.arrayed) {
-                if (event) return createCallback(frames[0], callback, -1)
-                else return createArray(frames[0], callback)
+                if (event) return createCallback(frame, callback, -1)
+                else return createArray(frame, callback)
             }
 
             return createCallback(frame, callback, 0)
@@ -200,7 +200,8 @@
                     callback.steps.push(function () {
                         var vargs = __slice.call(arguments)
                         if (gather) gather.push(vargs)
-                        frames[0].nextIndex = 0
+                        frames[0].nextIndex = 0 // <- why is this not `frame`?
+                                                //    ! because we are hacking a step.
                         step().apply(frame.self, [null].concat(vargs))
                         count++
                     })
@@ -469,17 +470,17 @@
             frames.unshift(frame)
 
             hold = step()
-            var results = frames[0].callbacks[0].results[0] = [ null ]
+            var results = frame.callbacks[0].results[0] = [ null ]
             try {
                 result = fn.apply(frame.self, vargs)
             } catch (errors) {
                 if (errors === frame.caller.errors) {
-                    frames[0].errors.uncaught = errors.uncaught
+                    frame.errors.uncaught = errors.uncaught
                 } else {
                     errors = [ errors ]
                 }
-                consume(frames[0].errors, errors)
-                frames[0].called = frames[0].count - 1
+                consume(frame.errors, errors)
+                frame.called = frame.count - 1
             }
             frame = frames.shift()
             frame.callbacks.forEach(function (callback) {
