@@ -333,7 +333,7 @@
 
             if (frame.cleanup.length) {
                 return function () {
-                    invoke(enframe(frame.self, function (errors, finalizers, results) {
+                    return _invoke(enframe(frame.self, function (errors, finalizers, results) {
                         consume(frame.errors, errors)
                         consume(frame.finalizers, finalizers)
                         invoke(frame)
@@ -367,7 +367,7 @@
                         callbacks[0].results[0] = [ results ]
                         iterator.errors.length = 0
                         consume(iterator.finalizers, finalizers)
-                        return function () { invoke(iterator) }
+                        return function () { return _invoke(iterator) }
                     }
                     consume(finalizers, iterator.finalizers)
                     iterator = iterator.caller
@@ -488,7 +488,7 @@
             hold.apply(frame.self, results.concat([ result === void(0) ? vargs : result ]))
 
             if (frame.sync) {
-                return function () { invoke(frame) }
+                return function () { return _invoke(frame) }
             } else {
                 frame.join = function () { invoke(frame) }
             }
