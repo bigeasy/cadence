@@ -81,10 +81,10 @@
                 }
 
                 if (vargs[0] === null) {
-                  var callback = _step(frame, callback, true, vargs.slice(1))
-                  return function () {
+                    var callback = _step(frame, callback, true, vargs.slice(1))
+                    return function () {
                         return callback.apply(null, [ null ].concat(__slice.call(arguments)))
-                  }
+                    }
                 }
 
                 if (vargs[0] && vargs[0].invoke === invoke) {
