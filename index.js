@@ -36,7 +36,7 @@
                 callback = vargs.pop()
             }
 
-            invoke(enframe(this, consumer, steps, -1, { root: true }, argue([ step ].concat(vargs))))
+            invoke(enframe(this, consumer, steps, -1, { errors:[], root: true }, argue([ step ].concat(vargs))))
 
             function consumer (errors, finalizers, results) {
                 var vargs = results.length ? [null].concat(results) : []
@@ -476,6 +476,10 @@
             try {
                 result = fn.apply(frame.self, vargs)
             } catch (errors) {
+                // Caller must always have errors defined or else this condition
+                // will be true if the user throws undefined. So, don't save
+                // bytes by pruning the errors array from any of the frame
+                // initializations.
                 if (errors === frame.caller.errors) {
                     frame.errors.uncaught = errors.uncaught
                 } else {

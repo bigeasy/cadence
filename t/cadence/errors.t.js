@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(23, function (step, assert) {
+require('proof')(25, function (step, assert) {
     var cadence = require('../..')
     var errors = []
 
@@ -8,6 +8,20 @@ require('proof')(23, function (step, assert) {
         throw new Error('thrown')
     })(function (error) {
         assert(error.message, 'thrown', 'intercepted throw')
+    })
+
+    cadence(function (step) {
+        function foo () { foo() }
+        step(function () { foo() })
+    })(function (error) {
+        assert(/stack/.test(error.message), 'stack overflow')
+    })
+
+    cadence(function (step) {
+        function foo () {}
+        throw (void(0))
+    })(function (error) {
+        assert(error === undefined, 'throw undefined')
     })
 
     var self = {}
