@@ -63,21 +63,21 @@
         var frames = []
 
         function step () {
-            return _step(frames[0], { errors: [], results: [] }, false, __slice.call(arguments))
+            return _step(frames[0], { errors: [], results: [] }, __slice.call(arguments))
         }
 
-        function _step (frame, callback, event, vargs) {
+        function _step (frame, callback, vargs) {
             if (vargs.length) {
                 if (vargs[0] === step) {
                     callback.fixup = !! vargs.shift()
                     if (!vargs.length) return function () {
-                        return _step(frame, callback, false, __slice.call(arguments))
+                        return _step(frame, callback, __slice.call(arguments))
                     }
                     throw new Error('relocating')
                 }
 
                 if (vargs[0] === Error) {
-                    var error = _step(frame, callback, false, [ 0, [] ].concat(vargs.slice(1)))
+                    var error = _step(frame, callback, [ 0, [] ].concat(vargs.slice(1)))
                     callback.count = Infinity
                     return function (e) {
                         error()(e)
@@ -86,12 +86,7 @@
 
                 if (vargs[0] === null) {
                     vargs.shift()
-                    event = true
-                    /*
-                    var callback = _step(frame, callback, true, vargs.slice(1))
-                    return function () {
-                        return callback.apply(null, [ null ].concat(__slice.call(arguments)))
-                    }*/
+                    callback.event = true
                 }
 
                 if (vargs[0] && vargs[0].invoke === invoke) {
@@ -143,7 +138,7 @@
                 var arrayed = function () {
                     return createCallback(frame, callback, index++)
                 }
-                if (event) {
+                if (callback.event) {
                     return function () {
                         arrayed().apply(null, [ null ].concat(__slice.call(arguments)))
                     }
@@ -153,7 +148,7 @@
             }
 
             var done = createCallback(frame, callback, 0)
-            if (event) {
+            if (callback.event) {
                 return function () {
                     done.apply(null, [ null ].concat(__slice.call(arguments)))
                 }
