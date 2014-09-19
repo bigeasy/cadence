@@ -254,6 +254,11 @@
 
         function createCallback (frame, callback, index) {
             frame.count++
+            function tick () {
+                if ((frame.called += callback.count || 1) >= frame.count) {
+                    frame.join()
+                }
+            }
             return function () {
                 var vargs = __slice.call(arguments, 0), error
                 error = vargs.shift()
@@ -270,23 +275,14 @@
 
                             if (callback.fixup) {
                                 consume(frame.finalizers, finalizers)
-                                consumer()
+                                tick()
                             } else {
-                                finalize.call(frame.self, finalizers, finalizers.length - 1, frame.errors, consumer)
-                            }
-
-                            function consumer () {
-                                if (-1 < index && ++frame.called == frame.count) {
-                                    invoke(frame)
-                            //        frame.join()
-                                }
+                                finalize.call(frame.self, finalizers, finalizers.length - 1, frame.errors, tick)
                             }
                         }
                     }
                 }
-                if ((frame.called += callback.count || 1) >= frame.count) {
-                    frame.join()
-                }
+                tick()
             }
         }
 
