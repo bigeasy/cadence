@@ -140,11 +140,122 @@ The result of the callback invoked by `step()` is passed to the next step in the
 cadence. The next step does not expect an error as its first argument. If there
 is an error, the error is propagated up and out to caller's callback.
 
+## Cadence Step by Step
+
+In our examples we are going to use a function called echo which will invoke the
+callback with the arguments given.
+
+```javascript
+function echo (value, callback) {
+    callback(null, value)
+}
+```
+
+Cadence exports a single function which by convention is named `cadence`.
+
+```javascript
+var cadence = require('cadence'), fs = require('fs')
+
+var find = cadence(function ($, path, filter) {
+    $(function () {
+        fs.readdir(path, $())
+    }, function (list) {
+        return list.some(filter)
+    })
+})
+
+function isJavaScript (file) {
+    return /\.js$/.test(file)
+}
+
+find(__dirname, isJavaScript, function (error, found) {
+    if (found) {
+        console.log(__dirname + ' contains a JavaScript file.')
+    }
+})
+```
+
+Let's look closer at the `find` function.
+
+```javascript
+var find = cadence(function ($, path, filter) {
+    $(function () {
+        fs.readdir(path, $())
+    }, function (list) {
+        return list.some(filter)
+    })
+})
+```
+
+The find function is returned by calling `cadence`. The `cadence` function will
+build a function that, when invoked, will call the function body.
+
+The first argument is a universal builder function. We've named it `$` for
+brevity, but you can name it whatever you'd like.
+
+The universal builder function is invoked with a series of functions. The
+creates a **cadence**. Each function is a **step** in the cadence.
+
+
+The `cadence` function accepts a body function. It returns a function. The
+function that it returns, when invoked, will invoke the function body.
+
+The first parameter to the function body is always the magical `step` function.
+The step function builds callbacks and cadences.
+
+When you invoke `step` with no arguments, it builds a simple error first callback.
+
+```javascript
+var calledback = cadence(function (step) {
+    echo(1, step())
+})
+
+calledback(function (error, value) {
+    equal(value, 1, 'called back')
+})
+```
+
+When you invoke `step` with a function, it creates a cadence. Each function in
+the cadence is a step in the cadence.
+
+```javascript
+var stepping = cadence(function ($) {
+    $(function () {
+        echo(1, $())
+    }, function (value) {
+        return value + 1
+    })
+})
+
+stepping(function (error, value) {
+    equal(value, 2, 'incremented')
+})
+```
+
+The results of one step are the arguments of the next step. The results of the
+final step are the results of the cadence.
+
+A step can return a value one of two ways. A step can either explicitly return a
+value using a return statement or else it can pass values through a callback
+created by invokeing the universal builder function.
+
 ## Serial and Parallel
 
 A simple distinction between serial and parallel. The functions in a cadence are
 run in **serial**. The callbacks build by calling `step()` withing a cadence are
 invoked in **parallel**.
+
+```javascript
+var double = cadence(functions (step) {
+    step(function () {
+        echo(1, step())
+        echo(2, step())
+    }, function (one, two) {
+        return { one: one, two: two }
+    })
+})(function (error, one, two) {
+})
+```
 
 ```javascript
 var db = require('db'), fs = require('fs')

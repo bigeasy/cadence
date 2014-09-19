@@ -126,10 +126,101 @@ and to create the callbacks that will take us from one step to the next.</p>
 <p>The result of the callback invoked by <code>step()</code> is passed to the next step in the
 cadence. The next step does not expect an error as its first argument. If there
 is an error, the error is propagated up and out to caller&#39;s callback.</p>
+<h2>Cadence Step by Step</h2>
+<p>In our examples we are going to use a function called echo which will invoke the
+callback with the arguments given.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">function</span> <span class="nx">echo</span> <span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</code></pre>
+<p>Cadence exports a single function which by convention is named <code>cadence</code>.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">),</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+
+<span class="kd">var</span> <span class="nx">find</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">$</span><span class="p">,</span> <span class="nx">path</span><span class="p">,</span> <span class="nx">filter</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readdir</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">$</span><span class="p">())</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">list</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">list</span><span class="p">.</span><span class="nx">some</span><span class="p">(</span><span class="nx">filter</span><span class="p">)</span>
+    <span class="p">})</span>
+<span class="p">})</span>
+
+<span class="kd">function</span> <span class="nx">isJavaScript</span> <span class="p">(</span><span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="sr">/\.js$/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="nx">find</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="nx">isJavaScript</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">found</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">found</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39; contains a JavaScript file.&#39;</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>Let&#39;s look closer at the <code>find</code> function.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">find</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">$</span><span class="p">,</span> <span class="nx">path</span><span class="p">,</span> <span class="nx">filter</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readdir</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">$</span><span class="p">())</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">list</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">list</span><span class="p">.</span><span class="nx">some</span><span class="p">(</span><span class="nx">filter</span><span class="p">)</span>
+    <span class="p">})</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>The find function is returned by calling <code>cadence</code>. The <code>cadence</code> function will
+build a function that, when invoked, will call the function body.</p>
+<p>The first argument is a universal builder function. We&#39;ve named it <code>$</code> for
+brevity, but you can name it whatever you&#39;d like.</p>
+<p>The universal builder function is invoked with a series of functions. The
+creates a <strong>cadence</strong>. Each function is a <strong>step</strong> in the cadence.</p>
+<p>The <code>cadence</code> function accepts a body function. It returns a function. The
+function that it returns, when invoked, will invoke the function body.</p>
+<p>The first parameter to the function body is always the magical <code>step</code> function.
+The step function builds callbacks and cadences.</p>
+<p>When you invoke <code>step</code> with no arguments, it builds a simple error first callback.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">calledback</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">echo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+<span class="p">})</span>
+
+<span class="nx">calledback</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">equal</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;called back&#39;</span><span class="p">)</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>When you invoke <code>step</code> with a function, it creates a cadence. Each function in
+the cadence is a step in the cadence.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">stepping</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">$</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">$</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">echo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">$</span><span class="p">())</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">value</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="p">})</span>
+<span class="p">})</span>
+
+<span class="nx">stepping</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">equal</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;incremented&#39;</span><span class="p">)</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>The results of one step are the arguments of the next step. The results of the
+final step are the results of the cadence.</p>
+<p>A step can return a value one of two ways. A step can either explicitly return a
+value using a return statement or else it can pass values through a callback
+created by invokeing the universal builder function.</p>
 <h2>Serial and Parallel</h2>
 <p>A simple distinction between serial and parallel. The functions in a cadence are
 run in <strong>serial</strong>. The callbacks build by calling <code>step()</code> withing a cadence are
 invoked in <strong>parallel</strong>.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="kr">double</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="nx">functions</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">echo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+        <span class="nx">echo</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">one</span><span class="p">,</span> <span class="nx">two</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">{</span> <span class="nx">one</span><span class="o">:</span> <span class="nx">one</span><span class="p">,</span> <span class="nx">two</span><span class="o">:</span> <span class="nx">two</span> <span class="p">}</span>
+    <span class="p">})</span>
+<span class="p">})(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">one</span><span class="p">,</span> <span class="nx">two</span><span class="p">)</span> <span class="p">{</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">db</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;db&#39;</span><span class="p">),</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
 
 <span class="kd">var</span> <span class="nx">initialize</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">,</span> <span class="nx">conf</span><span class="p">)</span> <span class="p">{</span>
