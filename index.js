@@ -77,14 +77,22 @@
                 }
 
                 if (vargs[0] === Error) {
-                    return _step(frame, callback, true, [ 0, [] ].concat(vargs.slice(1)))
+                    var error = _step(frame, callback, false, [ 0, [] ].concat(vargs.slice(1)))
+                    callback.count = Infinity
+                    return function (e) {
+                        console.log(e)
+                        error()(e)
+                    }
                 }
 
                 if (vargs[0] === null) {
+                    vargs.shift()
+                    event = true
+                    /*
                     var callback = _step(frame, callback, true, vargs.slice(1))
                     return function () {
                         return callback.apply(null, [ null ].concat(__slice.call(arguments)))
-                    }
+                    }*/
                 }
 
                 if (vargs[0] && vargs[0].invoke === invoke) {
@@ -132,11 +140,24 @@
             }
 
             if (callback.arrayed) {
-                if (event) return createCallback(frame, callback, -1)
-                else return createArray(frame, callback)
+                var arrayed = createArray(frame, callback)
+                if (event) {
+                    return function () {
+                        arrayed().apply(null, [ null ].concat(__slice.call(arguments)))
+                    }
+                } else {
+                    return arrayed
+                }
             }
 
-            return createCallback(frame, callback, 0)
+            var done = createCallback(frame, callback, 0)
+            if (event) {
+                return function () {
+                    done.apply(null, [ null ].concat(__slice.call(arguments)))
+                }
+            } else {
+                return done
+            }
         }
 
         function createCadence (frame, callback) {
@@ -236,15 +257,14 @@
         }
 
         function createCallback (frame, callback, index) {
-            if (-1 < index) frame.count++
+            frame.count++
             return function () {
                 var vargs = __slice.call(arguments, 0), error
                 error = vargs.shift()
                 if (error) {
                     frame.errors.push(error)
                 } else {
-                    if (index < 0) callback.results.push(vargs)
-                    else callback.results[index] = vargs
+                    callback.results[index] = vargs
                     if (callback.steps.length) {
                         frame.count++
                         invoke(enframe(frame.self, consumer, callback.steps, -1, frame, argue(callback.results[index])))
@@ -268,7 +288,7 @@
                         }
                     }
                 }
-                if (index < 0 ? frame.errors.length : ++frame.called == frame.count) {
+                if ((frame.called += callback.count || 1) >= frame.count) {
                     frame.join()
                 }
             }
