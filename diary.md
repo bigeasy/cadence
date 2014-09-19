@@ -3219,7 +3219,7 @@ step(function () {
 
 })(4)([])
 
-// Another way would be a significate language change.
+// Another way would be a significant language change.
 
 var arrayed = step([])()
 
