@@ -3,6 +3,9 @@
     else if (typeof define == "function") define(definition)
     else module.exports = definition()
 } (function () {
+    // NOTE: You are allowed to say, "behavior is undefined." Cadence in its
+    // current incarnation may behave a certain way, but you do not have to
+    // document it.
     var __slice = [].slice
 
     function consume (to, from) {
