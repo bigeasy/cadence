@@ -3314,3 +3314,27 @@ common to see two literals next to each other. The `[]` is terse, which
 according to the aesthetics of Cadence is more pleasing.
 
 In fact, if arity is zero, we can skip gathering.
+
+
+## Contine and Out Callbacks Outgoing
+
+Now I don't like the `step(label)` construct, nor `step(label())` to create a
+callback that continues. I've removed `step(null)`, so either I reintroduce it,
+which I don't want to do, or I remove the other. Stepping out should be a
+`return` because that is what it feels like, an exit. What does it mean if you
+have additional callbacks that do not specify a label, or specify a conflicting
+label? I suppose you simply say that that is undefined.
+
+Might leave it. Wondering about how to test additional constructs. Say continue
+and a cadnece, does that mean we continue with the results?
+
+```javascript
+var label = step(function (index, count, letter) {
+    if (count < 10) step(label(), function () {
+        echo(count + 1, step())
+        echo(letter + letter, step())
+    })
+})(1, count, '_')
+```
+
+You need to embrace the ability to say, "is undefined."
