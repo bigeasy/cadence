@@ -1,13 +1,7 @@
 #!/usr/bin/env node
 
-require('proof')(26, function (step, assert) {
+require('proof')(25, function (step, assert) {
     var cadence = require('../..')
-
-    cadence(function (step) {
-        step(function () {})('bad')
-    })(function (error, result) {
-        assert(error.message, 'invalid arguments', 'invalid arguments')
-    })
 
     function counter (count, callback) {
         callback(null, count < 3)

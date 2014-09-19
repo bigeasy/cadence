@@ -188,12 +188,10 @@
                             vargs.shift()
                         }
                         counter = vargs.shift()
-                        if (typeof counter == 'number') {
-                            whilst = function () { return count != counter }
-                        } else if (each = Array.isArray(counter)) {
+                        if (each = Array.isArray(counter)) {
                             whilst = function () { return count != counter.length }
                         } else {
-                            throw new Error('invalid arguments')
+                            whilst = function () { return count != counter }
                         }
                     }
 
