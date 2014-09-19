@@ -1,5 +1,6 @@
 ### Issue by Issue
 
+ * Remove `createArray`. #245.
  * Use `frames` stack only where necessary. #244.
  * Upgrade Proof to 0.0.48. #243.
  * Bouncier trampoline. #242.

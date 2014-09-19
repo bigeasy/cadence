@@ -140,7 +140,10 @@
             }
 
             if (callback.arrayed) {
-                var arrayed = createArray(frame, callback)
+                var index = 0
+                var arrayed = function () {
+                    return createCallback(frame, callback, index++)
+                }
                 if (event) {
                     return function () {
                         arrayed().apply(null, [ null ].concat(__slice.call(arguments)))
@@ -247,13 +250,6 @@
             starter.offset = callback.steps.length
 
             return starter
-        }
-
-        function createArray (frame, callback) {
-            var index = 0
-            return function () {
-                return createCallback(frame, callback, index++)
-            }
         }
 
         function createCallback (frame, callback, index) {
