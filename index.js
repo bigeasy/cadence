@@ -80,7 +80,6 @@
                     var error = _step(frame, callback, false, [ 0, [] ].concat(vargs.slice(1)))
                     callback.count = Infinity
                     return function (e) {
-                        console.log(e)
                         error()(e)
                     }
                 }
