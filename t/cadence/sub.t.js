@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(10, function (step, assert) {
+require('proof')(12, function (step, assert) {
     var cadence = require('../..')
 
     cadence(function (step) {
@@ -96,7 +96,9 @@ require('proof')(10, function (step, assert) {
 
     }, function (items) {
 
-        assert(items, [ 1, 3 ], 'step arrayed missing')
+        assert(items[0], 1, 'step arrayed missing 1')
+        assert(items[1], (void(0)), 'step arrayed missing 2')
+        assert(items[2], 3, 'step arrayed missing 3')
 
     })(step())
 

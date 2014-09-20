@@ -35,14 +35,14 @@ require('proof')(12, function (step, assert) {
 
     }, function (letters, numbers) {
 
-        assert(letters.length, 2, 'some undefineds letters count')
-        assert(letters.length, 2, 'some undefineds numbers count')
+        assert(letters.length, 3, 'some undefineds letters count')
+        assert(letters.length, 3, 'some undefineds numbers count')
 
         assert(letters[0], 'a', 'some undefines letter one')
-        assert(letters[1], 'b', 'some undefines letter two')
+        assert(letters[2], 'b', 'some undefines letter two')
 
         assert(numbers[0] === undefined, 'some undefines numbers one')
-        assert(numbers[1], 2, 'some undefines numbers two')
+        assert(numbers[2], 2, 'some undefines numbers two')
 
     })()
 })

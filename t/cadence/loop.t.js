@@ -91,7 +91,7 @@ require('proof')(25, function (step, assert) {
     })
 
     function echo (value, callback) {
-        setImmediate(function () { callback(null, value) })
+        callback(null, value)
     }
 
     step(function () {

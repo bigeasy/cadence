@@ -93,7 +93,7 @@
                 }
 
                 if (vargs[0] && vargs[0].invoke === invoke) {
-                    frame.callbacks[0].results[0].push(vargs.shift())
+                    frame.callbacks[0].results.push(vargs.shift())
                 }
 
                 if (typeof vargs[0] == 'string') {
@@ -207,7 +207,6 @@
                                 step().apply(frame.self, [ null ].concat(vargs).concat(count))
                             }
                         } else if (gather) {
-                            callback.results = [ null ].concat(gather)
                             return [ step ]
                         } else {
                             return [ step ].concat(vargs)
@@ -216,7 +215,11 @@
 
                     callback.steps.push(function () {
                         var vargs = __slice.call(arguments)
-                        if (gather) gather.push(vargs)
+                        if (gather) {
+                            createCallback(frame, subClass(callback, {
+                                steps: []
+                            }), count).apply(null, [null].concat(vargs))
+                        }
                         frames[0].nextIndex = 0 // <- why is this not `frame`?
                                                 //    ! because we are hacking a step.
                         step().apply(frame.self, [null].concat(vargs))
@@ -254,28 +257,42 @@
                     frame.join()
                 }
             }
-            return function () {
-                var vargs = __slice.call(arguments, 0), error
+            function register (vargs) {
+                var stop = callback.arity == null ? vargs.length : callback.arity
+                if (callback.arrayed) {
+                    for (var i = 0; i < stop; i++) {
+                        if (!callback.results[i]) {
+                            callback.results[i] = []
+                        }
+                        callback.results[i][index] = vargs[i]
+                    }
+                } else {
+                    callback.results = vargs.slice(0, stop)
+                    callback.results.length = stop
+                }
+            }
+            return function f () {
+                var vargs = __slice.call(arguments), error
                 error = vargs.shift()
                 if (error) {
                     frame.errors.push(error)
-                } else {
-                    callback.results[index] = vargs
-                    if (callback.steps.length) {
-                        frame.count++
-                        invoke(enframe(frame.self, consumer, callback.steps, -1, frame, argue(callback.results[index])))
-                        function consumer (errors, finalizers, results) {
-                            callback.results[index] = results
-                            consume(frame.errors, errors)
+                } else if (callback.steps.length) {
+                    frame.count++
+                    invoke(enframe(frame.self, consumer, callback.steps, -1, frame, argue(vargs)))
+                    function consumer (errors, finalizers, results) {
+                        consume(frame.errors, errors)
 
-                            if (callback.fixup) {
-                                consume(frame.finalizers, finalizers)
-                                tick()
-                            } else {
-                                finalize.call(frame.self, finalizers, finalizers.length - 1, frame.errors, tick)
-                            }
+                        if (callback.fixup) {
+                            consume(frame.finalizers, finalizers)
                         }
+
+                        finalize.call(frame.self, finalizers, finalizers.length - 1, frame.errors, function () {
+                            register(results)
+                            tick()
+                        })
                     }
+                } else {
+                    register(vargs)
                 }
                 tick()
             }
@@ -305,7 +322,7 @@
         }
 
         // When we explicitly set we always set the vargs as an array.
-        function argue (vargs) { return [{ results: [[vargs]] }] }
+        function argue (vargs) { return [{ results: vargs }] }
 
         function invoke (frame) {
             var f = _invoke(frame)
@@ -337,6 +354,7 @@
                 return
             }
 
+            var results = callbacks[0].results
             if (frame.cleanup.length) {
                 return function () {
                     return _invoke(enframe(frame.self, function (errors, finalizers, results) {
@@ -345,11 +363,6 @@
                         invoke(frame)
                     }, [ frame.cleanup.pop() ], -1, frame, argue([])))
                 }
-            }
-
-            var results = callbacks[0].results[0]
-            if (results.length == 1 && Array.isArray(results[0])) {
-                callbacks[0].results[0] = results = results[0]
             }
 
             if (results[0] === step && !frame.caller.root) {
@@ -370,7 +383,7 @@
                     if (iterator.steps[0] === label.step) {
                         iterator.nextIndex = label.offset
                         iterator.callbacks = callbacks
-                        callbacks[0].results[0] = [ results ]
+                        callbacks[0].results = results
                         iterator.errors.length = 0
                         consume(iterator.finalizers, finalizers)
                         return function () { return _invoke(iterator) }
@@ -380,45 +393,27 @@
                 }
             }
 
+
             // One in callbacks means that there were no callbacks created, we're
             // going to use the return value.
             if (callbacks.length == 1) {
-                i = 0, j = 0
+                vargs = callbacks[0].results
             } else {
-                i = 1, j = 0
-            }
-
-            for (; i < callbacks.length; i++) {
-                callback = callbacks[i]
-                if (callback.arrayed) {
-                    callback.results = callback.results.filter(function (vargs) { return vargs.length })
-                }
-                if ('arity' in callback) {
-                    arity = callback.arity
-                } else {
-                    arity = callback.arrayed ? 1 : 0
-                    callback.results.forEach(function (result) {
-                        arity = Math.max(arity, result.length - j)
-                    })
-                }
-                for (k = 0; k < arity; k++) {
-                    vargs.push({ values: [], arrayed: callback.arrayed })
-                }
-                callback.results.forEach(function (result) {
-                    for (k = 0; k < arity; k++) {
-                        vargs[arg + k].values.push(result[k + j])
+                vargs = callbacks.slice(1).reduce(function (vargs, callback) {
+                    var arity = ('arity' in callback) ? callback.arity
+                              : Math.max(callback.results.length, callback.arrayed ? 1 : 0)
+                    if (callback.arrayed) {
+                        for (var i = callback.results.length; i < arity; i++) {
+                            callback.results[i] = []
+                        }
                     }
-                })
-                if (callback.property) {
-                    frame.self[callback.property] = vargs[0].arrayed ? vargs[0].values : vargs[0].values[0]
-                }
-                arg += arity
-                j = 0
+                    callback.results.length = arity
+                    if (callback.property) {
+                        frame.self[callback.property] = callback.results[0]
+                    }
+                    return vargs.concat(callback.results)
+                }, [])
             }
-
-            vargs = vargs.map(function (vargs) {
-                return vargs.arrayed ? vargs.values : vargs.values.shift()
-            })
 
             frame = subClass(frame, {
                 cleanup: [],
@@ -475,7 +470,7 @@
             frames.unshift(frame)
 
             hold = step()
-            var results = frame.callbacks[0].results[0] = [ null ]
+            var results = frame.callbacks[0].results = [ null ]
             try {
                 result = fn.apply(frame.self, vargs)
             } catch (errors) {
@@ -495,7 +490,7 @@
             frame.callbacks.forEach(function (callback) {
                 if (callback.starter) callback.starter(invoke)
             })
-            hold.apply(frame.self, results.concat([ result === void(0) ? vargs : result ]))
+            hold.apply(frame.self, results.concat(result === void(0) ? vargs : result))
 
             if (frame.sync) {
                 return function () { return _invoke(frame) }
