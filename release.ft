@@ -1,0 +1,11 @@
+# Arrays As You Go
+
+In this release, I've updated the array creation to build arrays for arrayed results as you go. There is one slight API change, but it is not going to effect any of the existing Cadence code that I know of.
+
+## Build Arrays As Needed
+
+Now arrays are built in parallel as needed.
+
+# Issue by Issue
+
+ * Create arrayed responses as you go. #248.
