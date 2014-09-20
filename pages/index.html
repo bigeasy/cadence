@@ -17,9 +17,9 @@
 </div>
 <!-- todo: code font is too small for body text font -->
 <div class="unit description markdown">
-Cadence builds you an asynchronous function with an error-first signature. It
-uses a single `step` method to express all the control flows you've come to
-expect from a control flow library.
+Cadence builds an asynchronous function with an error-first signature. It uses a
+single `step` method to express all the control flows you've come to expect from
+a control flow library.
 
 Here's a function that will delete a file if it exists.
 
@@ -112,22 +112,20 @@ minzips to ~2.25k.
 ### Cadence Basics
 
 We call the series of functions a ***cadence***. We call an individual function
-in a cadence a ***step***. We use the `step` function to both define cadences
+in a cadence a ***step***. Within a step we create **callbacks**.
+
+A step can either return a value directory using the
+`return` statement, or else it can return values asynchronously.
+
+We use the `step` function to both define cadences
 and to create the callbacks that will take us from one step to the next.
 
 ```javascript
-// Use Cadence.
-var cadence = require('cadence')
-var fs = require('fs')
-
 // Create an asynchronous function.
 var cat = cadence(function (step) {
     step(function () {
-        // Use `step()` to create a callback.
         fs.readFile(__filename, 'utf8', step())
     }, function (body) {
-        // Any error is propagted to the caller, so our next step is only
-        // invoked if everything is okay.
         process.stdout.write(body)
     })
 })
@@ -135,6 +133,39 @@ var cat = cadence(function (step) {
 // Use it in your program.
 cat(function (error) { if (error) throw error })
 ```
+
+### The Needlessly Confusing Bit: `step` v. **step**
+
+Forgive me dear developer, but I've come to call our univeral builder function
+`step`, but I also use the word step to describe the anonymous functions that
+compose a cadence.
+
+I'll refer to the universl builder function as the `step` function, but I'll use
+used the word **step** in bold to refer to a **step** in a **cadence**.
+
+```javascript
+var cat = cadence(function (step) {
+
+    step(function () {      // &lt;- Step one.
+
+        fs.readFile(__filename, 'utf8', step())
+
+    }, function (body) {    // &lt;- Step two.
+
+        process.stdout.write(body)
+
+    })    // &lt;- And that's a Cadence!
+
+})
+```
+
+I've considered using `$` in lieu of `step` so that it is all sigils all the
+time, but the code gets so squiggly. The universal builder function needs a name
+to distinquish it from all the syntax hacks. That name is `step`.
+
+
+
+The `step` function is used to create cadences and callbacks.
 
 The result of the callback invoked by `step()` is passed to the next step in the
 cadence. The next step does not expect an error as its first argument. If there

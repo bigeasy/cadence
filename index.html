@@ -16,9 +16,9 @@
 <h1>Cadence</h1>
 </div>
 <!-- todo: code font is too small for body text font -->
-<div class="unit description markdown"><p>Cadence builds you an asynchronous function with an error-first signature. It
-uses a single <code>step</code> method to express all the control flows you&#39;ve come to
-expect from a control flow library.</p>
+<div class="unit description markdown"><p>Cadence builds an asynchronous function with an error-first signature. It uses a
+single <code>step</code> method to express all the control flows you&#39;ve come to expect from
+a control flow library.</p>
 <p>Here&#39;s a function that will delete a file if it exists.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">)</span>
 <span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
@@ -101,20 +101,16 @@ Cadence, but not simpiler.</p>
 minzips to ~2.25k.</p>
 <h3>Cadence Basics</h3>
 <p>We call the series of functions a <strong><em>cadence</em></strong>. We call an individual function
-in a cadence a <strong><em>step</em></strong>. We use the <code>step</code> function to both define cadences
+in a cadence a <strong><em>step</em></strong>. Within a step we create <strong>callbacks</strong>.</p>
+<p>A step can either return a value directory using the
+<code>return</code> statement, or else it can return values asynchronously. </p>
+<p>We use the <code>step</code> function to both define cadences
 and to create the callbacks that will take us from one step to the next.</p>
-<pre><code class="lang-javascript"><div class="highlight"><pre><span class="c1">// Use Cadence.</span>
-<span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">)</span>
-<span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
-
-<span class="c1">// Create an asynchronous function.</span>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="c1">// Create an asynchronous function.</span>
 <span class="kd">var</span> <span class="nx">cat</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-        <span class="c1">// Use `step()` to create a callback.</span>
         <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">__filename</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
     <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
-        <span class="c1">// Any error is propagted to the caller, so our next step is only</span>
-        <span class="c1">// invoked if everything is okay.</span>
         <span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span>
     <span class="p">})</span>
 <span class="p">})</span>
@@ -123,6 +119,31 @@ and to create the callbacks that will take us from one step to the next.</p>
 <span class="nx">cat</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span> <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span> <span class="p">})</span>
 </pre></div>
 </code></pre>
+<h3>The Needlessly Confusing Bit: <code>step</code> v. <strong>step</strong></h3>
+<p>Forgive me dear developer, but I&#39;ve come to call our univeral builder function
+<code>step</code>, but I also use the word step to describe the anonymous functions that
+compose a cadence.</p>
+<p>I&#39;ll refer to the universl builder function as the <code>step</code> function, but I&#39;ll use
+used the word <strong>step</strong> in bold to refer to a <strong>step</strong> in a <strong>cadence</strong>.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">cat</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>      <span class="c1">// &lt;- Step one.</span>
+
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">__filename</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">body</span><span class="p">)</span> <span class="p">{</span>    <span class="c1">// &lt;- Step two.</span>
+
+        <span class="nx">process</span><span class="p">.</span><span class="nx">stdout</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span>
+
+    <span class="p">})</span>    <span class="c1">// &lt;- And that&#39;s a Cadence!</span>
+
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>I&#39;ve considered using <code>$</code> in lieu of <code>step</code> so that it is all sigils all the
+time, but the code gets so squiggly. The universal builder function needs a name
+to distinquish it from all the syntax hacks. That name is <code>step</code>.</p>
+<p>The <code>step</code> function is used to create cadences and callbacks.</p>
 <p>The result of the callback invoked by <code>step()</code> is passed to the next step in the
 cadence. The next step does not expect an error as its first argument. If there
 is an error, the error is propagated up and out to caller&#39;s callback.</p>
