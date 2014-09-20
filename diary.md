@@ -3338,3 +3338,9 @@ var label = step(function (index, count, letter) {
 ```
 
 You need to embrace the ability to say, "is undefined."
+
+## Advanced Loop Control
+
+You could accept a function that does cool things with loops. You can define the
+existing operations in terms of the function. The funciton returns an array of
+vargs to prepend to the call to the start of the loop, or else it returns null.
