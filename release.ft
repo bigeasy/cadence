@@ -4,7 +4,15 @@ In this release, I've updated the array creation to build arrays for arrayed res
 
 ## Build Arrays As Needed
 
-Now arrays are built in parallel as needed.
+Now arrays are built in parallel as needed. Arity for an arrayed callback when the arity is set by adding arrays to an array of parallel arrays based on the count of arguments given to the the callback for a particular index. If no callbacks are created &mdash; if the parallel array has zero entries &mdash; then the arity defaults to 1.
+
+If the callbacks generated for each array index are invoked with different numbers of arguments, the default arity the greater number of arguments. Cells in the parallel array that have no argument are left undefined. Generally, you should avoid building an array from variadic responses, and variadic responses are rare in the Node.js modules I've seen so far. That is, I haven't seen such a monster yet.
+
+It was the case that a parallel loop would omit entries from the gathered results if the callback was invoked with no arguments. This is inconsistent. If the default arity is three and the callback for a particular index receives only two arguments, the third argument is undefined. However, if that same callback were to receive no arguments, that result would be omitted.
+
+At some point I must have been using parallel arrays to weed through a list, wanting to filter as much as loop, and thought this was a clever trick. What did is save me though? Internally the filter was implemented as a call to `Array.filter`. Today I'd use a serial loop and continue to skip to filter. This would prevent the index from ever being created.
+
+I'm generally avoiding looped parallelism. Preferring to have parallelism implemented at a higher level. Rather than reading a directory of files in parallel, read them one at a time, but know that the HTTP service in which this logic is embedded is reading another directory for another client somewhere else.
 
 # Issue by Issue
 
