@@ -14,7 +14,12 @@ At some point I must have been using parallel arrays to weed through a list, wan
 
 I'm generally avoiding looped parallelism. Preferring to have parallelism implemented at a higher level. Rather than reading a directory of files in parallel, read them one at a time, but know that the HTTP service in which this logic is embedded is reading another directory for another client somewhere else.
 
+### Anonymous Functions Have No Name
+
+The function created by Cadence is now nameless as an anonymous function should be. It was named `execute`. That's a leak.
+
 # Issue by Issue
 
+ * Generated function must have no name. #255.
  * Create arrayed responses as you go. #248.
  * Use continue label internally. #253.
