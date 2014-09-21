@@ -17,3 +17,4 @@ I'm generally avoiding looped parallelism. Preferring to have parallelism implem
 # Issue by Issue
 
  * Create arrayed responses as you go. #248.
+ * Use continue label internally. #253.

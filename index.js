@@ -220,10 +220,8 @@
                                 steps: []
                             }), count).apply(null, [null].concat(vargs))
                         }
-                        frames[0].nextIndex = 0 // <- why is this not `frame`?
-                                                //    ! because we are hacking a step.
-                        step().apply(frame.self, [null].concat(vargs))
                         count++
+                        return [ label() ].concat(vargs)
                     })
 
                     callback.starter = function () {
@@ -231,8 +229,9 @@
                     }
 
                     var label = function () {
-                        label.offset = 0
-                        return label
+                        return {
+                            invoke: invoke, step: label.step, offset: 0
+                        }
                     }
 
                     label.invoke = invoke
@@ -379,6 +378,8 @@
                 var label = results.shift()
                 var finalizers = []
                 // fixme: what about finalizers? are they run? probably not.
+                // fixme: remove above fixme.
+                // fixme: don't stop, have an error.
                 while (!iterator.root) {
                     if (iterator.steps[0] === label.step) {
                         iterator.nextIndex = label.offset
