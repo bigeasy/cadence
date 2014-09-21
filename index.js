@@ -377,8 +377,6 @@
                 var iterator = frame
                 var label = results.shift()
                 var finalizers = []
-                // fixme: what about finalizers? are they run? probably not.
-                // fixme: remove above fixme.
                 // fixme: don't stop, have an error.
                 while (!iterator.root) {
                     if (iterator.steps[0] === label.step) {
