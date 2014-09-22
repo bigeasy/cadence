@@ -548,6 +548,8 @@
             '}'))(execute)
         }
 
+        f.toString = function () { return steps[0].toString() }
+
         return f
     }
 

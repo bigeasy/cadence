@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-require('proof')(2, function (assert) {
+require('proof')(3, function (assert) {
     var cadence = require('../..')
-    var f = cadence(function (one, two, three, four, five) {})
+    var f = cadence(function (one, two, three, four, five) { Snuffleupagus })
     assert(f.name, '', 'anonymous')
     assert(f.length, 5, 'dynamic arity')
+    assert(/Snuffleupagus/.test(f.toString()), 'to string')
 })
