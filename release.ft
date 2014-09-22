@@ -18,6 +18,10 @@ I'm generally avoiding looped parallelism. Preferring to have parallelism implem
 
 The function created by Cadence is now nameless as an anonymous function should be. It was named `execute`. That's a leak.
 
+### Using Continue Label Internally
+
+Loops are implemented by adding an additional step to the start and end of the cadence that defines the loop. The leading step prepares the arguments for the user's steps. The trailing step used to manipulate the `nextIndex` property of the top frame. It now  returns the continue label using the same mechanism as that given to the dear user.
+
 # Issue by Issue
 
  * Generated function must have no name. #255.
