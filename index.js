@@ -13,7 +13,7 @@
     }
 
     function cadence () {
-        var steps = __slice.call(arguments)
+        var steps = __slice.call(arguments), frames = [], f
 
         function enframe (self, consumer, steps, index, caller, callbacks, catcher) {
             return {
@@ -31,15 +31,14 @@
             }
         }
 
-        var execute = function () {
-            var vargs = __slice.call(arguments, 0),
-                callback = function (error) { if (error) throw error }
+        var execute = function (self, vargs) {
+            var callback = function (error) { if (error) throw error }
 
             if (vargs.length) {
                 callback = vargs.pop()
             }
 
-            invoke(enframe(this, consumer, steps, -1, { errors:[], root: true }, argue([ step ].concat(vargs))))
+            invoke(enframe(self, consumer, steps, -1, { errors:[], root: true }, argue([ step ].concat(vargs))))
 
             function consumer (errors, finalizers, results) {
                 var vargs = results.length ? [null].concat(results) : []
@@ -62,8 +61,7 @@
         // invoking `setTimeout` with a callback that calls `step` five minutes
         // later, long after the cadence has ended. Mayhem, but what can you do?
 
-        //
-        var frames = []
+        // See frames above. fixme: assert that you never have more than one frame.
 
         function step () {
             return _step(frames[0], { errors: [], results: [] }, __slice.call(arguments))
@@ -498,7 +496,59 @@
             }
         }
 
-        return execute
+        // Preserving arity for the sake of Proof. It is expensive in bulk, but
+        // it is not expensive in execution time. It does add a stack frame, but
+        // the growth is linear. Use of `Function` will freak some people out.
+        //
+        // This is temporary to see if I can live with it. To see if it blocks
+        // anyone's adoption. It is removed if it has to great a cost in
+        // performance for some application.
+        //
+        // This might be important enought to add a switch statement and to say
+        // goodbye to a super tiny Cadence. This adds 91 bytes! Okay, added the
+        // switch statement for 51 more bytes!
+        //
+        // So much minified budget to spend on arity. I believe it is the nature
+        // of the work that completeness is costly.
+        switch (steps[0].length) {
+        case 0:
+            f = function () {
+                execute(this, Array.prototype.slice.call(arguments))
+            }
+            break
+        case 1:
+            f = function (one) {
+                execute(this, Array.prototype.slice.call(arguments))
+            }
+            break
+        case 2:
+            f = function (one, two) {
+                execute(this, Array.prototype.slice.call(arguments))
+            }
+            break
+        case 3:
+            f = function (one, two, three) {
+                execute(this, Array.prototype.slice.call(arguments))
+            }
+            break
+        case 4:
+            f = function (one, two, three, four) {
+                execute(this, Array.prototype.slice.call(arguments))
+            }
+            break
+        default:
+            // Avert your eyes if you're squeamish.
+            var args = []
+            for (var i = 0; i < steps[0].length; i++) {
+                args[i] = '_' + i
+            }
+
+            var f = (new Function('execute', 'return function (' + args.join(',') + ') {' +
+                'execute(this, Array.prototype.slice.call(arguments))' +
+            '}'))(execute)
+        }
+
+        return f
     }
 
     return cadence
