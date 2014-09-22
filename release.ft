@@ -1,6 +1,8 @@
-# Arrays As You Go
+# Arrays As You Go and Construction
 
 In this release, I've updated the array creation to build arrays for arrayed results as you go. There is one slight API change, but it is not going to effect any of the existing Cadence code that I know of.
+
+Our constructed function now has no name as an anonymous function should, it preserves arity, and `toString` shows the function body that was given to us by the dear user.
 
 ## Build Arrays As Needed
 
@@ -17,6 +19,16 @@ I'm generally avoiding looped parallelism. Preferring to have parallelism implem
 ### Anonymous Functions Have No Name
 
 The function created by Cadence is now nameless as an anonymous function should be. It was named `execute`. That's a leak.
+
+Arity is now preserved at an enormous cost in size, over one hundred bytes added. Plus, the use use of `Function` when the arity greater than four. I expect that someone is going to want to have a talk with me about the use of `Function`. I'm cool with it, but people are told that they are not capable of using it correctly, so they assume that their limitations are universal.
+
+Not you, dear user. The others.
+
+Tried to override the `length` property of a function. Not surprised that it is impossible, even using `__defineGetter__`. I was able to override `toString`, however.
+
+Thus, I added a `toString` to the generated function that displays the result of calling `toString` on the body given to us by the dear user.
+
+Cadence now builds an anonymous function with the properties of the anonymous error-first callback you'd define directly.
 
 ### Using Continue Label Internally
 
