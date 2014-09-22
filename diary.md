@@ -3344,3 +3344,14 @@ You need to embrace the ability to say, "is undefined."
 You could accept a function that does cool things with loops. You can define the
 existing operations in terms of the function. The funciton returns an array of
 vargs to prepend to the call to the start of the loop, or else it returns null.
+
+
+## Base Function Tidy
+
+What does a `cadence` that returns nothing return? It will return `step`. Why
+would you have a base cadence that returns nothing? If it does return nothing
+then it should not do the default and return it's arguments.
+
+Arity for the base function would be nice.
+
+The base function should assert that it gets only one step.
