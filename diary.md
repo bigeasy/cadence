@@ -3316,7 +3316,7 @@ according to the aesthetics of Cadence is more pleasing.
 In fact, if arity is zero, we can skip gathering.
 
 
-## Contine and Out Callbacks Outgoing
+## Continue and Out Callbacks Outgoing
 
 Now I don't like the `step(label)` construct, nor `step(label())` to create a
 callback that continues. I've removed `step(null)`, so either I reintroduce it,
