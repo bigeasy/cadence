@@ -13,6 +13,9 @@
         "cadence": "0.0.24",
         "edify": "0.0.4",
         "less": "1.4.2",
-        "marked": "0.2.9"
+        "marked": "0.2.9",
+        "serve-static": "1.6.3",
+        "finalhandler": "0.3.0",
+        "connect": "3.2.0"
     }
 }
