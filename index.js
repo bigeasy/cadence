@@ -214,9 +214,9 @@
                     callback.steps.push(function () {
                         var vargs = __slice.call(arguments)
                         if (gather) {
-                            createCallback(frame, subClass(callback, {
-                                steps: []
-                            }), count).apply(null, [null].concat(vargs))
+                            var subClass = Object.create(callback)
+                            subClass.steps = []
+                            createCallback(frame, subClass, count).apply(null, [null].concat(vargs))
                         }
                         count++
                         return [ label() ].concat(vargs)
@@ -268,7 +268,7 @@
                     callback.results.length = stop
                 }
             }
-            return function f () {
+            function f () {
                 var vargs = __slice.call(arguments), error
                 error = vargs.shift()
                 if (error) {
@@ -293,17 +293,7 @@
                 }
                 tick()
             }
-        }
-
-        function subClass (base, override) {
-            var object = {}
-            for (var key in base) {
-                object[key] = base[key]
-            }
-            for (var key in override) {
-                object[key] = override[key]
-            }
-            return object
+            return f
         }
 
         function finalize (finalizers, index, errors, consumer) {
@@ -412,7 +402,14 @@
                 }, [])
             }
 
-            frame = subClass(frame, {
+            frame = {
+                self: frame.self,
+                caller: frame.caller,
+                steps: frame.steps,
+                consumer: frame.consumer,
+                finalizers: frame.finalizers,
+                catcher: frame.catcher,
+                _catcher: frame._catcher,
                 cleanup: [],
                 callbacks: [],
                 errors: [],
@@ -422,7 +419,7 @@
                 nextIndex: frame.nextIndex + 1,
                 sync: false,
                 join: function () { frame.sync = true }
-            })
+            }
 
             if (steps.length == frame.index) {
                 return function () {
