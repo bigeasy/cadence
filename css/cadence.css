@@ -62,7 +62,7 @@
   src: url('CRYSRG__.TTF');
 }
 html {
-  background: #f7f7f7;
+  background: #fcfcfc;
   font-size: 100%;
   color: #1a1a1a;
 }
@@ -78,7 +78,7 @@ img {
 .container {
   /* Whatever you want. They’re your oats. */
 
-  max-width: 60em;
+  max-width: 70em;
   margin: 0 auto;
   padding: 0 0;
 }
@@ -92,6 +92,9 @@ img {
   font-size: 72pt;
   margin-top: 0.5em;
   margin-bottom: 0.25em;
+}
+.unit.welcome h3 {
+  margin-top: 1em;
 }
 .unit.welcome p {
   font-family: "Questrial", "Helvetica", sans-serif;
@@ -110,10 +113,11 @@ img {
   margin: 1em 0;
 }
 .unit.description {
-  font-family: 'Mate', "Raleway", "Merriweather", "Maven Pro", "Helvetica", serif;
+  font-family: Helvetica, 'Mate', "Raleway", "Merriweather", "Maven Pro", "Helvetica", serif;
 }
 .unit.description p {
   font-size: 1.45em;
+  line-height: 1.75em;
   margin: 1em 0;
   /* todo: not working in chrome */
 
@@ -124,22 +128,27 @@ img {
 }
 .unit.description ul {
   font-size: 1.45em;
+  font-weight: 100;
   margin: 1em 0;
   padding-left: 2em;
+}
+.unit.description ul li {
+  margin: 0.25em 0;
 }
 .unit.description h2 {
   font-family: "Sorts Mill Goudy";
   font-size: 2em;
   font-style: italic;
-  margin: 1em 0;
+  margin: 2em 0 1em 0;
 }
 .unit.description h3 {
   font-family: "Sorts Mill Goudy";
+  margin: 2em 0 1em 0;
   font-size: 1.5em;
 }
 .unit.description p code {
-  font-family: 'Oxygen Mono';
-  font-size: 0.85em;
+  font-family: 'Courier New';
+  font-size: 1.10em;
   background: white;
   padding: 0 0.25em;
   border: 1px dotted #ccc;
@@ -169,9 +178,7 @@ img {
 .unit.description .highlight > pre {
   margin: 2em 0;
   padding: 1em;
-  font-size: 1.15em;
   font-size: 0.95em;
-  letter-spacing: -1px;
   font-family: 'Monaco', 'Oxygen Mono', 'Crystal', 'Cutive Mono', 'Oxygen Mono', monospace;
 }
 .unit.sidebar {
