@@ -754,6 +754,50 @@ Create optional captions for code examples.</em></p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
+<p>If you create a <strong>step</strong> that neither returns a value nor creates an
+asynchronous operation using the <code>async</code> function, then the results of that
+<strong>step</strong> are its arguments.</p>
+<p>Put another way, if a <strong>step</strong> does not produce any results, then the <strong>next</strong>
+step receives the results of the last <strong>step</strong> to produce results.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">fallthrough</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="nx">async</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="nx">echo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">async</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;callback value&#39;</span><span class="p">)</span>
+
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;callback value from step before last&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nx">value</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;returned value&#39;</span><span class="p">)</span>
+
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="nx">equal</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;returned value from step before last&#39;</span><span class="p">)</span>
+                <span class="c1">// &lt;- no return or `async`, outcome is also a fall through.</span>
+    <span class="p">})</span>
+
+<span class="p">})</span>
+
+<span class="nx">fallthrough</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="nx">equal</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;fell through&#39;</span><span class="p">)</span>
+
+<span class="p">})</span>
+</pre></div>
+</code></pre>
 <p>Parallel and serial have a natual expression in Cadence. <em>&lt;- Erp? ed.</em></p>
 <p>The <strong>steps</strong> in a <strong>cadence</strong> run in <em>serial</em>.</p>
 <p>The asynchronous operations in a <strong>step</strong> run in <em>parallel</em>. An asynchronous
@@ -890,6 +934,74 @@ that forwards only that many arguments to the next step.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
+<p>You can leave a <strong>cadence</strong> by returning an array of arguments, the first
+argument being the <code>async</code> function.</p>
+<p>The mnemonic is that the first argument is an optional break, and <code>async</code> is
+what you&#39;re breaking out of.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">early</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">async</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="k">return</span> <span class="p">[</span> <span class="nx">async</span><span class="p">,</span> <span class="mi">2</span> <span class="p">]</span>         <span class="c1">// &lt;- the `async` means break.</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="nx">echo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">value</span><span class="p">())</span>            <span class="c1">// &lt;- never called.</span>
+
+    <span class="p">})</span>
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>You will use this construct all the time to end loops. You will also use it to
+return early when you catch an exception.</p>
+<p>The following is example of returing cached asynchronous operation early.</p>
+<p>I&#39;ve said that asynchronous trumps synchronous, but <code>return</code> trumps anything
+that follows it. That is why <code>return</code> makes for a nice break construct.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">),</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">),</span> <span class="nx">config</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="nx">async</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">config</span><span class="p">)</span> <span class="k">return</span> <span class="p">[</span> <span class="nx">async</span><span class="p">,</span> <span class="nx">config</span> <span class="p">]</span>
+
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;./config.json&#39;</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="k">return</span> <span class="p">[</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span> <span class="p">]</span>
+
+    <span class="p">})</span>
+
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<p>A loops is a <strong>cadence</strong> that repeats itself. When we create a <strong>cadence</strong>, the
+<code>async</code> function returns a loop function that we can use to invoke the
+<strong>cadence</strong> as a loop.</p>
+<p>By convention, we call this loop function immediately.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">loopy</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="nx">async</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">count</span> <span class="o">==</span> <span class="mi">10</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="p">[</span> <span class="nx">async</span><span class="p">,</span> <span class="nx">count</span> <span class="p">]</span>     <span class="c1">// &lt;- break and return count.</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">count</span><span class="o">++</span>
+        <span class="p">}</span>
+
+    <span class="p">})()</span>
+   <span class="c1">// ^^ loop forever.</span>
+<span class="p">})</span>
+
+<span class="nx">loopy</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="nx">assert</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;looped&#39;</span><span class="p">)</span>
+
+<span class="p">})</span>
+</pre></div>
+</code></pre>
 <h2>Here Be Dragons</h2>
 <p>After this point is old documentation. I&#39;m pulling anything useful up above this
 heading. Anything you read below is goofy and dubious.</p>
@@ -905,24 +1017,6 @@ recursive operation in Cadence, then call the function generated by <code>cadnec
 functions that we reuse. If we want to reuse a <strong>step</strong> or a series of
 <strong>steps</strong>, we simply create a new function using <code>cadence</code> and call that
 function the way we would any other error-first asynchronous function.</p>
-<h2>Serial and Parallel</h2>
-<p>A simple distinction between serial and parallel. The functions in a cadence are
-run in <strong>serial</strong>. The callbacks build by calling <code>step()</code> withing a cadence are
-invoked in <strong>parallel</strong>.</p>
-<p>A step inside a cadence can contain callbacks whose return values appear in the
-next step or sub-cadences. The callbacks and sub-cadences in a step are run in
-<strong>parallel</strong>, allowing you to mix and match cadences and sub-cadences to direct
-the flow of your asynchronous program.</p>
-<p>Note that Cadence is as terse as it can be. Yes, you must still use callbacks,
-but it avoids the temple of doom by keeping your callbacks in line, one after
-the other. It works hard so that indentation reflects a logical nesting of your
-program into parallel operations, instead of having a nesting for each and every
-callback.</p>
-<h3>TODO</h3>
-<p>OMG! NO! NO! NO!</p>
-<p>Note that it is simple to create sub-routines within your library using cadence.
-Instead of passing a callback, pass the step function. A sub-cadence in the step
-function will return to the next step in the caller&#39;s cadence.</p>
 <h3>Cadences Within Steps Within Cadences</h3>
 <p>You can define a cadence within a step. This let&#39;s you work with results of an
 asynchronous call.</p>
@@ -945,110 +1039,10 @@ complete the <code>stat</code> object by reading the body.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<p>In the above example, we create a sub-cadence so that we can read in the file
-body and add it to the <code>stat</code> object. The sub-cadence allows us to update the
-<code>stat</code> object asynchronously. It is in the scope of callback step invoked after
-we read the file body with <code>fs.readFile</code>.</p>
-<p>Here&#39;s how we would use this module.</p>
-<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">bodyStat</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./body-stat&#39;</span><span class="p">)</span>
-
-<span class="nx">bodyStat</span><span class="p">(</span><span class="nx">__filename</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">stat</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="k">throw</span> <span class="nx">error</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Content-Length: &#39;</span> <span class="o">+</span> <span class="nx">stat</span><span class="p">.</span><span class="nx">size</span><span class="p">)</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-    <span class="nx">conosle</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">stat</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
-<span class="p">})</span>
-</pre></div>
-</code></pre>
-<h3>Here&#39;s a Tour Guide Function; Echo</h3>
-<p>For the sake of our tour, let&#39;s implement an asynchronous function that we can
-use to exercise Cadence. All it does is wait a bit, then invoke our callback.</p>
-<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">function</span> <span class="nx">echo</span> <span class="p">(</span><span class="nx">parameter</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">setImmediate</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-        <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">parameter</span><span class="p">)</span>
-    <span class="p">})</span>
-<span class="p">}</span>
-</pre></div>
-</code></pre>
-<p>Let&#39;s use echo to illustrate the many difference flows possible with cadence.</p>
-<h3>Subsequent Arguments</h3>
-<p>When you create callbacks in a Cadence step, the results are passed onto the
-subsequent step. If you create multiple callbacks, the subsequent step will
-receive the results in order.</p>
-<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-
-        <span class="nx">echo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
-        <span class="nx">echo</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
-
-    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
-
-        <span class="nx">equal</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;first&#39;</span><span class="p">)</span>
-        <span class="nx">equal</span><span class="p">(</span><span class="nx">b</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;second&#39;</span><span class="p">)</span>
-
-    <span class="p">})</span>
-<span class="p">})</span>
-</pre></div>
-</code></pre>
-<p>The order of the callbacks determines the order of of the arguments.</p>
-<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-
-        <span class="kd">var</span> <span class="nx">first</span> <span class="o">=</span> <span class="nx">step</span><span class="p">()</span>
-        <span class="kd">var</span> <span class="nx">second</span> <span class="o">=</span> <span class="nx">step</span><span class="p">()</span>
-
-        <span class="nx">echo</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nx">second</span><span class="p">)</span>
-        <span class="nx">echo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">first</span><span class="p">)</span>
-
-    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
-
-        <span class="nx">equal</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;first&#39;</span><span class="p">)</span>
-        <span class="nx">equal</span><span class="p">(</span><span class="nx">b</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;second&#39;</span><span class="p">)</span>
-
-    <span class="p">})</span>
-<span class="p">})</span>
-</pre></div>
-</code></pre>
-<p>In the above example, observe that the declaration order determines argument
-order, not the order of invocation of the callbacks. Even if <code>second</code> is called
-back before <code>first</code>, the argument to first in the subsequent step is invoked with
-the results of <code>first</code> as the first argument <code>a</code>, and <code>second</code> as the second argument
-<code>b</code>.</p>
-<p>TK: More words and examples here.
-TK: Example using <code>fs</code>.
-TK: Always use an initial sub-cadence in the <code>README.md</code> so people don&#39;t get to
-thinking that it is something to be avoided.
-TK: In the sub-cadence example, talk about scope and closure.
-TK: Move up a section.</p>
-<p>Sometimes you don&#39;t have an asynchronous function to invoke. You can return a
-a value to be used as the arguments for the subsequent step.</p>
-<pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="mi">1</span>
-    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">one</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">equal</span><span class="p">(</span><span class="nx">one</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;returned&#39;</span><span class="p">)</span>
-    <span class="p">})</span>
-<span class="p">})</span>
-</pre></div>
-</code></pre>
 <p>This happens quite often actually. Sometimes you&#39;ve already invoked the
 asynchronous function and have a copy of the result. Other times you want to do
 some synchronous processing of the result of an asynchronous call. The example
 below illustrates both cases.</p>
-<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">),</span> <span class="nx">config</span>
-
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-    <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nx">config</span><span class="p">)</span> <span class="k">return</span> <span class="nx">config</span>
-        <span class="k">else</span> <span class="nx">step</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-            <span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="s1">&#39;./config.json&#39;</span><span class="p">,</span> <span class="s1">&#39;utf8&#39;</span><span class="p">,</span> <span class="nx">step</span><span class="p">())</span>
-        <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">body</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">body</span><span class="p">)</span>
-        <span class="p">})</span>
-    <span class="p">})</span>
-<span class="p">})</span>
-</pre></div>
-</code></pre>
 <p>Returning an array is a special case. When you return an array the elements of
 the array are used as the arguments to the subsequent function.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
@@ -1075,6 +1069,7 @@ function? Then put the array in an array as the sole element.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
+<p>We&#39;re going to use this construct in a bit to break out of loops</p>
 <h3>Catching Errors</h3>
 <p>Cadence encourages parallelism, and because parallel operations can also
 fail in parallel and/or raise many exceptions in parallel (fun stuff),

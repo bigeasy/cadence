@@ -832,6 +832,54 @@ sip(__filename, 2, function (error, value) {
 })
 ```
 
+If you create a **step** that neither returns a value nor creates an
+asynchronous operation using the `async` function, then the results of that
+**step** are its arguments.
+
+Put another way, if a **step** does not produce any results, then the **next**
+step receives the results of the last **step** to produce results.
+
+```javascript
+var fallthrough = cadence(function (async) {
+
+    async(function () {
+
+        echo(1, async())
+
+    }, function (value) {
+
+        equal(value, 1, 'callback value')
+
+        console.log(value)
+
+    }, function (value) {
+
+        equal(value, 1, 'callback value from step before last')
+
+        return value + 1
+
+    }, function (value) {
+
+        equal(value, 2, 'returned value')
+
+        console.log(value)
+
+    }, function (value) {
+
+        equal(value, 2, 'returned value from step before last')
+                // &lt;- no return or `async`, outcome is also a fall through.
+    })
+
+})
+
+fallthrough(function (error, value) {
+
+    equal(value, 2, 'fell through')
+
+})
+
+```
+
 Parallel and serial have a natual expression in Cadence. *&lt;- Erp? ed.*
 
 The **steps** in a **cadence** run in *serial*.
@@ -986,6 +1034,84 @@ arity(function (error, first, second, third) {
 })
 ```
 
+You can leave a **cadence** by returning an array of arguments, the first
+argument being the `async` function.
+
+The mnemonic is that the first argument is an optional break, and `async` is
+what you're breaking out of.
+
+```javascript
+var early = cadence(function (async) {
+    async(function () {
+
+        return [ async, 2 ]         // &lt;- the `async` means break.
+
+    }, function () {
+
+        echo(1, value())            // &lt;- never called.
+
+    })
+})
+```
+
+You will use this construct all the time to end loops. You will also use it to
+return early when you catch an exception.
+
+The following is example of returing cached asynchronous operation early.
+
+I've said that asynchronous trumps synchronous, but `return` trumps anything
+that follows it. That is why `return` makes for a nice break construct.
+
+```javascript
+var fs = require('fs'), cadence = require('cadence'), config
+
+module.exports = cadence(function (async) {
+
+    async(function () {
+
+        if (config) return [ async, config ]
+
+        fs.readFile('./config.json', 'utf8', step())
+
+    }, function (body) {
+
+        return [ config = JSON.parse(body) ]
+
+    })
+
+})
+```
+
+A loops is a **cadence** that repeats itself. When we create a **cadence**, the
+`async` function returns a loop function that we can use to invoke the
+**cadence** as a loop.
+
+By convention, we call this loop function immediately.
+
+```javascript
+var loopy = cadence(function (async) {
+
+    var count = 0
+
+    async(function () {
+
+        if (count == 10) {
+            return [ async, count ]     // &lt;- break and return count.
+        } else {
+            count++
+        }
+
+    })()
+   // ^^ loop forever.
+})
+
+loopy(function (error, value) {
+
+    assert(value, 10, 'looped')
+
+})
+```
+
 ## Here Be Dragons
 
 After this point is old documentation. I'm pulling anything useful up above this
@@ -1008,31 +1134,6 @@ By convention steps are *anonymous* functions. We do not create **step**
 functions that we reuse. If we want to reuse a **step** or a series of
 **steps**, we simply create a new function using `cadence` and call that
 function the way we would any other error-first asynchronous function.
-
-## Serial and Parallel
-
-A simple distinction between serial and parallel. The functions in a cadence are
-run in **serial**. The callbacks build by calling `step()` withing a cadence are
-invoked in **parallel**.
-
-A step inside a cadence can contain callbacks whose return values appear in the
-next step or sub-cadences. The callbacks and sub-cadences in a step are run in
-**parallel**, allowing you to mix and match cadences and sub-cadences to direct
-the flow of your asynchronous program.
-
-Note that Cadence is as terse as it can be. Yes, you must still use callbacks,
-but it avoids the temple of doom by keeping your callbacks in line, one after
-the other. It works hard so that indentation reflects a logical nesting of your
-program into parallel operations, instead of having a nesting for each and every
-callback.
-
-### TODO
-
-OMG! NO! NO! NO!
-
-Note that it is simple to create sub-routines within your library using cadence.
-Instead of passing a callback, pass the step function. A sub-cadence in the step
-function will return to the next step in the caller's cadence.
 
 ### Cadences Within Steps Within Cadences
 
@@ -1061,127 +1162,10 @@ module.exports = cadence(function (step, file) {
 
 ```
 
-In the above example, we create a sub-cadence so that we can read in the file
-body and add it to the `stat` object. The sub-cadence allows us to update the
-`stat` object asynchronously. It is in the scope of callback step invoked after
-we read the file body with `fs.readFile`.
-
-Here's how we would use this module.
-
-```javascript
-var bodyStat = require('./body-stat')
-
-bodyStat(__filename, function (error, stat) {
-    if (error) throw error
-    console.log('Content-Length: ' + stat.size)
-    console.log('')
-    conosle.log(stat.body)
-})
-```
-
-### Here's a Tour Guide Function; Echo
-
-For the sake of our tour, let's implement an asynchronous function that we can
-use to exercise Cadence. All it does is wait a bit, then invoke our callback.
-
-```javascript
-function echo (parameter, callback) {
-    setImmediate(function () {
-        callback(null, parameter)
-    })
-}
-```
-
-Let's use echo to illustrate the many difference flows possible with cadence.
-
-### Subsequent Arguments
-
-When you create callbacks in a Cadence step, the results are passed onto the
-subsequent step. If you create multiple callbacks, the subsequent step will
-receive the results in order.
-
-```javascript
-cadence(function () {
-    step(function () {
-
-        echo(1, step())
-        echo(2, step())
-
-    }, function (a, b) {
-
-        equal(a, 1, 'first')
-        equal(b, 2, 'second')
-
-    })
-})
-```
-
-The order of the callbacks determines the order of of the arguments.
-
-```javascript
-cadence(function () {
-    step(function () {
-
-        var first = step()
-        var second = step()
-
-        echo(2, second)
-        echo(1, first)
-
-    }, function (a, b) {
-
-        equal(a, 1, 'first')
-        equal(b, 2, 'second')
-
-    })
-})
-```
-
-In the above example, observe that the declaration order determines argument
-order, not the order of invocation of the callbacks. Even if `second` is called
-back before `first`, the argument to first in the subsequent step is invoked with
-the results of `first` as the first argument `a`, and `second` as the second argument
-`b`.
-
-TK: More words and examples here.
-TK: Example using `fs`.
-TK: Always use an initial sub-cadence in the `README.md` so people don't get to
-thinking that it is something to be avoided.
-TK: In the sub-cadence example, talk about scope and closure.
-TK: Move up a section.
-
-Sometimes you don't have an asynchronous function to invoke. You can return a
-a value to be used as the arguments for the subsequent step.
-
-```javascript
-cadence(function () {
-    step(function () {
-        return 1
-    }, function (one) {
-        equal(one, 1, 'returned')
-    })
-})
-```
-
 This happens quite often actually. Sometimes you've already invoked the
 asynchronous function and have a copy of the result. Other times you want to do
 some synchronous processing of the result of an asynchronous call. The example
 below illustrates both cases.
-
-```javascript
-var fs = require('fs'), config
-
-module.exports = cadence(function () {
-    step(function () {
-        if (config) return config
-        else step(function () {
-            fs.readFile('./config.json', 'utf8', step())
-        }, function (body) {
-            return config = JSON.parse(body)
-        })
-    })
-})
-```
 
 Returning an array is a special case. When you return an array the elements of
 the array are used as the arguments to the subsequent function.
@@ -1212,6 +1196,8 @@ cadence(function () {
     })
 })
 ```
+
+We're going to use this construct in a bit to break out of loops
 
 ### Catching Errors
 
