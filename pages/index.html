@@ -295,7 +295,7 @@ var find = cadence(function (async, path, filter) {
 
 The next **step** is called with the result of the previous **step**, but
 without the error. The error is shifted off the arguments so that the next
-**step** receives only result arguments.
+**step** receives no errors, only results.
 
 There is no error for the **step** to check. There is no need for an `if
 (error)` at every **step**.
@@ -337,7 +337,7 @@ find(__dirname, isJavaScript, function (error, found) {
 ```
 
 The results of the final **step** in a **cadence** are the results of the
-**cadence**. The results of the **cadence**.
+**cadence**.
 
 Notice that if a **step** does not invoke an asynchronous function, it can
 simply return a result.
@@ -410,7 +410,9 @@ function echo (value, callback) {
 }
 ```
 
-When you invoke `async` with no arguments, it builds a simple error first callback.
+When you invoke `async` with no arguments, it builds a simple error first
+**callback**. Cadence will receive the results given to the **callback** on your
+behalf and do the right thing.
 
 ```javascript
 var calledback = cadence(function (async) {
@@ -510,7 +512,7 @@ of the arguments are the parameters passed to the `cadence` generated function.
 ```javascript
 var arguable = cadence(function (async, value) {
                                      // ^^^^^ from the caller.
-    step(value, async())
+    async(value, async())
 
 })
 
@@ -526,8 +528,8 @@ last argument, you might wonder why `async` is the first.
 
 We put the `async` as the first argument, not the last, because Cadence is
 nothing without its `async` function, it will always be passed into the function
-body. Also because, `cadence` generated function always expects a callback, so
-there is no concept of optional callbacks.
+body. Also because, a `cadence` generated function always expects a callback.
+There is no concept of optional callbacks.
 
 Also because, best of all, putting the `async` function at the head to make it
 easier to implement variadic functions. No messy `var callback = vargs.pop()`.
@@ -830,12 +832,16 @@ sip(__filename, 2, function (error, value) {
 })
 ```
 
-Parallel and serial have a natual expression in Cadence.
+Parallel and serial have a natual expression in Cadence. *&lt;- Erp? ed.*
 
 The **steps** in a **cadence** run in *serial*.
 
 The asynchronous operations in a **step** run in *parallel*. An asynchronous
-operation is a **cadence** or a function that invokes a **callback**.
+operation in a **step** is a **cadence** or a function that invokes a
+**callback**.
+
+If you see `async` in a **step**, something asynchronous is going on. If you see
+more than one `async` in a **step**, something parallel is going on.
 
 Multiple the results of multiple asynchronous operations in a **step** are
 gathered and passed as arguments to the next **step**. The next **step** is not
@@ -876,7 +882,7 @@ var parallel = cadence(functions (async) {
         var first = async()         // &lt;- first callback.
         var second = async()        // &lt;- second callback.
 
-        second(null, 1)             // &lt;- call second first.
+        second(null, 1)             // &lt;- call second first, and right now.
         echo(1, first)              // &lt;- call first on next tick.
 
     }, function (first, second) {
@@ -897,15 +903,28 @@ parallel(function (error, first, second) {
 })
 ```
 
-Parallel operations in Cadence are generally programatic. Although there are
-mechanisms for parallel jobs, generally parallelism is best obtained at the
-serivce level. Instead of having a highly-parallel directory listing in your web
-server, let your web server serve many directory listings in parallel, each
-being worked through in serial. You will get similar performance, but much more
-precise error handling.
+Parallel loops can be found below. That is the model for a bunch of identical
+asynchronous operations running in parallel, or *homogeneous* parallel
+operations. There you will see `async` but once, yet something parallel is going
+on, so the above is a aphorism, not a hard rule.
 
-Where parallel operations make sense is when you need to to create funnel,
-performing multiple asynchronous operations needed for the next operation.
+*TK: This might be moved to a usage section. The example can stay. The statement
+above, plus the example. Anyway, on to arity.*
+
+Although there are mechanisms for homogeneous parallel operations, that sort of
+parallelism is best obtained at the serivce level. Instead of having a
+highly-parallel directory listing in your web server, let your web server serve
+many directory listings in parallel, each being worked through in serial. You
+will get similar performance, but with a lot less complexity.
+
+The complexity comes in the error handling. If you can't read one file in a
+directory, you probably can't read any of them. Now you have an array of errors
+instead of an array of file statistics.
+
+What we are discussing here are *heterogeneous* parallel operations, and they are
+generally useful and easy to reason about. The make a lot of sense when you
+need to to create funnel, performing multiple heterogeneous asynchronous
+operations needed for the next **step**.
 
 The following is a contrived initialization example.
 
@@ -930,6 +949,43 @@ var initialize = cadence(function (step, conf) {
 })
 ```
 
+When you don't want all of the arguments passed to a **callback** or none of
+them, you can specify the arity of the **callback** to the `async` function.
+
+If you pass an integer to the `async` function, that will create a **callback**
+that forwards only that many arguments to the next step.
+
+```javascript
+function echo2 (one, two, callback) {
+    setImmediate(callback, null, one, two)
+}
+
+var arity = cadence(functions (async) {
+
+    async(function () {
+
+        echo(1, async())            // &lt;- all results.
+        echo(2, async(0))           // &lt;- no results.
+        echo2(3, 4, async(1))       // &lt;- just the first result.
+        echo(5, async())            // &lt;- all results.
+
+    }, function (first, second, third) {
+
+        return [ first, second, third ]
+
+    })
+
+})
+
+arity(function (error, first, second, third) {
+
+    assert(first, 1, 'one of three returned')
+    assert(second, 3, 'two of three returned')
+    assert(third, 5, 'three of three returned')
+
+})
+```
+
 ## Here Be Dragons
 
 After this point is old documentation. I'm pulling anything useful up above this
@@ -941,7 +997,7 @@ conditions. I'm not trying to save characters. I'm not trying to save
 keystrokes. I'm trying to save work. I'm trying to save cognition.
 
 
-## Recusion
+## Recursion
 
 Cadence creates an error-first asynchronous function. If you need to perform a
 recursive operation in Cadence, then call the function generated by `cadnece`.
@@ -971,6 +1027,8 @@ program into parallel operations, instead of having a nesting for each and every
 callback.
 
 ### TODO
+
+OMG! NO! NO! NO!
 
 Note that it is simple to create sub-routines within your library using cadence.
 Instead of passing a callback, pass the step function. A sub-cadence in the step

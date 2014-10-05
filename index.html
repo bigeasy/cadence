@@ -265,7 +265,7 @@ you know that something asynchronous is going on.</p>
 </code></pre>
 <p>The next <strong>step</strong> is called with the result of the previous <strong>step</strong>, but
 without the error. The error is shifted off the arguments so that the next
-<strong>step</strong> receives only result arguments.</p>
+<strong>step</strong> receives no errors, only results.</p>
 <p>There is no error for the <strong>step</strong> to check. There is no need for an <code>if
 (error)</code> at every <strong>step</strong>.</p>
 <p>If an error does occur, it propagates out to the user. No matter how deeply
@@ -303,7 +303,7 @@ error to the user.</p>
 </pre></div>
 </code></pre>
 <p>The results of the final <strong>step</strong> in a <strong>cadence</strong> are the results of the
-<strong>cadence</strong>. The results of the <strong>cadence</strong>.</p>
+<strong>cadence</strong>.</p>
 <p>Notice that if a <strong>step</strong> does not invoke an asynchronous function, it can
 simply return a result.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">find</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">,</span> <span class="nx">path</span><span class="p">,</span> <span class="nx">filter</span><span class="p">)</span> <span class="p">{</span>
@@ -367,7 +367,9 @@ and <code>equal</code> to assert what we believe to be true.</p>
 <span class="p">}</span>
 </pre></div>
 </code></pre>
-<p>When you invoke <code>async</code> with no arguments, it builds a simple error first callback.</p>
+<p>When you invoke <code>async</code> with no arguments, it builds a simple error first
+<strong>callback</strong>. Cadence will receive the results given to the <strong>callback</strong> on your
+behalf and do the right thing.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">calledback</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">)</span> <span class="p">{</span>
 
     <span class="nx">echo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">async</span><span class="p">())</span>
@@ -457,7 +459,7 @@ function body and it will propagate out to the user.</p>
 of the arguments are the parameters passed to the <code>cadence</code> generated function.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">arguable</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
                                      <span class="c1">// ^^^^^ from the caller.</span>
-    <span class="nx">step</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">async</span><span class="p">())</span>
+    <span class="nx">async</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">async</span><span class="p">())</span>
 
 <span class="p">})</span>
 
@@ -472,8 +474,8 @@ of the arguments are the parameters passed to the <code>cadence</code> generated
 last argument, you might wonder why <code>async</code> is the first.</p>
 <p>We put the <code>async</code> as the first argument, not the last, because Cadence is
 nothing without its <code>async</code> function, it will always be passed into the function
-body. Also because, <code>cadence</code> generated function always expects a callback, so
-there is no concept of optional callbacks.</p>
+body. Also because, a <code>cadence</code> generated function always expects a callback.
+There is no concept of optional callbacks.</p>
 <p>Also because, best of all, putting the <code>async</code> function at the head to make it
 easier to implement variadic functions. No messy <code>var callback = vargs.pop()</code>.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">argumentCounter</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">)</span> <span class="p">{</span>
@@ -752,10 +754,13 @@ Create optional captions for code examples.</em></p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<p>Parallel and serial have a natual expression in Cadence.</p>
+<p>Parallel and serial have a natual expression in Cadence. <em>&lt;- Erp? ed.</em></p>
 <p>The <strong>steps</strong> in a <strong>cadence</strong> run in <em>serial</em>.</p>
 <p>The asynchronous operations in a <strong>step</strong> run in <em>parallel</em>. An asynchronous
-operation is a <strong>cadence</strong> or a function that invokes a <strong>callback</strong>.</p>
+operation in a <strong>step</strong> is a <strong>cadence</strong> or a function that invokes a
+<strong>callback</strong>.</p>
+<p>If you see <code>async</code> in a <strong>step</strong>, something asynchronous is going on. If you see
+more than one <code>async</code> in a <strong>step</strong>, something parallel is going on.</p>
 <p>Multiple the results of multiple asynchronous operations in a <strong>step</strong> are
 gathered and passed as arguments to the next <strong>step</strong>. The next <strong>step</strong> is not
 called until all the asynchronous operations finish.</p>
@@ -791,7 +796,7 @@ or <strong>cadence</strong> was declared.</p>
         <span class="kd">var</span> <span class="nx">first</span> <span class="o">=</span> <span class="nx">async</span><span class="p">()</span>         <span class="c1">// &lt;- first callback.</span>
         <span class="kd">var</span> <span class="nx">second</span> <span class="o">=</span> <span class="nx">async</span><span class="p">()</span>        <span class="c1">// &lt;- second callback.</span>
 
-        <span class="nx">second</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>             <span class="c1">// &lt;- call second first.</span>
+        <span class="nx">second</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>             <span class="c1">// &lt;- call second first, and right now.</span>
         <span class="nx">echo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">first</span><span class="p">)</span>              <span class="c1">// &lt;- call first on next tick.</span>
 
     <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">first</span><span class="p">,</span> <span class="nx">second</span><span class="p">)</span> <span class="p">{</span>
@@ -812,14 +817,24 @@ or <strong>cadence</strong> was declared.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<p>Parallel operations in Cadence are generally programatic. Although there are
-mechanisms for parallel jobs, generally parallelism is best obtained at the
-serivce level. Instead of having a highly-parallel directory listing in your web
-server, let your web server serve many directory listings in parallel, each
-being worked through in serial. You will get similar performance, but much more
-precise error handling.</p>
-<p>Where parallel operations make sense is when you need to to create funnel,
-performing multiple asynchronous operations needed for the next operation.</p>
+<p>Parallel loops can be found below. That is the model for a bunch of identical
+asynchronous operations running in parallel, or <em>homogeneous</em> parallel
+operations. There you will see <code>async</code> but once, yet something parallel is going
+on, so the above is a aphorism, not a hard rule.</p>
+<p><em>TK: This might be moved to a usage section. The example can stay. The statement
+above, plus the example. Anyway, on to arity.</em></p>
+<p>Although there are mechanisms for homogeneous parallel operations, that sort of
+parallelism is best obtained at the serivce level. Instead of having a
+highly-parallel directory listing in your web server, let your web server serve
+many directory listings in parallel, each being worked through in serial. You
+will get similar performance, but with a lot less complexity.</p>
+<p>The complexity comes in the error handling. If you can&#39;t read one file in a
+directory, you probably can&#39;t read any of them. Now you have an array of errors
+instead of an array of file statistics.</p>
+<p>What we are discussing here are <em>heterogeneous</em> parallel operations, and they are
+generally useful and easy to reason about. The make a lot of sense when you
+need to to create funnel, performing multiple heterogeneous asynchronous
+operations needed for the next <strong>step</strong>.</p>
 <p>The following is a contrived initialization example.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">initialize</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">,</span> <span class="nx">conf</span><span class="p">)</span> <span class="p">{</span>
 
@@ -841,6 +856,40 @@ performing multiple asynchronous operations needed for the next operation.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
+<p>When you don&#39;t want all of the arguments passed to a <strong>callback</strong> or none of
+them, you can specify the arity of the <strong>callback</strong> to the <code>async</code> function.</p>
+<p>If you pass an integer to the <code>async</code> function, that will create a <strong>callback</strong>
+that forwards only that many arguments to the next step.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">function</span> <span class="nx">echo2</span> <span class="p">(</span><span class="nx">one</span><span class="p">,</span> <span class="nx">two</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">setImmediate</span><span class="p">(</span><span class="nx">callback</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">one</span><span class="p">,</span> <span class="nx">two</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">var</span> <span class="nx">arity</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="nx">functions</span> <span class="p">(</span><span class="nx">async</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="nx">async</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+        <span class="nx">echo</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nx">async</span><span class="p">())</span>            <span class="c1">// &lt;- all results.</span>
+        <span class="nx">echo</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nx">async</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>           <span class="c1">// &lt;- no results.</span>
+        <span class="nx">echo2</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="nx">async</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>       <span class="c1">// &lt;- just the first result.</span>
+        <span class="nx">echo</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="nx">async</span><span class="p">())</span>            <span class="c1">// &lt;- all results.</span>
+
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">first</span><span class="p">,</span> <span class="nx">second</span><span class="p">,</span> <span class="nx">third</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="k">return</span> <span class="p">[</span> <span class="nx">first</span><span class="p">,</span> <span class="nx">second</span><span class="p">,</span> <span class="nx">third</span> <span class="p">]</span>
+
+    <span class="p">})</span>
+
+<span class="p">})</span>
+
+<span class="nx">arity</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">first</span><span class="p">,</span> <span class="nx">second</span><span class="p">,</span> <span class="nx">third</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="nx">assert</span><span class="p">(</span><span class="nx">first</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;one of three returned&#39;</span><span class="p">)</span>
+    <span class="nx">assert</span><span class="p">(</span><span class="nx">second</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;two of three returned&#39;</span><span class="p">)</span>
+    <span class="nx">assert</span><span class="p">(</span><span class="nx">third</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;three of three returned&#39;</span><span class="p">)</span>
+
+<span class="p">})</span>
+</pre></div>
+</code></pre>
 <h2>Here Be Dragons</h2>
 <p>After this point is old documentation. I&#39;m pulling anything useful up above this
 heading. Anything you read below is goofy and dubious.</p>
@@ -848,7 +897,7 @@ heading. Anything you read below is goofy and dubious.</p>
 might be more verbose, but while you&#39;ll have more characters, you&#39;ll have fewer
 conditions. I&#39;m not trying to save characters. I&#39;m not trying to save
 keystrokes. I&#39;m trying to save work. I&#39;m trying to save cognition.</p>
-<h2>Recusion</h2>
+<h2>Recursion</h2>
 <p>Cadence creates an error-first asynchronous function. If you need to perform a
 recursive operation in Cadence, then call the function generated by <code>cadnece</code>.</p>
 <h2>Reuse</h2>
@@ -870,6 +919,7 @@ the other. It works hard so that indentation reflects a logical nesting of your
 program into parallel operations, instead of having a nesting for each and every
 callback.</p>
 <h3>TODO</h3>
+<p>OMG! NO! NO! NO!</p>
 <p>Note that it is simple to create sub-routines within your library using cadence.
 Instead of passing a callback, pass the step function. A sub-cadence in the step
 function will return to the next step in the caller&#39;s cadence.</p>
