@@ -3355,3 +3355,77 @@ then it should not do the default and return it's arguments.
 Arity for the base function would be nice.
 
 The base function should assert that it gets only one step.
+
+## The `step` Misnomer
+
+There is a decision along the lines of converting Strata to Cadence, it is the
+name of the `step` function in Cadence.
+
+In Cadence I call the series of anonymous functions in a cadence, and each
+function in the cadence a step. Because I was inspired by the
+[step](https://github.com/creationix/step) module by Tim Caswell, I named the
+function that is the first argument to a Cadence body `step`. The `step`
+function creates callbacks in steps and it also creates cadences. The one thing
+that it does not do is create steps, steps are just anonymous functions.
+
+This is miserable to document and to discuss. I can't get past it in the
+documentation. I've had to vocalize these distinctions more than once.
+
+People can accept that a library can export a function that is named for the
+library and have a concept inside it for which the library is named and that the
+function and the concept do not map one to one. `async` and `step` are examples
+of that.
+
+But, to have concepts that you're introducing, **cadences** with **steps** and
+then name something within the library `step` that doesn't map directly to one
+of those concepts, you're going to constantly be explaining this, it is going to
+be a stupid legacy caveat that you're introducing before adoption.
+
+Yes, there are charming examples of this everywhere, but I'm sure it is more
+commonly associated with software that never had more than one user.
+
+When I last visited this, I considered using `$` for `step`. All sigils all the
+time. But that is even harder to document. The `$` function, what do you call
+that in English. How do you read that aloud? The dollar function? Then Cadence
+goes so squiggly, it appears to be too precious, to clever.
+
+It should be a word. It should be a verb. The only verb that stands out is
+`make`.
+
+`build` is way, way too long, and it is hard to type, and it looks horrible to
+see over and over again, and it makes me think of building software, which makes
+me think of Maven, Ant, Rake, Grunt and all the horrible solutions for that task
+that are not make.
+
+`make` also makes me think of building software, but it makes me think happy
+thoughts. It is not too long. It is not too short.
+
+What is hard to get rid of is this:
+
+```javascript
+var f = cadence(function (step) {})
+```
+
+That `cadence(function (step) {` is so adorable. It also makes us think of
+marching, instead of singing, where the metaphor makes more sense. Cadence was
+inspired by Step and so was the name.
+
+Another word is `mint`, which might do, which would also be `coin`. Which ones
+look bests nestled up to parenthesis?
+
+```
+step()
+make()
+coin()
+mint()
+```
+
+Well, `coin()` doesn't look pleasant. `step()` looks right and wonderful to me.
+`make()` and `mint()` both look acceptable, but `make()` is rounder than
+`mint()` which is sticky.
+
+A word fitting with the metaphor would be `call`. Unfortunately, that has a
+meaning in computer programming that trumps any meaning that could be borrowed
+from the metaphor.
+
+`async`. The name of the function is `async()`.
