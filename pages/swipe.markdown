@@ -36,3 +36,31 @@ type or class data.
 
 Unlike method-chaining or other forms of syntax-bashing, cadence users a single
 `step` function with which you can define asynchronous parallel operations.
+
+### Don't Apologize
+
+Note that for the simple examples, the simple solution is often as simple as
+Cadence, but not simpiler.
+
+```javascript
+var fs = require('fs')
+
+function deleteIf (file, callback) {
+    fs.unlink(file, function (error) {
+        if (error) {
+            if (error.code == 'ENOENT') callback(null, false)
+            else callback(error)
+        } else {
+            callback(null, true)
+        }
+    })
+}
+
+deleteIf('junk.txt', function (error, deleted) {
+    if (error) console.log(error)
+    console.log('junk.txt: was deleted ' + deleted)
+})
+```
+
+This should go without saying. The temple of doom does not appear for trival
+examples. If people are looking at Cadence, it is because they feel the pain.

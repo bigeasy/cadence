@@ -124,7 +124,7 @@ img {
   font-weight: 100;
 }
 .unit.description p strong {
-  font-weight: 700;
+  font-weight: 500;
 }
 .unit.description ul {
   font-size: 1.45em;
@@ -148,9 +148,10 @@ img {
 }
 .unit.description p code {
   font-family: 'Courier New';
-  font-size: 1.10em;
+  font-size: 1.05em;
   background: white;
   padding: 0 0.25em;
+  letter-spacing: -1px;
   border: 1px dotted #ccc;
 }
 .unit.benefit {
@@ -178,10 +179,15 @@ img {
 .unit.description .highlight > pre {
   margin: 2em 0;
   padding: 1em;
-  font-size: 0.95em;
-  font-family: 'Monaco', 'Oxygen Mono', 'Crystal', 'Cutive Mono', 'Oxygen Mono', monospace;
+  font-weight: normal;
+  font-size: 1.05em;
+  font-family: 'Courier New', 'Monaco', 'Oxygen Mono', 'Crystal', 'Cutive Mono', 'Oxygen Mono', monospace;
 }
 .unit.sidebar {
   width: 25%;
+}
+.highlight .c1 {
+  font-style: normal;
+  color: blue;
 }
 /* vim: set ts=4 sw=4: */
