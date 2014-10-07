@@ -216,6 +216,8 @@ var find = cadence(function (async, path, filter) {
 })
 ```
 
+### Function Body
+
 We create the `find` function by invoking `cadence` with a single argument which
 is the function body for `find`.  The `cadence` function will build a function
 that, when invoked, will call the function body.
@@ -235,6 +237,8 @@ var find = cadence(function (async, path, filter) {
 
 })
 ```
+
+### The `async` Function
 
 The first argument to the body is the universal builder function which by
 convention is named `async`. It is named `async` because anywhere you see it,
@@ -256,6 +260,8 @@ var find = cadence(function (async, path, filter) {
 })
 ```
 
+### Steps and Cadences
+
 When you invoke the `async` function with one or more functions, you create a
 **cadence**. Each function is a **step** in the cadence.
 
@@ -274,6 +280,8 @@ var find = cadence(function (async, path, filter) {
 
 })
 ```
+
+### Cadence Argument Progression
 
 The results of one **step** in a **cadence** become the arguments of the next **step**.
 
@@ -299,6 +307,8 @@ without the error. The error is shifted off the arguments so that the next
 
 There is no error for the **step** to check. There is no need for an `if
 (error)` at every **step**.
+
+### Error Propagation
 
 If an error does occur, it propagates out to the user. No matter how deeply
 nested your **cadences**, an error will stop the **cadence** and return the
@@ -335,6 +345,8 @@ find(__dirname, isJavaScript, function (error, found) {
 
 })
 ```
+
+### Function Body Results
 
 The results of the final **step** in a **cadence** are the results of the
 **cadence**.
@@ -397,6 +409,8 @@ find(__dirname, isJavaScript, function (error, found) {
 
 Let's look at the rest of Cadence.
 
+### Our Friend Echo
+
 In our examples we are going to use a function called echo which will invoke the
 callback with the argument given. We're also going to assume that we have `ok`
 and `equal` to assert what we believe to be true.
@@ -410,9 +424,11 @@ function echo (value, callback) {
 }
 ```
 
+### Creating Callback Functions
+
 When you invoke `async` with no arguments, it builds a simple error first
-**callback**. Cadence will receive the results given to the **callback** on your
-behalf and do the right thing.
+**callback** function. Cadence will receive the results given to the
+**callback** on your behalf and do the right thing.
 
 ```javascript
 var calledback = cadence(function (async) {
@@ -427,6 +443,8 @@ calledback(function (error, value) {
 
 })
 ```
+
+### Creating Cadences
 
 When you invoke `async` with one or more functions, you build a **cadence**.
 
@@ -452,6 +470,8 @@ stepper(function (error, value) {
 
 })
 ```
+
+### Propagating Errors
 
 Any error or exception that occurs in the function body is propagated to the
 caller by default.
@@ -482,6 +502,8 @@ stepper(function (error, value) {
 })
 ```
 
+### Propagating Exceptions
+
 Exceptions are also propagated. You can throw an exception anywhere in the
 function body and it will propagate out to the user.
 
@@ -505,6 +527,8 @@ stepper(function (error, value) {
 
 })
 ```
+
+### Function Body Arguments
 
 The first argument to the function body is always the `async` function. The rest
 of the arguments are the parameters passed to the `cadence` generated function.
@@ -549,6 +573,8 @@ arguable('a', 'b', 'c', function (error, count) {
 })
 ```
 
+### Multiple Callback Arguments
+
 Because error-first callbacks can receive multiple arguments, **steps** can
 receive multiple arguments and a **cadence** can return multiple arguments.
 
@@ -583,6 +609,8 @@ multi(function (error, first, second) {
 })
 ```
 
+### Synchronous Steps Using `return`
+
 Sometimes **steps** do not need to call asynchronous functions. In that case we can
 simply use `return` to pass a value to the next **step**, but only if the value
 is not an array.
@@ -610,6 +638,8 @@ sync(function (error, value) {
 
 })
 ```
+
+### Returning Multiple Arguments from a Step
 
 When we want to synchronously return multiple values, we return an array of
 arguments. The elements in the array are used as the arguments to the next
@@ -639,6 +669,8 @@ sync(function (error, value) {
 
 })
 ```
+
+### Returning an Array from a Step
 
 If you want to synchronously pass an array to the next **step**, you cannot
 simply return the array, because the array elements will be used as the
@@ -674,6 +706,8 @@ sync(function (error, value) {
 })
 ```
 
+### Asynchronous Trumps Synchronous
+
 Asynchronous trumps synchronous. If you create a callback or a **cadence** using
 `async` inside a **step**, then the return value of the **step** is ignored.
 
@@ -701,6 +735,8 @@ sync(function (error, value) {
 
 })
 ```
+
+### Cadences within Cadences
 
 You can create a **cadence** in a **cadence** and you will. You can create a
 **cadence** in any **step**. The result of the **cadence** is passed as an
@@ -776,6 +812,8 @@ sync(function (error, value) {
 })
 ```
 
+### Cadences within Cadences: Practical Application
+
 You will use **cadences** in **steps** in **cadences** to manage your scope. It
 is a common construct.
 
@@ -832,6 +870,8 @@ sip(__filename, 2, function (error, value) {
 })
 ```
 
+### Fallthrough when a Step Returns Nothing
+
 If you create a **step** that neither returns a value nor creates an
 asynchronous operation using the `async` function, then the results of that
 **step** are its arguments.
@@ -879,6 +919,8 @@ fallthrough(function (error, value) {
 })
 
 ```
+
+### Parallel versus Serial
 
 Parallel and serial have a natual expression in Cadence. *&lt;- Erp? ed.*
 
@@ -997,6 +1039,8 @@ var initialize = cadence(function (step, conf) {
 })
 ```
 
+### Callback Arity
+
 When you don't want all of the arguments passed to a **callback** or none of
 them, you can specify the arity of the **callback** to the `async` function.
 
@@ -1033,6 +1077,8 @@ arity(function (error, first, second, third) {
 
 })
 ```
+
+### Breaking, Leaving a Cadence Early
 
 You can leave a **cadence** by returning an array of arguments, the first
 argument being the `async` function.
@@ -1082,11 +1128,16 @@ module.exports = cadence(function (async) {
 })
 ```
 
+### Forever Loops
+
 A loops is a **cadence** that repeats itself. When we create a **cadence**, the
 `async` function returns a loop function that we can use to invoke the
 **cadence** as a loop.
 
 By convention, we call this loop function immediately.
+
+This is an endless loop. In order to leave the loop we need to break from the
+**cadence**.
 
 ```javascript
 var loopy = cadence(function (async) {
@@ -1112,6 +1163,214 @@ loopy(function (error, value) {
 })
 ```
 
+### Counted Loops
+
+
+We can specify a count for a loop by passing a count to the loop starter
+function. The count must be an integer greater than or equal to zero. The loop
+will run count times.
+
+
+```javascript
+var counted = cadence(function (async) {
+
+    var count = 0
+
+    async(function () {
+
+        async(function () {
+
+            count++
+
+        })(4)
+        // ^ the above cadence is run four times.
+    }, function () { // &lt;- not called until loop in previous step finishes.
+
+        return count
+
+    })
+
+})
+
+counted(function (error, value) {
+
+    assert(value, 4, 'counted')
+
+})
+```
+
+### Counted Loop Result
+
+The result of a counted loop is the value returned by the last loop iteration,
+which is also the last run of the **cadence**.
+
+
+```javascript
+var counted = cadence(function (async) {
+
+    var count = 0
+
+    async(function () {
+
+        return ++count
+              // ^^^^^ returned as loop result on last run of the cadence.
+    })(4)
+    // ^ the above cadence is run four times.
+})
+
+counted(function (error, value) {
+
+    assert(value, 4, 'counted')
+
+})
+```
+
+### The Counted Loop Index Argument
+
+The first argument to the **cadence** of a counted loop is the always index of
+the current count.
+
+
+```javascript
+var counted = cadence(function (async) {
+
+    async(function (index) {
+
+        return index + 1
+            // ^^^^^ on the last run of the cadence, index is three.
+    })(4)
+    // ^ the above cadence is run four times.
+})
+
+counted(function (error, value) {
+
+    assert(value, 4, 'counted')
+
+})
+```
+
+### Counted Loop Additional Arguments
+
+While the first argument to the counted loop **cadence** is the always index of
+the current count, you can pass additional arguments into the loop **cadence**
+by specifying them after the count.
+
+The arguments after the index argument are the arguments passed to the loop
+starter on the first iteration.
+
+On subsequent iterations the arguments after the index argument are the results
+of the previous iteration, the previous invocation of the **cadence**.
+
+```javascript
+var reduce = cadence(function (async) {
+
+    async(function (index, sum) {
+                        // ^^^ initial argument or result of last iteration.
+        return index + 1 + sum
+
+    })(4, 0)
+       // ^ initial argument.
+})
+
+reduce(function (error, value) {
+
+    assert(value, 10, 'reduced sum')
+
+})
+```
+
+### Each Loops
+
+When you pass an array as the first argument to the loop starter function, you
+create an each loop. An each loop will run the loop **cadence** once for each
+entry in the array. The array entry is passed into the first **step** of the
+**cadence** as the first argument.
+
+```javascript
+var sum = cadence(function (async) {
+
+    var sum = 0
+
+    async(function (number) {
+                 // ^^^^^^ one array element at a time.
+        return sum + number
+
+    })([ 1, 2, 3 ])
+    // ^^^^^^^^^^^ array argument to loop function.
+})
+
+sum(function (error, value) {
+
+    assert(value, 10, 'summed')
+
+})
+```
+
+### Each Loop Index Argument
+
+The second argument to an each loop **cadence** is the index of the entry in the
+array.
+
+```javascript
+var sum = cadence(function (async) {
+
+    var sum = 0
+
+    async(function (number, index) {
+                         // ^^^^^ index of array entry.
+        return sum + (number - index)
+
+    })([ 1, 2, 3 ])
+
+})
+
+sum(function (error, value) {
+
+    assert(value, 3, 'sum of ones')
+
+})
+```
+
+### Forever Loop Arguments
+
+If you want without a count and without an each array, but you do want to use
+arguments, then you pass an unreachable count.
+
+### Each Loop Additional Arguments
+
+You can pass arguments to the each loop **cadence** by passing them in after the
+each loop array.
+
+The arguments after the array argument are the arguments passed to the loop
+starter on the first iteration.
+
+On subsequent iterations the arguments after the index argument are the results
+of the previous iteration, the previous invocation of the **cadence**.
+
+```javascript
+var reduce = cadence(function (async) {
+
+    async(function (number, index, sum) {
+                                // ^^^ initial argument or result of last iteration.
+        return sum + number
+
+    })([ 1, 2, 3 ], 0)
+                 // ^ initial argument.
+})
+
+reduce(function (error, value) {
+
+    assert(value, 10, 'reduced sum')
+
+})
+```
+
+### Gathered Loops
+
+Loops can gather their results into an array. To specify that a loop should
+gather results, pass an array as the first argument. The result of a gathered
+loop is the gathered array.
+
 ## Here Be Dragons
 
 After this point is old documentation. I'm pulling anything useful up above this
@@ -1126,7 +1385,7 @@ keystrokes. I'm trying to save work. I'm trying to save cognition.
 ## Recursion
 
 Cadence creates an error-first asynchronous function. If you need to perform a
-recursive operation in Cadence, then call the function generated by `cadnece`.
+recursive operation in Cadence, then call the function generated by `cadence`.
 
 ## Reuse
 
