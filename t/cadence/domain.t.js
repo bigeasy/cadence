@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(2, function (step, assert) {
+require('proof')(2, require('../..')(function (step, assert) {
     var cadence = require('../..')
     var domain = require('../../domain')
     var events = require('events')
@@ -24,4 +24,4 @@ require('proof')(2, function (step, assert) {
     }, function (errors, error) {
         assert(error.message, 'emitted', 'error emitted 2')
     }])
-})
+}))

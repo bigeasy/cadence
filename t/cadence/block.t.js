@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(4, function (step, assert) {
+require('proof')(4, require('../..')(function (step, assert) {
     var cadence = require('../..')
     cadence(function (step) {
         var block = step(function () {
@@ -27,4 +27,4 @@ require('proof')(4, function (step, assert) {
         assert(!error, 'step out no errors')
         assert(result, 1, 'step out exit block')
     })
-})
+}))

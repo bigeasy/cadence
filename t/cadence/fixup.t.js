@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(6, function (step, assert) {
+require('proof')(6, require('../..')(function (step, assert) {
     var cadence = require('../..')
 
     cadence(function (step) {
@@ -91,6 +91,6 @@ require('proof')(6, function (step, assert) {
         assert(numbers, [ -1, -2, -3 ], 'fixup array cadence')
 
     })(step())
-})
+}))
 
 function echo (value, callback) { process.nextTick(function () { callback(null, value) }) }

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(1, function (step, assert) {
+require('proof')(1, require('../..')(function (step, assert) {
     var cadence = require('../..')
     function echo (value, callback) {
         setImmediate(function () { callback(null, value) })
@@ -21,4 +21,4 @@ require('proof')(1, function (step, assert) {
         })
 
     })(step())
-})
+}))

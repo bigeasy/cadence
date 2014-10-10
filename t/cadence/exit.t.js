@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(2, function (step, assert) {
+require('proof')(2, require('../..')(function (step, assert) {
     var cadence = require('../..')
 
     cadence(function (step) {
@@ -24,4 +24,4 @@ require('proof')(2, function (step, assert) {
         if (error.message != 'abend') throw error
         assert(error.message, 'abend', 'early return with error')
     })
-})
+}))

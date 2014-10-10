@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(11, function (step, assert) {
+require('proof')(11, require('../..')(function (step, assert) {
     var EventEmitter = require('events').EventEmitter
     var cadence = require('../..')
     var ee
@@ -109,4 +109,4 @@ require('proof')(11, function (step, assert) {
     ee.emit('data', 3)
 
     ee.emit('end', 'ended')
-})
+}))

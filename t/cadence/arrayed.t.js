@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(12, function (step, assert) {
+require('proof')(12, require('../..')(function (step, assert) {
     var cadence = require('../..')
 
     cadence(function (step) {
@@ -45,4 +45,4 @@ require('proof')(12, function (step, assert) {
         assert(numbers[2], 2, 'some undefines numbers two')
 
     })()
-})
+}))

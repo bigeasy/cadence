@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(3, function (step, assert) {
+require('proof')(3, require('../..')(function (step, assert) {
     var cadence = require('../..')
     var object = {}
     object.method = cadence(function (step) {
@@ -17,4 +17,4 @@ require('proof')(3, function (step, assert) {
         assert(result === object, 'this')
         assert(object.value, 1, 'value')
     })
-})
+}))

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(2, function (step, assert) {
+require('proof')(2, require('../..')(function (step, assert) {
     var cadence = require('../..')
 
     function Bogus (erroneous, value) {
@@ -33,4 +33,4 @@ require('proof')(2, function (step, assert) {
             assert(error.message, 'error', 'betrayal')
         }])
     })(step())
-})
+}))
