@@ -13,13 +13,15 @@ require('proof')(2, function (step, assert) {
         assert(error.message, 'emitted', 'error emitted')
     })
 
-    cadence(domain(function (step) {
-        step(function () {
-            process.nextTick()
-        }, function () {
-            new events.EventEmitter().emit('error', new Error('emitted'))
-        })
-    }))(function (error) {
-        assert(error.message, 'emitted', 'error emitted')
-    })
+    step([function () {
+        cadence(domain(function (step) {
+            step(function () {
+                process.nextTick(step())
+            }, function () {
+                new events.EventEmitter().emit('error', new Error('emitted'))
+            })
+        }))(step())
+    }, function (errors, error) {
+        assert(error.message, 'emitted', 'error emitted 2')
+    }])
 })
