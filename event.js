@@ -16,23 +16,23 @@ Constructor.prototype.configure = function (options) {
     return new Constructor(options)
 }
 
-Constructor.prototype.step = function (step, vargs) {
-    var ee = vargs.shift(), builder = new Builder(this._options, step, ee)
+Constructor.prototype.async = function (async, vargs) {
+    var ee = vargs.shift(), builder = new Builder(this._options, async, ee)
     if (vargs.length) {
         builder.on.apply(builder, vargs)
     }
     return builder
 }
 
-function Builder (options, step, ee) {
+function Builder (options, async, ee) {
     this._options = options
-    this._step = step
+    this._async = async
     this._ee = ee
 }
 
 Builder.prototype.on = function () {
     var vargs = __slice.call(arguments),
-        options = this._options, step = this._step, ee = this._ee,
+        options = this._options, async = this._async, ee = this._ee,
         name, handler
     if (typeof vargs[0] == 'string') {
         name = vargs.shift()
@@ -41,12 +41,12 @@ Builder.prototype.on = function () {
         if (!name) {
             name = options.error
         }
-        handler = step(Error)
+        handler = async(Error)
     } else {
-        handler = step.apply(null, [ null ].concat(vargs))
+        handler = async.apply(null, [ null ].concat(vargs))
     }
     ee[options.on](name, handler)
-    step([function () { ee[options.off](name, handler) }])
+    async([function () { ee[options.off](name, handler) }])
     return this
 }
 

@@ -1,115 +1,115 @@
 #!/usr/bin/env node
 
-require('proof')(15, require('../..')(function (step, assert) {
+require('proof')(15, require('../..')(function (async, assert) {
     var cadence = require('../..')
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        step(function () {
-            step()(null)
-            step()(null, 1)
+        async(function () {
+            async()(null)
+            async()(null, 1)
         }, function (x) {
             assert(x, 1, 'default is zero')
         })
 
-    })(step())
+    })(async())
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        step(function () {
-            step(function () {
-                step()(null, 1, 2)
+        async(function () {
+            async(function () {
+                async()(null, 1, 2)
             })
         }, function (one, two) {
             assert(one, 1, 'sub-cadence inferred one')
             assert(two, 2, 'sub-cadence inferred two')
         })
 
-    })(step())
+    })(async())
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        step(function () {
-            step(1, function () {
-                step()(null, 1, 2)
+        async(function () {
+            async(1, function () {
+                async()(null, 1, 2)
             })
-            step()(null, 3)
+            async()(null, 3)
         }, function (one, two) {
             assert(one, 1, 'sub-cadence specified one')
             assert(two, 3, 'sub-cadence specified two')
         })
 
-    })(step())
+    })(async())
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        step(function () {
-            ; [ 1, 2, 3 ].forEach(step([], function (number) {
-                step()(null, number, number + 1)
+        async(function () {
+            ; [ 1, 2, 3 ].forEach(async([], function (number) {
+                async()(null, number, number + 1)
             }))
         }, function (one, two) {
-            assert(one, [ 1, 2, 3 ], 'arrayed sub-cadence step inferred one')
-            assert(two, [ 2, 3, 4 ], 'arrayed sub-cadence step inferred two')
+            assert(one, [ 1, 2, 3 ], 'arrayed sub-cadence inferred one')
+            assert(two, [ 2, 3, 4 ], 'arrayed sub-cadence inferred two')
         })
 
-    })(step())
+    })(async())
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        step(function () {
-            [ 1, 2, 3 ].forEach(step(1, [], function (number) {
-                step()(null, number, number + 1)
+        async(function () {
+            [ 1, 2, 3 ].forEach(async(1, [], function (number) {
+                async()(null, number, number + 1)
             }))
-            step(1)(null, 2)
+            async(1)(null, 2)
         }, function (one, two) {
             assert(one, [ 1, 2, 3 ], 'arrayed sub-cadence specified one')
             assert(two, 2, 'arrayed sub-cadence specified two')
         })
 
-    })(step())
+    })(async())
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        step(function () {
-            var items = step([])
+        async(function () {
+            var items = async([])
             ; [ 1, 2, 3 ].forEach(function (number) {
                 items()(null, number, number + 1)
             })
         }, function (one, two) {
-            assert(one, [ 1, 2, 3 ], 'arrayed step inferred one')
-            assert(two, [ 2, 3, 4 ], 'arrayed step inferred two')
+            assert(one, [ 1, 2, 3 ], 'arrayed inferred one')
+            assert(two, [ 2, 3, 4 ], 'arrayed inferred two')
         })
 
-    })(step())
+    })(async())
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        step(function () {
-            var items = step(1, [])
+        async(function () {
+            var items = async(1, [])
             ; [ 1, 2, 3 ].forEach(function (number) {
                 items()(null, number, number + 1)
             })
-            step()(null, 2)
+            async()(null, 2)
         }, function (one, two) {
-            assert(one, [ 1, 2, 3 ], 'arrayed step inferred one')
-            assert(two, 2, 'arrayed step specified two')
+            assert(one, [ 1, 2, 3 ], 'arrayed inferred one')
+            assert(two, 2, 'arrayed specified two')
         })
 
-    })(step())
+    })(async())
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        step(function () {
-            step(step)(1, function (numbers) {
-                numbers.forEach(step(1, [], function (number) {
-                    step()(null, number, number + 1)
+        async(function () {
+            async(async)(1, function (numbers) {
+                numbers.forEach(async(1, [], function (number) {
+                    async()(null, number, number + 1)
                 }))
             })(null, [ 1, 2, 3 ])
-            step(step)(function (number) { return number + 1 })(null, 2)
+            async(async)(function (number) { return number + 1 })(null, 2)
         }, function (one, two) {
-            assert(one, [ 1, 2, 3 ], 'fixed-up step inferred one')
-            assert(two, 3, 'fixed-up step specified two')
+            assert(one, [ 1, 2, 3 ], 'fixed-up inferred one')
+            assert(two, 3, 'fixed-up specified two')
         })
 
-    })(step())
+    })(async())
 }))

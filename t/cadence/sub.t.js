@@ -1,25 +1,25 @@
 #!/usr/bin/env node
 
-require('proof')(12, require('../..')(function (step, assert) {
+require('proof')(12, require('../..')(function (async, assert) {
     var cadence = require('../..')
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        step(function () { return 1 })
-        step(function () { return 2 })
+        async(function () { return 1 })
+        async(function () { return 2 })
 
     })(function (error, one, two) {
 
-        assert(one, 1, 'step')
-        assert(two, 2, 'two step')
+        assert(one, 1, 'callback')
+        assert(two, 2, 'two callback')
 
     })
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        step(function () {
-            step(function () {
-                step()(new Error('errored'))
+        async(function () {
+            async(function () {
+                async()(new Error('errored'))
             })
         }, function () {
             throw new Error('should not be called')
@@ -31,39 +31,39 @@ require('proof')(12, require('../..')(function (step, assert) {
 
     })
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        if (!step) throw new Error
+        if (!async) throw new Error
 
-        step([function () {
-            step(function () {
-                step()(new Error('errored'))
+        async([function () {
+            async(function () {
+                async()(new Error('errored'))
             })
         }, function (_, error) {
             assert(error.message, 'errored', 'error caught')
         }])
 
-    })(step())
+    })(async())
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        [ 1, 2, 3 ].forEach(step([], function (number) {
-            item(number, step())
+        [ 1, 2, 3 ].forEach(async([], function (number) {
+            item(number, async())
         }, function (number) {
             return - number
         }))
 
     }, function (items) {
 
-        assert(items, [ -1, -2, -3 ], 'step arrayed')
+        assert(items, [ -1, -2, -3 ], 'callback arrayed')
 
-    })(step())
+    })(async())
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        [ 1, 2 ].forEach(step([], function (number) {
-            step()(null, number)
-            step()(null, number + 1)
+        [ 1, 2 ].forEach(async([], function (number) {
+            async()(null, number)
+            async()(null, number + 1)
         }))
 
     }, function (first, second) {
@@ -71,48 +71,48 @@ require('proof')(12, require('../..')(function (step, assert) {
         assert(first, [ 1, 2 ], 'arrayed multi return one')
         assert(second, [ 2, 3 ], 'arrayed multi return two')
 
-    })(step())
+    })(async())
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        [].forEach(step([], function (number) {
-            item(number, step())
+        [].forEach(async([], function (number) {
+            item(number, async())
         }, function (number) {
             return - number
         }))
 
     }, function (items) {
 
-        assert(items, [], 'step arrayed empty')
+        assert(items, [], 'callback arrayed empty')
 
-    })(step())
+    })(async())
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        [ 1, 2, 3 ].forEach(step([], function (number) {
-            if (number % 2) step()(null, number)
-            else step()(null)
+        [ 1, 2, 3 ].forEach(async([], function (number) {
+            if (number % 2) async()(null, number)
+            else async()(null)
         }))
 
     }, function (items) {
 
-        assert(items[0], 1, 'step arrayed missing 1')
-        assert(items[1], (void(0)), 'step arrayed missing 2')
-        assert(items[2], 3, 'step arrayed missing 3')
+        assert(items[0], 1, 'callback arrayed missing 1')
+        assert(items[1], (void(0)), 'callback arrayed missing 2')
+        assert(items[2], 3, 'callback arrayed missing 3')
 
-    })(step())
+    })(async())
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        [ 1 ].forEach(step([], function (number) {
-            step(function () {}, function () { return number })
+        [ 1 ].forEach(async([], function (number) {
+            async(function () {}, function () { return number })
         }))
 
     }, function (items) {
 
-        assert(items, [ 1 ], 'step arrayed single')
+        assert(items, [ 1 ], 'callback arrayed single')
 
-    })(step())
+    })(async())
 
 }))
 

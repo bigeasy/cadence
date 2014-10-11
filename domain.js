@@ -6,7 +6,7 @@ module.exports = function () {
 
     return function () {
         var vargs = __slice.call(arguments)
-        var step = vargs[0]
+        var async = vargs[0]
 
         var self = this
 
@@ -19,8 +19,8 @@ module.exports = function () {
 
         var d = domain.create()
         d.run(function () {
-            step.apply(self, _steps)(1)
+            async.apply(self, _steps)(1)
         })
-        d.on('error', step(Error))
+        d.on('error', async(Error))
     }
 }

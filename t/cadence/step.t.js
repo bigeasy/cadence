@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
-require('proof')(1, require('../..')(function (step, assert) {
+require('proof')(1, require('../..')(function (async, assert) {
     var cadence = require('../..')
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        item(1, step())
+        item(1, async())
 
     }, function (number) {
 
         assert(number, 1, 'step')
 
-    })(step())
+    })(async())
 }))
 
 function item (number, callback) { callback(null, number) }

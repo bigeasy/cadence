@@ -1,9 +1,9 @@
 var cadence = require('cadence')
 var fs = require('fs')
 
-cadence(function (step) {
-    step(function () {
-        fs.readFile(__filename, step())
+cadence(function (async) {
+    async(function () {
+        fs.readFile(__filename, async())
     }, function () {
         var d = require('domain').create()
         d.on('error', function (error) {

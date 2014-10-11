@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(25, require('../..')(function (step, assert) {
+require('proof')(25, require('../..')(function (async, assert) {
     var cadence = require('../..')
     var errors = []
 
@@ -10,14 +10,14 @@ require('proof')(25, require('../..')(function (step, assert) {
         assert(error.message, 'thrown', 'intercepted throw')
     })
 
-    cadence(function (step) {
+    cadence(function (async) {
         function foo () { foo() }
-        step(function () { foo() })
+        async(function () { foo() })
     })(function (error) {
         assert(/stack/.test(error.message), 'stack overflow')
     })
 
-    cadence(function (step) {
+    cadence(function (async) {
         function foo () {}
         throw (void(0))
     })(function (error) {
@@ -25,32 +25,32 @@ require('proof')(25, require('../..')(function (step, assert) {
     })
 
     var self = {}
-    cadence([function (step) {
-        step()(new Error('handled'))
+    cadence([function (async) {
+        async()(new Error('handled'))
     }, function (errors) {
         assert(self === this)
         assert(errors[0].message, 'handled', 'intercepted passed along')
     }]).call(self)
 
-    cadence([function (step) {
-        step()()
+    cadence([function (async) {
+        async()()
     }, function (error) {
         throw new Error('should not be called')
     }], function () {
         assert(true, 'no error')
     })()
 
-    cadence([function (step) {
-        step()(new Error('one'))
-        step()(new Error('two'))
-        step()()
+    cadence([function (async) {
+        async()(new Error('one'))
+        async()(new Error('two'))
+        async()()
     }, function (errors, error) {
         assert(errors.length, 2, 'got all errors')
         assert(errors[0].message, error.message, 'first error is second argument')
     }])()
 
-    cadence([function (step) {
-        step()(null, 1)
+    cadence([function (async) {
+        async()(null, 1)
     }, function () {
     }], function (number) {
         assert(number, 1, 'no error with value')
@@ -64,13 +64,13 @@ require('proof')(25, require('../..')(function (step, assert) {
         assert(e.message, 'exceptional', 'default error handler')
     }
 
-    cadence([function (step) {
-        step()(new Error('handled'))
+    cadence([function (async) {
+        async()(new Error('handled'))
     }, /handle/, function (errors) {
         assert(errors[0].message, 'handled', 'condtionally caught regex')
     }])()
 
-    cadence([function (step) {
+    cadence([function (async) {
         throw new Error
     }, function (error) {
         return 1
@@ -78,41 +78,41 @@ require('proof')(25, require('../..')(function (step, assert) {
         assert(number, 1, 'handled and value changed')
     })()
 
-    cadence([function (step) {
+    cadence([function (async) {
         var error = new Error('handled')
         error.code = 'ENOENT'
-        step()(error)
+        async()(error)
     }, /ENOENT/, function (errors) {
         assert(errors[0].message, 'handled', 'condtionally caught code regex')
     }])()
 
-    cadence([function (step) {
-        step()(new Error('handled'))
+    cadence([function (async) {
+        async()(new Error('handled'))
     }, 'message', /handle/, function (errors) {
         assert(errors[0].message, 'handled', 'condtionally caught named field regex')
     }])()
 
-    cadence([function (step) {
-          step()(new Error('handled'))
+    cadence([function (async) {
+          async()(new Error('handled'))
     }, 'message', /bogus/, function (errors) {
         throw new Error('should not get here')
     }])(function (error) {
         assert(error.message, 'handled', 'condtionally caught failure')
     })
 
-    cadence([function (step) {
-        step()(new Error('handled'))
-        step()(new Error('unhandled'))
+    cadence([function (async) {
+        async()(new Error('handled'))
+        async()(new Error('unhandled'))
     }, 'message', /^(handled)$/, function (errors) {
         throw new Error('should not get here')
     }])(function (error) {
         assert(error.message, 'unhandled', 'condtionally caught did not catch all')
     })
 
-    cadence([function (step) {
-        step([function () {
-            step()(new Error('handled'))
-            step()(new Error('unhandled'))
+    cadence([function (async) {
+        async([function () {
+            async()(new Error('handled'))
+            async()(new Error('unhandled'))
         }, 'message', /^(handled)$/, function (errors) {
             throw new Error('should not get here')
         }])
@@ -125,11 +125,11 @@ require('proof')(25, require('../..')(function (step, assert) {
         assert(error.message, 'handled', 'uncaughtedness reset')
     })
 
-    cadence(function (step) {
-        step([function () {
+    cadence(function (async) {
+        async([function () {
             throw new Error
         }, function () {
-            return [ step ]
+            return [ async ]
         }], function () {
             throw new Error('branch called')
         })
@@ -139,12 +139,12 @@ require('proof')(25, require('../..')(function (step, assert) {
 
     var dirty = true
     try {
-        cadence(function (step) {
-            step([function () {
+        cadence(function (async) {
+            async([function () {
                 dirty = false
             }], function () {
-                step(function () {
-                    return [ step ]
+                async(function () {
+                    return [ async ]
                 })
                 throw Error('propagated')
             }, function () {
@@ -158,21 +158,21 @@ require('proof')(25, require('../..')(function (step, assert) {
         assert(e.message, 'propagated', 'propagated')
     }
 
-    var domain = require('domain').create(), wait = step()
+    var domain = require('domain').create(), wait = async()
     domain.on('error', function (e) {
         assert(!dirty, 'finalizer ran')
         assert(e.message, 'propagated', 'domain propagated')
         wait()
     })
     domain.run(function () {
-        cadence(function (step) {
-            step([function () {
+        cadence(function (async) {
+            async([function () {
                 dirty = false
             }], function () {
-                step(function () {
-                    process.nextTick(step())
+                async(function () {
+                    process.nextTick(async())
                 }, function () {
-                    return [ step ]
+                    return [ async ]
                 }, function () {
                     console.log('should not get here')
                     process.exit(1)

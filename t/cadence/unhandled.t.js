@@ -14,18 +14,18 @@ require('proof')(4, function (assert) {
     }
 
     try {
-        cadence(function (step) {
+        cadence(function (async) {
 
-            step()(new Error('handed'))
+            async()(new Error('handed'))
 
         })()
     } catch (error) {
         assert(error.message, 'handed', 'unhandled error')
     }
 
-    cadence(function (step) {
-        step()(new Error('one'))
-        step()(new Error('two'))
+    cadence(function (async) {
+        async()(new Error('one'))
+        async()(new Error('two'))
     })(function (error) {
         assert(error.message, 'one', 'got first error from default handler')
     })

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-require('proof')(4, require('../..')(function (step, assert) {
+require('proof')(4, require('../..')(function (async, assert) {
     var cadence = require('../..')
-    cadence(function (step) {
-        var block = step(function () {
-            step(function () {
+    cadence(function (async) {
+        var block = async(function () {
+            async(function () {
                 return [ block, 1 ]
             }, function () {
                 throw new Error
@@ -15,10 +15,10 @@ require('proof')(4, require('../..')(function (step, assert) {
         assert(result, 1, 'exit block')
     })
 
-    cadence(function (step) {
-        step(function () {
-            step(function () {
-                return [ step, 1 ]
+    cadence(function (async) {
+        async(function () {
+            async(function () {
+                return [ async, 1 ]
             }, function () {
                 throw new Error
             })

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-require('proof')(15, require('../..')(function (step, assert) {
+require('proof')(15, require('../..')(function (async, assert) {
     var cadence = require('../..')
-    var one = step()
-    var two = step()
+    var one = async()
+    var two = async()
 
     cadence(function () {
         return 1
@@ -18,8 +18,8 @@ require('proof')(15, require('../..')(function (step, assert) {
         one()
     })
 
-    cadence(function (step) {
-        step()(null, 1)
+    cadence(function (async) {
+        async()(null, 1)
     })(function (error, number) {
         assert(number, 1, 'callback cadence')
         two()
@@ -45,9 +45,9 @@ require('proof')(15, require('../..')(function (step, assert) {
         assert(array[1], 2, 'callback cadence array ordered two')
     })
 
-    cadence(function (step) {
-        step(function () {
-            step()(null, 1, 2)
+    cadence(function (async) {
+        async(function () {
+            async()(null, 1, 2)
         }, function (one, two) {
             assert(one, 1, 'return undefined ignore one')
             assert(two, 2, 'return undefined ignore two')
@@ -60,8 +60,8 @@ require('proof')(15, require('../..')(function (step, assert) {
         assert(two, 2, 'return propagate two')
     })
 
-    cadence(function (step) {
-        var loop = step(function () {
+    cadence(function (async) {
+        var loop = async(function () {
             return [ loop, [ 1, 2 ] ]
         })()
     })(function (error, array) {

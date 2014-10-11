@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-require('proof')(2, require('../..')(function (step, assert) {
+require('proof')(2, require('../..')(function (async, assert) {
     var cadence = require('../..')
 
-    cadence(function (step) {
-        step(function () {
-            return [ step, 1 ]
+    cadence(function (async) {
+        async(function () {
+            return [ async, 1 ]
         }, function () {
             assert(false, 'should not be called')
         })
@@ -14,8 +14,8 @@ require('proof')(2, require('../..')(function (step, assert) {
         assert(number, 1, 'early return')
     })
 
-    cadence(function (step) {
-        step(function () {
+    cadence(function (async) {
+        async(function () {
             throw new Error('abend')
         }, function () {
             assert(false, 'should not be called')

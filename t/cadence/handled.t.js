@@ -11,9 +11,9 @@ require('proof')(2, function (assert) {
         assert(error.message, 'thrown', 'handled throw')
     })
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        step()(new Error('handed'))
+        async()(new Error('handed'))
 
     })(function (error) {
         assert(error.message, 'handed', 'unhandled error')

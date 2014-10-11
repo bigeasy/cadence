@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-require('proof')(12, require('../..')(function (step, assert) {
+require('proof')(12, require('../..')(function (async, assert) {
     var cadence = require('../..')
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        var arrays = step([])
+        var arrays = async([])
         arrays()(null, 'a', 1)
         arrays()(null, 'b', 2)
         arrays()(null, 'c', 3)
@@ -20,11 +20,11 @@ require('proof')(12, require('../..')(function (step, assert) {
         assert(numbers[1], 2, 'number two')
         assert(numbers[2], 3, 'number three')
 
-    })(step())
+    })(async())
 
     // **TODO**: Undone.
-    cadence(function (step) {
-        var array = step([])
+    cadence(function (async) {
+        var array = async([])
 
         var first = array()
 

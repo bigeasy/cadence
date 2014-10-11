@@ -1,16 +1,16 @@
 var cadence = require('cadence')
 var fs = require('fs')
 
-cadence(function (step) {
-    step(function () {
-        fs.readFile(__filename, step())
+cadence(function (async) {
+    async(function () {
+        fs.readFile(__filename, async())
     }, function () {
-        require('domain').create().on('error', step(Error)).run(function () {
+        require('domain').create().on('error', async(Error)).run(function () {
             throw new Error
         })
         /*require('domain').create().run(function () {
             throw new Error
-        }).on('error', step(Error))*/
+        }).on('error', async(Error))*/
     })
 })(function (error) {
     console.log('called')

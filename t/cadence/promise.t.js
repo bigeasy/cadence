@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-require('proof')(2, require('../..')(function (step, assert) {
+require('proof')(2, require('../..')(function (async, assert) {
     var cadence = require('../..')
 
     function Bogus (erroneous, value) {
@@ -18,19 +18,19 @@ require('proof')(2, require('../..')(function (step, assert) {
         this._error = error
     }
 
-    cadence(function (step) {
-        step(function () {
-            step(new Bogus(null, 1))
+    cadence(function (async) {
+        async(function () {
+            async(new Bogus(null, 1))
         }, function (one) {
             assert(one, 1, 'promise')
         })
-    })(step())
+    })(async())
 
-    cadence(function (step) {
-        step([function () {
-            step(new Bogus('error'))
+    cadence(function (async) {
+        async([function () {
+            async(new Bogus('error'))
         }, function (_, error) {
             assert(error.message, 'error', 'betrayal')
         }])
-    })(step())
+    })(async())
 }))

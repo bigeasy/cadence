@@ -38,7 +38,7 @@
                 callback = vargs.pop()
             }
 
-            invoke(enframe(self, consumer, steps, -1, { errors:[], root: true }, argue([ step ].concat(vargs))))
+            invoke(enframe(self, consumer, steps, -1, { errors:[], root: true }, argue([ async ].concat(vargs))))
 
             function consumer (errors, finalizers, results) {
                 var vargs = results.length ? [null].concat(results) : []
@@ -63,22 +63,22 @@
 
         // See frames above. fixme: assert that you never have more than one frame.
 
-        function step () {
-            return _step(frames[0], { errors: [], results: [] }, __slice.call(arguments))
+        function async () {
+            return _async(frames[0], { errors: [], results: [] }, __slice.call(arguments))
         }
 
-        function _step (frame, callback, vargs) {
+        function _async (frame, callback, vargs) {
             if (vargs.length) {
-                if (vargs[0] === step) {
+                if (vargs[0] === async) {
                     callback.fixup = !! vargs.shift()
                     if (!vargs.length) return function () {
-                        return _step(frame, callback, __slice.call(arguments))
+                        return _async(frame, callback, __slice.call(arguments))
                     }
                     throw new Error('relocating')
                 }
 
                 if (vargs[0] === Error) {
-                    var error = _step(frame, callback, [ 0, [] ].concat(vargs.slice(1)))
+                    var error = _async(frame, callback, [ 0, [] ].concat(vargs.slice(1)))
                     callback.count = Infinity
                     return function (e) {
                         error()(e)
@@ -115,10 +115,10 @@
                 }
 
                 if (vargs.length) {
-                    if (typeof vargs[0].step == 'function') {
-                        return vargs.shift().step(step, vargs)
+                    if (typeof vargs[0].async == 'function') {
+                        return vargs.shift().async(async, vargs)
                     } else if (typeof vargs[0].then == 'function') {
-                        var promise = vargs.shift(), handler = step.apply(frame.self, vargs)
+                        var promise = vargs.shift(), handler = async.apply(frame.self, vargs)
                         return promise.then(function () {
                             handler.apply(null, [null].concat(__slice.call(arguments)))
                         }, handler)
@@ -200,14 +200,14 @@
                         var vargs = __slice.call(arguments)
                         if (whilst()) {
                             if (counter) {
-                                step().apply(frame.self, [ null ].concat(each ? [ counter[count] ] : [], count, vargs))
+                                async().apply(frame.self, [ null ].concat(each ? [ counter[count] ] : [], count, vargs))
                             } else {
-                                step().apply(frame.self, [ null ].concat(vargs).concat(count))
+                                async().apply(frame.self, [ null ].concat(vargs).concat(count))
                             }
                         } else if (gather) {
-                            return [ step ]
+                            return [ async ]
                         } else {
-                            return [ step ].concat(vargs)
+                            return [ async ].concat(vargs)
                         }
                     })
 
@@ -362,7 +362,7 @@
                 }
             }
 
-            if (results[0] === step && !frame.caller.root) {
+            if (results[0] === async && !frame.caller.root) {
                 var iterator = frame.catcher ? frame.caller : frame
                 results[0] = {
                     invoke: invoke,
@@ -466,7 +466,7 @@
 
             frames.unshift(frame)
 
-            hold = step()
+            hold = async()
             var results = frame.callbacks[0].results = [ null ]
             try {
                 result = fn.apply(frame.self, vargs)

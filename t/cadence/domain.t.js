@@ -1,26 +1,26 @@
 #!/usr/bin/env node
 
-require('proof')(2, require('../..')(function (step, assert) {
+require('proof')(2, require('../..')(function (async, assert) {
     var cadence = require('../..')
     var domain = require('../../domain')
     var events = require('events')
 
-    cadence(domain(function (step) {
-        step(function () {
+    cadence(domain(function (async) {
+        async(function () {
             new events.EventEmitter().emit('error', new Error('emitted'))
         })
     }))(function (error) {
         assert(error.message, 'emitted', 'error emitted')
     })
 
-    step([function () {
-        cadence(domain(function (step) {
-            step(function () {
-                process.nextTick(step())
+    async([function () {
+        cadence(domain(function (async) {
+            async(function () {
+                process.nextTick(async())
             }, function () {
                 new events.EventEmitter().emit('error', new Error('emitted'))
             })
-        }))(step())
+        }))(async())
     }, function (errors, error) {
         assert(error.message, 'emitted', 'error emitted 2')
     }])

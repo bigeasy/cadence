@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-require('proof')(3, require('../..')(function (step, assert) {
+require('proof')(3, require('../..')(function (async, assert) {
     var cadence = require('../..')
     var object = {}
-    object.method = cadence(function (step) {
-        step(function () {
-            step(step)(function () {
+    object.method = cadence(function (async) {
+        async(function () {
+            async(async)(function () {
                 assert(this === object, 'inside')
                 this.value = 1
                 return this

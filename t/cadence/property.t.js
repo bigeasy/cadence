@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
-require('proof')(4, require('../..')(function (step, assert) {
+require('proof')(4, require('../..')(function (async, assert) {
     var cadence = require('../..')
     var object = {}
 
-    object.scalar = cadence(function (step, value) {
-        step('value')(null, value)
+    object.scalar = cadence(function (async, value) {
+        async('value')(null, value)
     })
 
-    object.arrayed = cadence(function (step, value) {
-        [ 1, 2, 3 ].forEach(step('values', [], function (number) {
+    object.arrayed = cadence(function (async, value) {
+        [ 1, 2, 3 ].forEach(async('values', [], function (number) {
             return number
         }))
     })

@@ -1,24 +1,24 @@
 #!/usr/bin/env node
 
-require('proof')(1, require('../..')(function (step, assert) {
+require('proof')(1, require('../..')(function (async, assert) {
     var cadence = require('../..')
     function echo (value, callback) {
         setImmediate(function () { callback(null, value) })
     }
-    cadence(function (step) {
+    cadence(function (async) {
         var order = []
-        step(function () {
-            step(function () {
-                setImmediate(step())
+        async(function () {
+            async(function () {
+                setImmediate(async())
             }, function () {
                 order.push('first')
             })
-            echo(1, step())
-            step([function () { order.push('second') }])
+            echo(1, async())
+            async([function () { order.push('second') }])
         }, function (value) {
             order.push('third')
             assert(order, [ 'first', 'second', 'third' ], 'cleanup')
         })
 
-    })(step())
+    })(async())
 }))

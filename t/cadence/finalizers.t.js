@@ -6,9 +6,9 @@ require('proof')(28, function (assert) {
     var object = {}
 
     // Simple example of a finalizer.
-    cadence(function (step, object) {
+    cadence(function (async, object) {
 
-        step([function () {
+        async([function () {
             assert(object.used, 'leading finalizer closed')
             object.closed = true
         }], function () {
@@ -24,12 +24,12 @@ require('proof')(28, function (assert) {
     })
 
     // Fixup finalizers run in the parent cadence.
-    cadence(function (step, object) {
+    cadence(function (async, object) {
 
-        step(function () {
+        async(function () {
             ! function (callback) {
                 callback(null, object)
-            } (step(step)([function (object) { object.closed = true }]))
+            } (async(async)([function (object) { object.closed = true }]))
         }, function (object) {
             assert(!object.closed, 'leading finalizer open')
             object.used = true
@@ -45,12 +45,12 @@ require('proof')(28, function (assert) {
     })
 
     // Finalizers run after explicit exit.
-    cadence(function (step, object) {
+    cadence(function (async, object) {
 
-        step(function () {
+        async(function () {
             ! function (callback) {
                 callback(null, object)
-            } (step(step)([function (object) { object.closed = true }]))
+            } (async(async)([function (object) { object.closed = true }]))
         }, function (object) {
             assert(!object.closed, 'on exit open')
             object.used = true
@@ -68,12 +68,12 @@ require('proof')(28, function (assert) {
 
       // Finalizers run with correct `this`.
       var self = {}
-      cadence(function (step) {
+      cadence(function (async) {
 
-        step(function () {
+        async(function () {
             ! function (callback) {
                 callback(null, 1)
-            } (step(step)([function (number) {
+            } (async(async)([function (number) {
                 assert(self === this, 'self is this')
                 this.closed = number
             }]))
@@ -94,9 +94,9 @@ require('proof')(28, function (assert) {
     })
 
     var me = {}
-    cadence(function (step) {
+    cadence(function (async) {
 
-        step(function () {
+        async(function () {
             this.opened = true
         }, [function () {
             assert(me === this, 'this exit')
@@ -114,10 +114,10 @@ require('proof')(28, function (assert) {
 
     })
 
-    cadence(function (step, object) {
-        var block = step(function () {
-            step(function () {
-                step([function () {
+    cadence(function (async, object) {
+        var block = async(function () {
+            async(function () {
+                async([function () {
                     object.done = true
                 }], function () {
                     return [ block, object ]
@@ -132,12 +132,12 @@ require('proof')(28, function (assert) {
     })
 
     // Finalizers report their errors.
-    cadence(function (step, object) {
+    cadence(function (async, object) {
 
-        step(function () {
+        async(function () {
             ! function (callback) {
                 callback(null, object)
-            } (step(step)([function (object) { step()(new Error('finalizer')) }]))
+            } (async(async)([function (object) { async()(new Error('finalizer')) }]))
         }, function (object) {
             assert(!object.closed, 'leading finalizer open')
             return object
@@ -151,8 +151,8 @@ require('proof')(28, function (assert) {
 
     // Finalizers do not run if they are not reached.
     var stopped
-    cadence(function (step, object) {
-        step(function () {
+    cadence(function (async, object) {
+        async(function () {
             throw new Error('errored')
         }, [function () {
             throw new Error('finalized')
@@ -166,8 +166,8 @@ require('proof')(28, function (assert) {
 
     // Finalizers run in the reverse order in which they are declared.
     var stopped
-    cadence(function (step, object) {
-        step([function () {
+    cadence(function (async, object) {
+        async([function () {
             assert(object.finalizer, 1, 'reverse order')
             object.finalizer++
         }], function () {

@@ -1,25 +1,25 @@
 #!/usr/bin/env node
 
-require('proof')(6, require('../..')(function (step, assert) {
+require('proof')(6, require('../..')(function (async, assert) {
     var cadence = require('../..')
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        step()(null, 1)
-        step()(null, 2)
+        async()(null, 1)
+        async()(null, 2)
 
     }, function (first, second) {
 
         assert(first, 1, 'first')
         assert(second, 2, 'second')
 
-    })(step())
+    })(async())
 
-    cadence(function (step) {
+    cadence(function (async) {
 
-        step(2)(null)
-        step()(null, 3)
-        step()(null, null)
+        async(2)(null)
+        async()(null, 3)
+        async()(null, null)
 
     }, function (first, second, third, fourth) {
 
@@ -28,5 +28,5 @@ require('proof')(6, require('../..')(function (step, assert) {
         assert(third, 3, 'third not undefined')
         assert(fourth === null, 'fourth null')
 
-    })(step())
+    })(async())
 }))
