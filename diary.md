@@ -3429,3 +3429,14 @@ meaning in computer programming that trumps any meaning that could be borrowed
 from the metaphor.
 
 `async`. The name of the function is `async()`.
+
+### Assume Serial Error
+
+Instead of assuming parallel errors because Cadence encourages parallelism,
+assume serial errors because Cadence discouranges parallelism, or rather, I
+don't use it much, it is much easier to think in serial.
+
+Couldn't we determine, by the number and nature of callbacks, if we should catch
+an error or errors? That would be wicked, but no different from asking the user
+to choose. If you call `async` more than once, or you create an arrayed
+callback, then you will catch an array of errors.
