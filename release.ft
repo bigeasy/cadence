@@ -36,6 +36,7 @@ Loops are implemented by adding an additional step to the start and end of the c
 
 # Issue by Issue
 
+ * Rename `consumer` to `done`. #270.
  * Rename `step` function to `async`. #263.
  * Upgrade Proof to 0.0.50. #265.
  * Preserve toString. #257.

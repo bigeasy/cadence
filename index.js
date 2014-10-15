@@ -15,10 +15,10 @@
     function cadence () {
         var steps = __slice.call(arguments), frames = [], f
 
-        function enframe (self, consumer, steps, index, caller, callbacks, catcher) {
+        function enframe (self, done, steps, index, caller, callbacks, catcher) {
             return {
                 self: self,
-                consumer: consumer,
+                done: done,
                 steps: steps,
                 index: index,
                 nextIndex: index + 1,
@@ -38,9 +38,9 @@
                 callback = vargs.pop()
             }
 
-            invoke(enframe(self, consumer, steps, -1, { errors:[], root: true }, argue([ async ].concat(vargs))))
+            invoke(enframe(self, done, steps, -1, { errors:[], root: true }, argue([ async ].concat(vargs))))
 
-            function consumer (errors, finalizers, results) {
+            function done (errors, finalizers, results) {
                 var vargs = results.length ? [null].concat(results) : []
                 finalize.call(this, finalizers, finalizers.length - 1, errors, function (errors) {
                     if (errors.length) {
@@ -275,8 +275,8 @@
                     frame.errors.push(error)
                 } else if (callback.steps.length) {
                     frame.count++
-                    invoke(enframe(frame.self, consumer, callback.steps, -1, frame, argue(vargs)))
-                    function consumer (errors, finalizers, results) {
+                    invoke(enframe(frame.self, done, callback.steps, -1, frame, argue(vargs)))
+                    function done (errors, finalizers, results) {
                         consume(frame.errors, errors)
 
                         if (callback.fixup) {
@@ -306,14 +306,14 @@
             return object
         }
 
-        function finalize (finalizers, index, errors, consumer) {
+        function finalize (finalizers, index, errors, done) {
             if (index == -1) {
-                consumer.call(this, errors)
+                done.call(this, errors)
             } else {
                 var finalizer = finalizers[index]
                 invoke(enframe(this, function (e) {
                     consume(errors, e)
-                    finalize.call(this, finalizers, index - 1, errors, consumer)
+                    finalize.call(this, finalizers, index - 1, errors, done)
                 }, [ finalizer.f ], -1, finalizer.caller, argue(finalizer.vargs)))
             }
         }
@@ -334,19 +334,19 @@
             if (frame.errors.length) {
                 catcher = frame._catcher
                 if (catcher) {
-                    invoke(enframe(frame.self, _consumer, [ catcher ], -1, frame, argue([ frame.errors, frame.errors[0] ]), true))
-                    function _consumer (errors, finalizers, results) {
+                    invoke(enframe(frame.self, _done, [ catcher ], -1, frame, argue([ frame.errors, frame.errors[0] ]), true))
+                    function _done (errors, finalizers, results) {
                         frame.errors = []
                         consume(frame.finalizers, finalizers)
                         if (errors.length) {
-                            frame.consumer.call(frame.self, errors, frame.finalizers, results)
+                            frame.done.call(frame.self, errors, frame.finalizers, results)
                         } else {
                             frame.callbacks = argue(results)
                             invoke(frame)
                         }
                     }
                 } else {
-                    frame.consumer.call(frame.self, frame.errors, frame.finalizers.splice(0, frame.finalizers.length), [])
+                    frame.done.call(frame.self, frame.errors, frame.finalizers.splice(0, frame.finalizers.length), [])
                 }
                 return
             }
@@ -426,7 +426,7 @@
 
             if (steps.length == frame.index) {
                 return function () {
-                    frame.consumer.call(frame.self, [], frame.finalizers.splice(0, frame.finalizers.length), vargs)
+                    frame.done.call(frame.self, [], frame.finalizers.splice(0, frame.finalizers.length), vargs)
                 }
             }
 
