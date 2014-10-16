@@ -550,6 +550,8 @@
 
         f.toString = function () { return steps[0].toString() }
 
+        f.isCadence = true
+
         return f
     }
 
