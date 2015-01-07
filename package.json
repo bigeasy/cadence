@@ -22,6 +22,7 @@
                           "url": "git://github.com/bigeasy/cadence.git",
                           "type": "git"
     },
+    "main":               "cadence.js",
     "dependencies":
     {},
     "devDependencies":
