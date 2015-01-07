@@ -414,6 +414,7 @@
 
             frame = subClass(frame, {
                 cleanup: [],
+                _catcher: null,
                 callbacks: [],
                 errors: [],
                 count: 0,

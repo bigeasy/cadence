@@ -1,8 +1,21 @@
 #!/usr/bin/env node
 
-require('proof')(23, require('../..')(function (async, assert) {
+require('proof')(24, require('../..')(function (async, assert) {
     var cadence = require('../..')
     var errors = []
+
+    // bug #272
+    cadence(function (async) {
+        async([function () {
+        }, function () {
+            throw new Error('do not call')
+        }], function () {
+        }, function () {
+            throw new Error('thrown')
+        })
+    })(function (error) {
+        assert(error.message, 'thrown', 'overzealous catch blocks: 272')
+    })
 
     cadence(function () {
         throw new Error('thrown')
