@@ -200,15 +200,13 @@
                         var vargs = __slice.call(arguments)
                         if (whilst()) {
                             if (counter) {
-                                async().apply(frame.self, [ null ].concat(each ? [ counter[count] ] : [], count, vargs))
-                            } else {
-                                async().apply(frame.self, [ null ].concat(vargs).concat(count))
+                                return [].concat(each ? [ counter[count] ] : [], count, vargs)
                             }
+                            return vargs.concat(count)
                         } else if (gather) {
                             return [ async ]
-                        } else {
-                            return [ async ].concat(vargs)
                         }
+                        return [ async ].concat(vargs)
                     })
 
                     callback.steps.push(function () {
