@@ -1,5 +1,6 @@
 var ok = require('assert').ok
 var cadence = require('..')
+var minimal = require('../minimal')
 var Benchmark = require('benchmark')
 var async = require('async')
 var streamlined = require('./scall._js')
@@ -29,6 +30,38 @@ suite.add({
     name: 'cadence loop',
     fn: function (deferred) {
         c(function (error, result) {
+            ok(result == 1, 'callback')
+            deferred.resolve()
+        })
+    },
+    defer: true
+})
+
+var m = minimal(function (aysnc) {
+    return 1
+})
+
+var ms = minimal(function (async) {
+    async(function () {
+        return 1
+    })
+})
+
+suite.add({
+    name: 'minimal call',
+    fn: function (deferred) {
+        m(function (error, result) {
+            ok(result == 1, 'callback')
+            deferred.resolve()
+        })
+    },
+    defer: true
+})
+
+suite.add({
+    name: 'minimal call with sub cadence',
+    fn: function (deferred) {
+        ms(function (error, result) {
             ok(result == 1, 'callback')
             deferred.resolve()
         })

@@ -3440,3 +3440,34 @@ Couldn't we determine, by the number and nature of callbacks, if we should catch
 an error or errors? That would be wicked, but no different from asking the user
 to choose. If you call `async` more than once, or you create an arrayed
 callback, then you will catch an array of errors.
+
+### Minimal Cadence
+
+I've been using Cadence now for three years. It works well for me. It is an
+advantage to use Cadence to simplify the reasoning around asynchronous
+programming.
+
+When I first created Strata, I used
+
+Wow! Cannot make the words.
+
+ * Strata had an asynchronous `get` because Streamline.js made that easy. If we
+ all used Streamline.js, this would not be a problem, but we don't, and using
+ Strata with all that asynchronicity would be hard, but I'd never notice,
+ because I'd be using Streamline.js.
+ * Streamline.js has outstanding performance.
+ * In all this time, I've used and would miss, finalizers and try/catch, that is
+ the reasoning I don't want to revisit with every project.
+ * Trampolines are also vital, requiring me to otherwise think about the stack.
+ * I've never used parallelism. Now that I need parallelism everywhere, I am not
+ not turning to the buried and unqueued parallelism of Cadence. It goes.
+ * We still have parallel operations, but they are heterogenous. A catch block
+ will take just an error. It will be called for each error, until the catch
+ block throws an error, or an error is missed by the regular expression.
+ * We remove arity and arrayed callbacks. We remove fixups, which are as easily
+ expressed using a sub-cadence.
+ * Remove any special form of sub-cadence; fixups, parallels, etc.
+ * Finalizers still work correctly as the next step.
+ * Create a minimal Cadence that smokes the benchmarks, if at all possible. If
+ not, then minimal Cadence doesn't buy us anything, and we move onto something
+ else.

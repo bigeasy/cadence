@@ -1,7 +1,11 @@
-module.exports = function (COUNT, _) {
+function inc (count, _) {
+    return count + 1
+}
+
+module.exports = function (COUNT, inc, _) {
     var count = 0
-    for (var i = 0; i < COUNT; i++) {
-        count++
+    while (count != 256) {
+        count = inc(count, _)
     }
     return count
 }

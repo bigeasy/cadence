@@ -5,7 +5,7 @@ var loop = cadence(function (async) {
     async(function () {
         async(function (i) {
             return count++
-        })(256)
+        })(256 * 10)
     }, function () {
         return [ count ]
     })
