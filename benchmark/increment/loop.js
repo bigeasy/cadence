@@ -12,7 +12,7 @@ function inc (count, callback) {
 }
 
 var m = minimal(function (async) {
-    var loop = async(function (i, inced) {
+    var loop = async(function (inced) {
         if (inced == 256) return [ loop, inced ]
         inc(inced, async())
     })(0)

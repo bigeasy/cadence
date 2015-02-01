@@ -3,7 +3,7 @@
     else if (typeof define == "function") define(definition)
     else module.exports = definition()
 } (function () {
-    var stack = [], slice = [].slice, push = [].push
+    var stack = [], push = [].push
 
     function Cadence (options) {
         this.self = options.self
@@ -33,14 +33,14 @@
         } else {
             push.apply(result.vargs, vargs)
         }
-        if (++this.called == this.count) {
+        if (++this.called === this.count) {
             this.join()
         }
     }
 
     Step.prototype.createCallback = function () {
         var self = this
-        var result = new Result
+        var result = { vargs: [] }
 
         self.results.push(result)
         self.count++
@@ -48,7 +48,14 @@
 
         return callback
 
-        function callback () { self.callback(result, slice.call(arguments)) }
+        function callback () {
+            var I = arguments.length
+            var vargs = new Array(I)
+            for (var i = 0; i < I; i++) {
+                vargs[i] = arguments[i]
+            }
+            self.callback(result, vargs)
+        }
     }
 
     Step.prototype.createCadence = function (vargs) {
@@ -71,8 +78,15 @@
             cadence: cadence
         })
 
-        return result.starter = function () {
-            return self.starter(step, result, slice.call(arguments))
+        return result.starter = starter
+
+        function starter () {
+            var I = arguments.length
+            var vargs = new Array(I)
+            for (var i = 0; i < I; i++) {
+                vargs[i] = arguments[i]
+            }
+            return self.starter(step, result, vargs)
         }
     }
 
@@ -104,7 +118,11 @@
             function loop () {
                 var I = arguments.length
                 var vargs = new Array(I + 2)
-                vargs[0] = label()
+                vargs[0] = {
+                    invoke: invoke,
+                    cadence: cadence,
+                    index: 0
+                }
                 vargs[1] = count++
                 for (var i = 0; i < I; i++) {
                     vargs[i + 2] = arguments[i]
@@ -114,17 +132,27 @@
         }
     }
 
-    function Result () {
-        this.vargs = []
-    }
-
     function cadence () {
-        return _cadence(slice.call(arguments))
+        var I = arguments.length
+        var vargs = new Array(I)
+        for (var i = 0; i < I; i++) {
+            vargs[i] = arguments[i]
+        }
+        return _cadence(vargs)
     }
 
     function invoke (step) {
         var f = _invoke(step)
         while (f) f = f()
+    }
+
+    function call (fn, self, vargs) {
+        try {
+            var ret = fn.apply(self, vargs)
+        } catch (e) {
+            throw e
+        }
+        return { ret: ret }
     }
 
     function _invoke (step) {
@@ -144,6 +172,7 @@
         }
 
         if (step.errors.length) {
+            throw new Error
         }
 
         step = new Step(step)
@@ -173,11 +202,8 @@
         }
 
         stack.push(step)
-        try {
-            var ret = fn.apply(step.cadence.self, vargs)
-        } catch (e) {
-            throw e
-        }
+        var outcome = call(fn, step.cadence.self, vargs)
+        var ret = outcome.ret
         stack.pop()
         for (var i = 0, I = step.results.length; i < I; i++) {
             var result = step.results[i]
@@ -209,11 +235,11 @@
         }
     }
 
-    function execute (steps, vargs) {
+    function execute (self, steps, vargs) {
         var callback = vargs.pop()
 
         var cadence = new Cadence({
-            self: this,
+            self: self,
             steps: steps,
             done: done
         })
@@ -221,7 +247,7 @@
         var step = new Step({
             index: -2,
             cadence: cadence,
-            vargs: [ async ].concat(vargs)
+            vargs: vargs
         })
 
         invoke(step)
@@ -237,27 +263,57 @@
         switch (steps[0].length) {
         case 0:
             f = function () {
-                execute.call(this, steps, slice.call(arguments))
+                var I = arguments.length
+                var vargs = new Array(I + 1)
+                vargs[0] = async
+                for (var i = 0; i < I; i++) {
+                    vargs[i + 1] = arguments[i]
+                }
+                execute(this, steps, vargs)
             }
             break
         case 1:
             f = function (one) {
-                execute.call(this, steps, slice.call(arguments))
+                var I = arguments.length
+                var vargs = new Array(I + 1)
+                vargs[0] = async
+                for (var i = 0; i < I; i++) {
+                    vargs[i + 1] = arguments[i]
+                }
+                execute(this, steps, vargs)
             }
             break
         case 2:
             f = function (one, two) {
-                execute.call(this, steps, slice.call(arguments))
+                var I = arguments.length
+                var vargs = new Array(I + 1)
+                vargs[0] = async
+                for (var i = 0; i < I; i++) {
+                    vargs[i + 1] = arguments[i]
+                }
+                execute(this, steps, vargs)
             }
             break
         case 3:
             f = function (one, two, three) {
-                execute.call(this, steps, slice.call(arguments))
+                var I = arguments.length
+                var vargs = new Array(I + 1)
+                vargs[0] = async
+                for (var i = 0; i < I; i++) {
+                    vargs[i + 1] = arguments[i]
+                }
+                execute(this, steps, vargs)
             }
             break
         case 4:
             f = function (one, two, three, four) {
-                execute.call(this, steps, slice.call(arguments))
+                var I = arguments.length
+                var vargs = new Array(I + 1)
+                vargs[0] = async
+                for (var i = 0; i < I; i++) {
+                    vargs[i + 1] = arguments[i]
+                }
+                execute(this, steps, vargs)
             }
             break
         default:
