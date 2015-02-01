@@ -18,4 +18,8 @@ mloop(function (error, count) {
     if (error) throw error
     ok(count == COUNT, 'cadence recurse ok')
     console.log(count)
+    mloop(function (error, count) {
+        if (error) throw error
+        ok(count == COUNT, 'cadence recurse ok')
+    })
 })

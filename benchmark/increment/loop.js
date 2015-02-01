@@ -7,24 +7,38 @@ var suite = new Benchmark.Suite
 
 var m = minimal(function () { return 1 })
 
+function inc (count, callback) {
+    callback(null, count + 1)
+}
+
+var m = minimal(function (async) {
+    var loop = async(function (i, inced) {
+        if (inced == 256) return [ loop, inced ]
+        inc(inced, async())
+    })(0)
+})
+
 suite.add({
-    name: 'minimal call',
+    name: 'minimal loop',
     fn: function (deferred) {
         m(function (error, result) {
-            ok(result == 1, 'callback')
             deferred.resolve()
         })
     },
     defer: true
 })
 
-var m_ = minimal_(function () { return 1 })
+var m_ = minimal_(function (async) {
+    var loop = async(function (i, inced) {
+        if (inced == 256) return [ loop, inced ]
+        inc(inced, async())
+    })(0)
+})
 
 suite.add({
     name: 'minimal_ call',
     fn: function (deferred) {
         m_(function (error, result) {
-            ok(result == 1, 'callback')
             deferred.resolve()
         })
     },
@@ -35,7 +49,6 @@ suite.add({
     name: 'minimal call 2',
     fn: function (deferred) {
         m(function (error, result) {
-            ok(result == 1, 'callback')
             deferred.resolve()
         })
     },
@@ -46,7 +59,6 @@ suite.add({
     name: 'minimal_ call 2',
     fn: function (deferred) {
         m_(function (error, result) {
-            ok(result == 1, 'callback')
             deferred.resolve()
         })
     },

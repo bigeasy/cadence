@@ -52,24 +52,26 @@ var wrapped = cadence(function (async, value) {
     return inc(value, async())
 })
 
+function looper (callback) {
+    function loop (error, count) {
+        setImmediate(function () {
+            if (count < 256) {
+                inc(count, loop)
+            } else {
+                callback(null, count)
+            }
+        })
+    }
+    loop(null, 0)
+}
+
 suite.add({
     name: 'raw loop',
     fn: function (deferred) {
-        function l (error, count) {
-            if (count < COUNT) {
-                inc(count, loop)
-            } else {
+        looper(function (error, count) {
                 ok(count == COUNT, 'loop over cadence ok')
                 deferred.resolve()
-            }
-        }
-        function loop (error, count) {
-            (function () {
-                var args = Array.prototype.slice.call(arguments)
-                l.apply(null, args)
-            })(error, count)
-        }
-        loop(null, 0)
+        })
     },
     defer: true
 })

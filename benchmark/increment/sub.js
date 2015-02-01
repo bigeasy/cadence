@@ -35,6 +35,28 @@ suite.add({
     defer: true
 })
 
+suite.add({
+    name: 'minimal call 2',
+    fn: function (deferred) {
+        m(function (error, result) {
+            ok(result == 1, 'callback')
+            deferred.resolve()
+        })
+    },
+    defer: true
+})
+
+suite.add({
+    name: 'minimal_ call 2',
+    fn: function (deferred) {
+        m_(function (error, result) {
+            ok(result == 1, 'callback')
+            deferred.resolve()
+        })
+    },
+    defer: true
+})
+
 suite.on('cycle', function(event) {
     console.log(String(event.target));
 })

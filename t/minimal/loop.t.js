@@ -1,4 +1,4 @@
-require('proof')(1, require('../..')(prove))
+require('proof')(2, require('../..')(prove))
 
 function prove (async, assert) {
     var cadence = require('../../minimal')

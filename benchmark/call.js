@@ -42,9 +42,7 @@ var m = minimal(function (aysnc) {
 })
 
 var ms = minimal(function (async) {
-    async(function () {
-        return 1
-    })
+    async(function () { return 1 })
 })
 
 suite.add({
@@ -69,6 +67,7 @@ suite.add({
     defer: true
 })
 
+/*
 suite.add({
     name: 'streamline loop',
     fn: function (deferred) {
@@ -80,6 +79,7 @@ suite.add({
     },
     defer: true
 })
+*/
 
 suite.on('cycle', function(event) {
     console.log(String(event.target));
