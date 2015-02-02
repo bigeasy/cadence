@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-require('proof')(1, require('../..')(prove))
+require('proof')(1, prove)
 
-function prove (async, assert) {
+function prove (assert) {
     var cadence = require('../../minimal')
 
     var f = cadence(function (async) {
@@ -15,7 +15,9 @@ function prove (async, assert) {
 
     })
 
-    f(async())
+    f(function (error) {
+        if (error) throw error
+    })
 }
 
 function item (number, callback) { callback(null, number) }
