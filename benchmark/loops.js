@@ -5,41 +5,13 @@ var Benchmark = require('benchmark')
 var async = require('async')
 var streamlined = require('./loop.s._js')
 
-var suite = new Benchmark.Suite
+var suite = new Benchmark.Suite('loops', { minSamples: 150 })
 
 var mloop = minimal(function (async, count) {
     var loop = async(function (inced) {
         if (inced == count) return [ loop, inced ]
         inc(inced, async())
     })(0)
-})
-
-minimal(function (async) {
-    var i = 0, loop = async(function () {
-        if (i++ == 100) return [ loop ]
-        mloop(256, async())
-    })(0)
-})(function () {})
-
-var loop = cadence(function (async) {
-    var count = 0
-    async(function () {
-        var loop = async(function () {
-            async(function () {
-                inc(count, async())
-            }, function (inced) {
-                count = inced
-                if (count == 256 * 10) return [ loop ]
-            })
-        })()
-    }, function () {
-        return [ count ]
-    })
-})
-
-loop(function (error, count) {
-    if (error) throw error
-    console.log(count)
 })
 
 var COUNT = 1024
@@ -67,6 +39,23 @@ function looper (callback) {
     loop(null, 0)
 }
 
+var cloop = cadence(function (async) {
+    async(function (i) {
+        if (i == COUNT) return [ async, i ]
+        inc(i, async())
+    })(null, 0)
+})
+
+suite.add({
+    name: 'cadence loop',
+    fn: function (deferred) {
+        cloop(function (error, count) {
+            deferred.resolve()
+        })
+    },
+    defer: true
+})
+
 suite.add({
     name: 'raw loop',
     fn: function (deferred) {
@@ -79,28 +68,11 @@ suite.add({
 })
 
 suite.add({
-    name: 'cadnece raw loop',
-    fn: function (deferred) {
-        function loop (error, count) {
-            if (count < COUNT) {
-                wrapped(count, loop)
-            } else {
-                ok(count == COUNT, 'loop over cadence ok')
-                deferred.resolve()
-            }
-        }
-        loop(null, 0)
-    },
-    defer: true
-})
-
-suite.add({
     name: 'streamline loop',
     fn: function (deferred) {
         streamlined(COUNT, inc, function (error, count) {
-            if (error) throw error
-            ok(count == COUNT, 'streamline ok')
             deferred.resolve()
+            ok(count == COUNT, 'streamline ok')
         })
     },
     defer: true
@@ -129,25 +101,8 @@ suite.add({
     name: 'minimal loop',
     fn: function (deferred) {
         mloop(COUNT, function (error, count) {
-            if (error) throw error
+            deferred.resolve()
             ok(count == COUNT, 'minimal ok')
-            deferred.resolve()
-        })
-    },
-    defer: true
-})
-
-var cloop = cadence(function (async) {
-    async(function (i) { inc(i, async()) })(256)
-})
-
-suite.add({
-    name: 'cadence loop',
-    fn: function (deferred) {
-        cloop(function (error, count) {
-            if (error) throw error
-         //   ok(count == COUNT, 'cadence ok')
-            deferred.resolve()
         })
     },
     defer: true
