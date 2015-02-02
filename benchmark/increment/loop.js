@@ -3,7 +3,7 @@ var minimal = require('../../minimal')
 var minimal_ = require('../../minimal_')
 var Benchmark = require('benchmark')
 
-var suite = new Benchmark.Suite
+var suite = new Benchmark.Suite('loop', { minSamples: 100 })
 
 var m = minimal(function () { return 1 })
 
@@ -13,13 +13,13 @@ function inc (count, callback) {
 
 var m = minimal(function (async) {
     var loop = async(function (inced) {
-        if (inced == 256) return [ loop, inced ]
+        if (inced == 1024) return [ loop, inced ]
         inc(inced, async())
     })(0)
 })
 
 suite.add({
-    name: 'minimal loop',
+    name: 'minimal  loop 1',
     fn: function (deferred) {
         m(function (error, result) {
             deferred.resolve()
@@ -29,14 +29,14 @@ suite.add({
 })
 
 var m_ = minimal_(function (async) {
-    var loop = async(function (i, inced) {
-        if (inced == 256) return [ loop, inced ]
+    var loop = async(function (inced) {
+        if (inced == 1024) return [ loop, inced ]
         inc(inced, async())
     })(0)
 })
 
 suite.add({
-    name: 'minimal_ call',
+    name: 'minimal_ loop 1',
     fn: function (deferred) {
         m_(function (error, result) {
             deferred.resolve()
@@ -46,7 +46,7 @@ suite.add({
 })
 
 suite.add({
-    name: 'minimal call 2',
+    name: 'minimal  loop 2',
     fn: function (deferred) {
         m(function (error, result) {
             deferred.resolve()
@@ -56,7 +56,7 @@ suite.add({
 })
 
 suite.add({
-    name: 'minimal_ call 2',
+    name: 'minimal_ loop 2',
     fn: function (deferred) {
         m_(function (error, result) {
             deferred.resolve()

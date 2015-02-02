@@ -5,10 +5,10 @@ function inc (count, callback) {
     callback(null, count + 1)
 }
 
-var COUNT = 256 * 1000
+var COUNT = 256
 
 var mloop = minimal(function (async) {
-    var loop = async(function (i, inced) {
+    var loop = async(function (inced) {
         if (inced == COUNT) return [ loop, inced ]
         inc(inced, async())
     })(0)

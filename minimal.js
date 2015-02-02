@@ -9,6 +9,7 @@
         this.self = options.self
         this.steps = options.steps
         this.done = options.done
+        this.loop = false
     }
 
     function Step (step) {
@@ -96,13 +97,13 @@
         } else {
             var count = 0, cadence = step.cadence
 
-            step.cadence.steps.push(loop)
-
             label.invoke = invoke
+            label.loop = false
             label.cadence = cadence
             label.index = cadence.steps.length
 
-            step.index = cadence.steps.length - 2
+            step.index = -1
+            step.cadence.loop = true
             push.apply(step.vargs, vargs)
 
             return label
@@ -110,23 +111,10 @@
             function label () {
                 return {
                     invoke: invoke,
+                    loop: true,
                     cadence: cadence,
                     index: 0
                 }
-            }
-
-            function loop () {
-                var I = arguments.length
-                var vargs = new Array(I + 1)
-                vargs[0] = {
-                    invoke: invoke,
-                    cadence: cadence,
-                    index: 0
-                }
-                for (var i = 0; i < I; i++) {
-                    vargs[i + 1] = arguments[i]
-                }
-                return vargs
             }
         }
     }
@@ -160,8 +148,9 @@
             vargs = step.vargs
             if (vargs[0] && vargs[0].invoke === invoke) {
                 var label = vargs.shift()
-                step.index = label.index - 1
                 step.cadence = label.cadence
+                step.cadence.loop = label.loop
+                step.index = label.index - 1
             }
         } else {
             vargs = []
@@ -177,8 +166,13 @@
         step = new Step(step)
 
         if (step.index == steps.length) {
-            step.cadence.done([ null ].concat(vargs))
-            return
+            var cadence = step.cadence
+            if (cadence.loop) {
+                step.index = 0
+            } else {
+                cadence.done([ null ].concat(vargs))
+                return
+            }
         }
 
         var fn = steps[step.index]

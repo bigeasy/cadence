@@ -117,15 +117,14 @@
 
             function loop () {
                 var I = arguments.length
-                var vargs = new Array(I + 2)
+                var vargs = new Array(I + 1)
                 vargs[0] = {
                     invoke: invoke,
                     cadence: cadence,
                     index: 0
                 }
-                vargs[1] = count++
                 for (var i = 0; i < I; i++) {
-                    vargs[i + 2] = arguments[i]
+                    vargs[i + 1] = arguments[i]
                 }
                 return vargs
             }

@@ -7,17 +7,17 @@ var streamlined = require('./loop.s._js')
 
 var suite = new Benchmark.Suite
 
-var mloop = minimal(function (async) {
-    var loop = async(function (i, inced) {
-        if (inced == 256) return [ loop, inced ]
+var mloop = minimal(function (async, count) {
+    var loop = async(function (inced) {
+        if (inced == count) return [ loop, inced ]
         inc(inced, async())
     })(0)
 })
 
 minimal(function (async) {
-    var loop = async(function (i) {
-        if (i == 100) return [ loop ]
-        mloop(async())
+    var i = 0, loop = async(function () {
+        if (i++ == 100) return [ loop ]
+        mloop(256, async())
     })(0)
 })(function () {})
 
@@ -42,7 +42,7 @@ loop(function (error, count) {
     console.log(count)
 })
 
-var COUNT = 256
+var COUNT = 1024
 
 function inc (count, callback) {
     callback(null, count + 1)
@@ -52,10 +52,12 @@ var wrapped = cadence(function (async, value) {
     return inc(value, async())
 })
 
+console.log('here')
+
 function looper (callback) {
     function loop (error, count) {
         setImmediate(function () {
-            if (count < 256) {
+            if (count < COUNT) {
                 inc(count, loop)
             } else {
                 callback(null, count)
@@ -126,9 +128,9 @@ suite.add({
 suite.add({
     name: 'minimal loop',
     fn: function (deferred) {
-        mloop(function (error, count) {
+        mloop(COUNT, function (error, count) {
             if (error) throw error
-            ok(count == COUNT, 'cadence ok')
+            ok(count == COUNT, 'minimal ok')
             deferred.resolve()
         })
     },

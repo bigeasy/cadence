@@ -4,7 +4,7 @@ function inc (count, _) {
 
 module.exports = function (COUNT, inc, _) {
     var count = 0
-    while (count != 256) {
+    while (count != COUNT) {
         count = inc(count, _)
     }
     return count
