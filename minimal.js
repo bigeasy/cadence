@@ -364,13 +364,20 @@
         default:
             // Avert your eyes if you're squeamish.
             var args = []
-            for (var i = 0; i < steps[0].length; i++) {
+            for (var i = 0, I = steps[0].length; i < I; i++) {
                 args[i] = '_' + i
             }
-
-            var f = (new Function('execute', 'steps', 'return function (' + args.join(',') + ') {' +
-                'execute.call(this, steps, Array.prototype.slice.call(arguments))' +
-            '}'))(execute, steps)
+            var f = (new Function('execute', 'steps', 'async', '                \n\
+                return function (' + args.join(',') + ') {                      \n\
+                    var I = arguments.length                                    \n\
+                    var vargs = new Array(I + 1)                                \n\
+                    vargs[0] = async                                            \n\
+                    for (var i = 0; i < I; i++) {                               \n\
+                        vargs[i + 1] = arguments[i]                             \n\
+                    }                                                           \n\
+                    execute(this, steps, vargs)                                 \n\
+                }                                                               \n\
+           '))(execute, steps, async)
         }
 
         f.toString = function () { return steps[0].toString() }
