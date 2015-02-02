@@ -22,7 +22,7 @@
         this.index = step.index + 1
         this.sync = true
         this.next = null
-        this.vargs = step.vargs || []
+        this.vargs = step.vargs
     }
 
     Step.prototype.callback = function (result, vargs) {
@@ -74,7 +74,8 @@
 
         var step = new Step({
             index: -2,
-            cadence: cadence
+            cadence: cadence,
+            vargs: []
         })
 
         return result.starter = starter

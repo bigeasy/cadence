@@ -3,7 +3,7 @@ var minimal = require('../../minimal')
 var minimal_ = require('../../minimal_')
 var Benchmark = require('benchmark')
 
-var suite = new Benchmark.Suite('call', { minSamples: 100 })
+var suite = new Benchmark.Suite('call', { /*minSamples: 100*/ })
 
 var m = minimal(function () { return 1 })
 
@@ -23,41 +23,19 @@ function fn_ (deferred) {
     })
 }
 
-suite.add({
-    name: 'minimal  call 1',
-    fn: fn,
-    defer: true
-})
+for (var i = 0; i < 3; i++)  {
+    suite.add({
+        name: 'minimal_ call ' + i,
+        fn: fn_,
+        defer: true
+    })
 
-suite.add({
-    name: 'minimal_ call 1',
-    fn: fn_,
-    defer: true
-})
-
-suite.add({
-    name: 'minimal  call 2',
-    fn: fn,
-    defer: true
-})
-
-suite.add({
-    name: 'minimal_ call 2',
-    fn: fn_,
-    defer: true
-})
-
-suite.add({
-    name: 'minimal  call 3',
-    fn: fn,
-    defer: true
-})
-
-suite.add({
-    name: 'minimal_ call 3',
-    fn: fn_,
-    defer: true
-})
+    suite.add({
+        name: 'minimal  call ' + i,
+        fn: fn,
+        defer: true
+    })
+}
 
 suite.on('cycle', function(event) {
     console.log(String(event.target));
