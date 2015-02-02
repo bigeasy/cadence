@@ -172,13 +172,13 @@
     }
 
     function _invoke (step) {
-        var vargs, steps = step.cadence.steps
+        var vargs, cadence = step.cadence, steps = cadence.steps
 
         if (step.errors.length) {
             if (step.catcher) {
                 rescue(step)
             } else {
-                step.cadence.done([ step.errors[0] ])
+                cadence.done([ step.errors[0] ])
             }
             return null
         }
@@ -187,9 +187,10 @@
             vargs = step.vargs
             if (vargs[0] && vargs[0].invoke === token) {
                 var label = vargs.shift()
-                step.cadence = label.cadence
-                step.cadence.loop = label.loop
+                cadence = step.cadence = label.cadence
+                cadence.loop = label.loop
                 step.index = label.index - 1
+                steps = cadence.steps
             }
         } else {
             vargs = []
@@ -201,7 +202,6 @@
         step = new Step(step)
 
         if (step.index == steps.length) {
-            var cadence = step.cadence
             if (cadence.loop) {
                 step.index = 0
             } else {
@@ -214,7 +214,7 @@
 
         if (Array.isArray(fn)) {
             if (fn.length === 1) {
-                step.cadence.finalizers.push({ steps: fn, vargs: vargs })
+                cadence.finalizers.push({ steps: fn, vargs: vargs })
                 return step
             } else {
                 step.catcher = fn[1]
@@ -224,7 +224,7 @@
 
         stack.push(step)
 
-        var ret = call(fn, step.cadence.self, vargs)
+        var ret = call(fn, cadence.self, vargs)
 
         stack.pop()
 
