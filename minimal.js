@@ -223,8 +223,11 @@
         }
 
         stack.push(step)
+
         var ret = call(fn, step.cadence.self, vargs)
+
         stack.pop()
+
         if (ret.length === 2) {
             step.errors.push(ret[1])
             step.vargs = vargs
