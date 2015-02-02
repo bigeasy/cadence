@@ -5,7 +5,7 @@ function inc (count, callback) {
     callback(null, count + 1)
 }
 
-var COUNT = 256
+var COUNT = 256 * 10
 
 var mloop = minimal(function (async) {
     var loop = async(function (inced) {
@@ -17,7 +17,6 @@ var mloop = minimal(function (async) {
 mloop(function (error, count) {
     if (error) throw error
     ok(count == COUNT, 'cadence recurse ok')
-    console.log(count)
     mloop(function (error, count) {
         if (error) throw error
         ok(count == COUNT, 'cadence recurse ok')

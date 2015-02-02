@@ -18,15 +18,11 @@ var m = minimal(function (async) {
     })(0)
 })
 
-suite.add({
-    name: 'minimal  loop 1',
-    fn: function (deferred) {
-        m(function (error, result) {
-            deferred.resolve()
-        })
-    },
-    defer: true
-})
+function fn (deferred) {
+    m(function (error, result) {
+        deferred.resolve()
+    })
+}
 
 var m_ = minimal_(function (async) {
     var loop = async(function (inced) {
@@ -35,33 +31,45 @@ var m_ = minimal_(function (async) {
     })(0)
 })
 
+function fn_ (deferred) {
+    m_(function (error, result) {
+        deferred.resolve()
+    })
+}
+
+suite.add({
+    name: 'minimal  loop 1',
+    fn: fn,
+    defer: true
+})
+
 suite.add({
     name: 'minimal_ loop 1',
-    fn: function (deferred) {
-        m_(function (error, result) {
-            deferred.resolve()
-        })
-    },
+    fn: fn_,
     defer: true
 })
 
 suite.add({
     name: 'minimal  loop 2',
-    fn: function (deferred) {
-        m(function (error, result) {
-            deferred.resolve()
-        })
-    },
+    fn: fn,
     defer: true
 })
 
 suite.add({
     name: 'minimal_ loop 2',
-    fn: function (deferred) {
-        m_(function (error, result) {
-            deferred.resolve()
-        })
-    },
+    fn: fn_,
+    defer: true
+})
+
+suite.add({
+    name: 'minimal  loop 3',
+    fn: fn,
+    defer: true
+})
+
+suite.add({
+    name: 'minimal_ loop 3',
+    fn: fn_,
     defer: true
 })
 
