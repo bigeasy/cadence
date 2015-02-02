@@ -1,6 +1,6 @@
 var cadence = require('./minimal')
 
-function varadic (f) {
+function variadic (f) {
     return function () {
         var I = arguments.length
         var vargs = new Array(I)
@@ -12,11 +12,11 @@ function varadic (f) {
 }
 
 cadence(function (async) {
-    async.forEach = varadic(function (steps) {
+    async.forEach = variadic(function (steps) {
         var async = this
-        return varadic(function (vargs) {
+        return variadic(function (vargs) {
             var loop, array = vargs.shift(), index = -1
-            steps.unshift(varadic(function (vargs) {
+            steps.unshift(variadic(function (vargs) {
                 index++
                 if (index === array.length) return [ loop ].concat(vargs)
                 return [ array[index], index ].concat(vargs)
@@ -24,16 +24,16 @@ cadence(function (async) {
             return loop = async.apply(null, steps).apply(null, vargs)
         })
     })
-    async.map = varadic(function (steps) {
+    async.map = variadic(function (steps) {
         var async = this
-        return varadic(function (vargs) {
+        return variadic(function (vargs) {
             var loop, array = vargs.shift(), index = -1, gather = []
-            steps.unshift(varadic(function (vargs) {
+            steps.unshift(variadic(function (vargs) {
                 index++
                 if (index === array.length) return [ loop, gather ]
                 return [ array[index], index ].concat(vargs)
             }))
-            steps.push(varadic(function (vargs) {
+            steps.push(variadic(function (vargs) {
                 gather.push.apply(gather, vargs)
             }))
             return loop = async.apply(null, steps).apply(null, vargs)
