@@ -1,4 +1,4 @@
-require("proof")(1, prove)
+require('proof')(1, prove)
 
 function prove (assert) {
     global.define = function (factory) {
