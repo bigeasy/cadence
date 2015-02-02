@@ -3,7 +3,7 @@
     else if (typeof define == "function") define(definition)
     else module.exports = definition()
 } (function () {
-    var stack = [], push = [].push
+    var stack = [], push = [].push, token = {}
 
     function Cadence (cadence, steps, done) {
         this.finalizers = cadence.finalizers
@@ -21,22 +21,23 @@
         this.called = 0
         this.index = step.index + 1
         this.sync = true
+        this.next = null
         this.vargs = step.vargs || []
-    }
-
-    Step.prototype.join = function () {
-        this.sync = true
     }
 
     Step.prototype.callback = function (result, vargs) {
         var error = vargs.shift()
-        if (error) {
-            result.errors.push(error)
-        } else {
+        if (error == null) {
             push.apply(result.vargs, vargs)
+        } else {
+            result.errors.push(error)
         }
         if (++this.called === this.count) {
-            this.join()
+            if (this.next == null) {
+                this.sync = true
+            } else {
+                invoke(this.next)
+            }
         }
     }
 
@@ -89,12 +90,12 @@
     }
 
     Step.prototype.starter = function (step, result, vargs) {
-        if (vargs[0] === invoke) {
+        if (vargs[0] === token) {
             invoke(step)
         } else {
             var count = 0, cadence = step.cadence
 
-            label.invoke = invoke
+            label.invoke = token
             label.loop = false
             label.cadence = cadence
             label.index = cadence.steps.length
@@ -107,7 +108,7 @@
 
             function label () {
                 return {
-                    invoke: invoke,
+                    invoke: token,
                     loop: true,
                     cadence: cadence,
                     index: 0
@@ -125,11 +126,6 @@
         return _cadence(vargs)
     }
 
-    function invoke (step) {
-        var f = _invoke(step)
-        while (f) f = f()
-    }
-
     function call (fn, self, vargs) {
         try {
             var ret = fn.apply(self, vargs)
@@ -139,11 +135,15 @@
         return { ret: ret }
     }
 
+    function invoke (step) {
+        while (step = _invoke(step)) { }
+    }
+
     function _invoke (step) {
         var vargs, steps = step.cadence.steps
         if (step.results.length == 0) {
             vargs = step.vargs
-            if (vargs[0] && vargs[0].invoke === invoke) {
+            if (vargs[0] && vargs[0].invoke === token) {
                 var label = vargs.shift()
                 step.cadence = label.cadence
                 step.cadence.loop = label.loop
@@ -168,7 +168,7 @@
                 step.index = 0
             } else {
                 cadence.done([ null ].concat(vargs))
-                return
+                return null
             }
         }
 
@@ -187,7 +187,7 @@
                     vargs: vargs
                 })
                 cadence.finalizers.push(finalizer)
-                return function () { return _invoke(step) }
+                return step
             }
             throw new Error
         }
@@ -199,16 +199,16 @@
         for (var i = 0, I = step.results.length; i < I; i++) {
             var result = step.results[i]
             if (result.starter) {
-                result.starter(invoke)
+                result.starter(token)
             }
         }
         step.vargs = [].concat(ret === void(0) ? vargs : ret)
 
         if (step.sync) {
-            return function () { return _invoke(step) }
+            return step
         }
 
-        step.join = function () { invoke(step) }
+        step.next = step
         return null
     }
 

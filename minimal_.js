@@ -5,10 +5,11 @@
 } (function () {
     var stack = [], push = [].push
 
-    function Cadence (options) {
-        this.self = options.self
-        this.steps = options.steps
-        this.done = options.done
+    function Cadence (cadence, steps, done) {
+        this.finalizers = cadence.finalizers
+        this.self = cadence.self
+        this.steps = steps
+        this.done = done
         this.loop = false
     }
 
@@ -66,12 +67,8 @@
 
         var result = this.results[this.results.length - 1]
 
-        var cadence = new Cadence({
-            self: self.cadence.self,
-            steps: vargs,
-            done: function (vargs) {
-                callback.apply(null, vargs)
-            }
+        var cadence = new Cadence(self.cadence, vargs, function (vargs) {
+            callback.apply(null, vargs)
         })
 
         var step = new Step({
@@ -180,8 +177,9 @@
         if (Array.isArray(fn)) {
             if (fn.length == 1) {
                 var cadence = new Cadence({
-                    self: step.cadence.self,
-                    steps: fn
+                    invocation: step.cadence.invocation,
+                    steps: [ fn ],
+                    done: null
                 })
                 var finalizer = new Step({
                     cadence: cadence,
@@ -231,11 +229,7 @@
     function execute (self, steps, vargs) {
         var callback = vargs.pop()
 
-        var cadence = new Cadence({
-            self: self,
-            steps: steps,
-            done: done
-        })
+        var cadence = new Cadence({ finalizers: [], self: self }, steps, done)
 
         var step = new Step({
             index: -2,
@@ -246,6 +240,8 @@
         invoke(step)
 
         function done (vargs) {
+            for (var i = 0, I = cadence.finalizers.length; i < I; i++) {
+            }
             callback.apply(null, vargs)
         }
     }

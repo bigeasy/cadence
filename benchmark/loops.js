@@ -14,7 +14,7 @@ var mloop = minimal(function (async, count) {
     })(0)
 })
 
-var COUNT = 1024
+var COUNT = 1024 * 4
 
 function inc (count, callback) {
     callback(null, count + 1)

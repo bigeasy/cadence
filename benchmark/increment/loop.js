@@ -5,6 +5,8 @@ var Benchmark = require('benchmark')
 
 var suite = new Benchmark.Suite('loop', { minSamples: 100 })
 
+var COUNT = 1024 * 4
+
 var m = minimal(function () { return 1 })
 
 function inc (count, callback) {
@@ -13,7 +15,7 @@ function inc (count, callback) {
 
 var m = minimal(function (async) {
     var loop = async(function (inced) {
-        if (inced == 1024) return [ loop, inced ]
+        if (inced == COUNT) return [ loop, inced ]
         inc(inced, async())
     })(0)
 })
@@ -26,7 +28,7 @@ function fn (deferred) {
 
 var m_ = minimal_(function (async) {
     var loop = async(function (inced) {
-        if (inced == 1024) return [ loop, inced ]
+        if (inced == COUNT) return [ loop, inced ]
         inc(inced, async())
     })(0)
 })
@@ -37,41 +39,19 @@ function fn_ (deferred) {
     })
 }
 
-suite.add({
-    name: 'minimal  loop 1',
-    fn: fn,
-    defer: true
-})
+for (var i = 1; i <= 4; i++) {
+    suite.add({
+        name: 'minimal_ loop ' + i,
+        fn: fn_,
+        defer: true
+    })
 
-suite.add({
-    name: 'minimal_ loop 1',
-    fn: fn_,
-    defer: true
-})
-
-suite.add({
-    name: 'minimal  loop 2',
-    fn: fn,
-    defer: true
-})
-
-suite.add({
-    name: 'minimal_ loop 2',
-    fn: fn_,
-    defer: true
-})
-
-suite.add({
-    name: 'minimal  loop 3',
-    fn: fn,
-    defer: true
-})
-
-suite.add({
-    name: 'minimal_ loop 3',
-    fn: fn_,
-    defer: true
-})
+    suite.add({
+        name: 'minimal  loop ' + i,
+        fn: fn,
+        defer: true
+    })
+}
 
 suite.on('cycle', function(event) {
     console.log(String(event.target));
