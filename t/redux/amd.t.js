@@ -4,6 +4,6 @@ function prove (assert) {
     global.define = function (factory) {
         assert(typeof factory == 'function', 'amd')
     }
-    require('../../minimal')
+    require('../../redux')
     delete global.define
 }

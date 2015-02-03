@@ -225,6 +225,7 @@
         stack.push(step)
 
         var ret = call(fn, cadence.self, vargs)
+               // ^^^^
 
         stack.pop()
 

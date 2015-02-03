@@ -1,7 +1,7 @@
 require('proof')(2, prove)
 
 function prove (assert) {
-    var cadence = require('../../minimal')
+    var cadence = require('../../redux')
     require('../../loops')
 
     cadence(function (async) {

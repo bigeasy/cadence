@@ -1,4 +1,4 @@
-var cadence = require('./minimal')
+var cadence = require('./redux')
 
 function variadic (f) {
     return function () {

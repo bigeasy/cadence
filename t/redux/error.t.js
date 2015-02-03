@@ -1,7 +1,7 @@
 require('proof')(6, prove)
 
 function prove (assert) {
-    var cadence = require('../../minimal')
+    var cadence = require('../../redux')
 
     cadence(function () {
         throw new Error('bogus')
