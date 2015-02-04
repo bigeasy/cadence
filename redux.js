@@ -269,7 +269,7 @@
                 callback.apply(null, [ errors[0] ])
             }
         } else {
-            var finalizer = cadence.finalizers.shift()
+            var finalizer = cadence.finalizers.pop()
             execute(cadence.self, finalizer.steps, finalizer.vargs.concat(done))
         }
         function done (error) {
