@@ -132,6 +132,10 @@
         }
     }
 
+    async.__defineGetter__('self', function () {
+        return stack[stack.length - 1].cadence.self
+    })
+
     function call (fn, self, vargs) {
         try {
             var ret = fn.apply(self, vargs)
@@ -285,6 +289,8 @@
             cadence: cadence,
             vargs: vargs
         })
+
+        // async.self = self
 
         invoke(step)
 
