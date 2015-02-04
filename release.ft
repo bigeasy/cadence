@@ -36,6 +36,7 @@ Loops are implemented by adding an additional step to the start and end of the c
 
 # Issue by Issue
 
+ * Remove pointless `results.length` reset. #298.
  * Result `results.length` instead of `count`. #297.
  * Create next `Step` with correct `vargs`. #296.
  * Rename `consumer` to `done`. #270.
