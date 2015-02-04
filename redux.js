@@ -118,13 +118,18 @@
         }
     }
 
-    function cadence () {
+    function async () {
+        var step = stack[stack.length - 1]
         var I = arguments.length
-        var vargs = new Array(I)
-        for (var i = 0; i < I; i++) {
-            vargs[i] = arguments[i]
+        if (I) {
+            var vargs = new Array(I)
+            for (var i = 0; i < I; i++) {
+                vargs[i] = arguments[i]
+            }
+            return step.createCadence(vargs)
+        } else {
+            return step.createCallback()
         }
-        return _cadence(vargs)
     }
 
     function call (fn, self, vargs) {
@@ -134,10 +139,6 @@
             return [ ret, e ]
         }
         return [ ret ]
-    }
-
-    function invoke (step) {
-        while (step = _invoke(step)) { }
     }
 
     function rescue (step) {
@@ -169,6 +170,10 @@
                 }
             }
         }
+    }
+
+    function invoke (step) {
+        while (step = _invoke(step)) { }
     }
 
     function _invoke (step) {
@@ -251,20 +256,6 @@
         return null
     }
 
-    function async () {
-        var step = stack[stack.length - 1]
-        var I = arguments.length
-        if (I) {
-            var vargs = new Array(I)
-            for (var i = 0; i < I; i++) {
-                vargs[i] = arguments[i]
-            }
-            return step.createCadence(vargs)
-        } else {
-            return step.createCallback()
-        }
-    }
-
     function finalize (cadence, errors, callback, vargs) {
         if (cadence.finalizers.length == 0) {
             if (errors.length === 0) {
@@ -304,6 +295,15 @@
                 finalize(cadence, [], callback, vargs)
             }
         }
+    }
+
+    function cadence () {
+        var I = arguments.length
+        var vargs = new Array(I)
+        for (var i = 0; i < I; i++) {
+            vargs[i] = arguments[i]
+        }
+        return _cadence(vargs)
     }
 
     function _cadence (steps) {
