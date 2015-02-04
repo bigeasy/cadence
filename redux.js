@@ -17,7 +17,6 @@
         this.cadence = cadence
         this.results = []
         this.errors = []
-        this.count = 0
         this.called = 0
         this.index = index
         this.sync = true
@@ -32,7 +31,7 @@
         } else {
             this.errors.push(error)
         }
-        if (++this.called === this.count) {
+        if (++this.called === this.results.length) {
             if (this.next == null) {
                 this.sync = true
             } else {
@@ -46,7 +45,6 @@
         var result = { vargs: [] }
 
         self.results.push(result)
-        self.count++
         self.sync = false
 
         return callback
