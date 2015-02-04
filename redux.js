@@ -13,16 +13,16 @@
         this.loop = false
     }
 
-    function Step (step) {
-        this.cadence = step.cadence
+    function Step (cadence, index, vargs) {
+        this.cadence = cadence
         this.results = []
         this.errors = []
         this.count = 0
         this.called = 0
-        this.index = step.index + 1
+        this.index = index
         this.sync = true
         this.next = null
-        this.vargs = step.vargs
+        this.vargs = vargs
     }
 
     Step.prototype.callback = function (result, vargs) {
@@ -72,11 +72,7 @@
             callback.apply(null, vargs)
         })
 
-        var step = new Step({
-            index: -2,
-            cadence: cadence,
-            vargs: []
-        })
+        var step = new Step(cadence, -1, [])
 
         return result.starter = starter
 
@@ -208,7 +204,7 @@
             }
         }
 
-        step = new Step(step)
+        step = new Step(step.cadence, step.index + 1, vargs)
 
         if (step.index == steps.length) {
             if (cadence.loop) {
@@ -285,11 +281,7 @@
 
         var cadence = new Cadence({ finalizers: [], self: self }, steps, done)
 
-        var step = new Step({
-            index: -2,
-            cadence: cadence,
-            vargs: vargs
-        })
+        var step = new Step(cadence, -1, vargs)
 
         // async.self = self
 

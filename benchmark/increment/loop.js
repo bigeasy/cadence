@@ -1,19 +1,19 @@
 var ok = require('assert').ok
-var minimal = require('../../minimal')
-var minimal_ = require('../../minimal_')
+var cadence = require('../../redux')
+var cadence_ = require('../../redux_')
 var Benchmark = require('benchmark')
 
 var suite = new Benchmark.Suite('loop', { minSamples: 100 })
 
 var COUNT = 1024 * 4
 
-var m = minimal(function () { return 1 })
+var m = cadence(function () { return 1 })
 
 function inc (count, callback) {
     callback(null, count + 1)
 }
 
-var m = minimal(function (async) {
+var m = cadence(function (async) {
     var loop = async(function (inced) {
         if (inced == COUNT) return [ loop, inced ]
         inc(inced, async())
@@ -26,7 +26,7 @@ function fn (deferred) {
     })
 }
 
-var m_ = minimal_(function (async) {
+var m_ = cadence_(function (async) {
     var loop = async(function (inced) {
         if (inced == COUNT) return [ loop, inced ]
         inc(inced, async())
@@ -41,13 +41,13 @@ function fn_ (deferred) {
 
 for (var i = 1; i <= 4; i++) {
     suite.add({
-        name: 'minimal_ loop ' + i,
+        name: 'cadence_ loop ' + i,
         fn: fn_,
         defer: true
     })
 
     suite.add({
-        name: 'minimal  loop ' + i,
+        name: 'cadence  loop ' + i,
         fn: fn,
         defer: true
     })
