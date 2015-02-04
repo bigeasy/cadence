@@ -242,6 +242,7 @@
             step.errors.push(ret[1])
             step.vargs = vargs
             step.results.length = 0
+            step.sync = true
         } else {
             for (var i = 0, I = step.results.length; i < I; i++) {
                 var result = step.results[i]

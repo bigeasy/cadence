@@ -1,4 +1,4 @@
-require('proof')(6, prove)
+require('proof')(7, prove)
 
 function prove (assert) {
     var cadence = require('../../redux')
@@ -39,7 +39,16 @@ function prove (assert) {
         }, function (error) {
             if (error.message != 'one') throw error
         }])
-    })(function (error, result) {
+    })(function (error) {
         assert(error.message, 'two', 'propagated second error')
+    })
+
+    cadence(function (async) {
+        async(function () {
+            async()
+            throw new Error('raised')
+        })
+    })(function (error) {
+        assert(error.message, 'raised', 'do not wait on callbacks after exception')
     })
 }
