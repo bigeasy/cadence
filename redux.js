@@ -208,7 +208,7 @@
             if (cadence.loop) {
                 step.index = 0
             } else {
-                cadence.done([ null ].concat(vargs))
+                cadence.done(vargs.length === 0 ? [] : [ null ].concat(vargs))
                 return null
             }
         }

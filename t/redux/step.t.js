@@ -1,4 +1,4 @@
-require('proof')(1, prove)
+require('proof')(2, prove)
 
 function prove (assert) {
     var cadence = require('../../redux')
@@ -15,6 +15,12 @@ function prove (assert) {
 
     f(function (error) {
         if (error) throw error
+    })
+
+    cadence(function () {
+        return []
+    })(function () {
+        assert(arguments.length, 0, 'zero arity does not prepend error')
     })
 }
 
