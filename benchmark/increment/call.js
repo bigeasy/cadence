@@ -1,39 +1,35 @@
 var ok = require('assert').ok
-var minimal = require('../../minimal')
-var minimal_ = require('../../minimal_')
+var redux = require('../../redux')
+var redux_ = require('../../redux_')
 var Benchmark = require('benchmark')
 
 var suite = new Benchmark.Suite('call', { /*minSamples: 100*/ })
 
-var m = minimal(function () { return 1 })
+var m = redux(function () { return 1 })
 
 function fn (deferred) {
     m(function (error, result) {
-        deferred.resolve()
         ok(result == 1, 'callback')
     })
 }
 
-var m_ = minimal_(function () { return 1 })
+var m_ = redux_(function () { return 1 })
 
 function fn_ (deferred) {
     m_(function (error, result) {
-        deferred.resolve()
         ok(result == 1, 'callback')
     })
 }
 
 for (var i = 0; i < 3; i++)  {
     suite.add({
-        name: 'minimal_ call ' + i,
-        fn: fn_,
-        defer: true
+        name: 'redux_ call ' + i,
+        fn: fn_
     })
 
     suite.add({
-        name: 'minimal  call ' + i,
-        fn: fn,
-        defer: true
+        name: 'redux  call ' + i,
+        fn: fn
     })
 }
 
