@@ -1,6 +1,6 @@
 var ok = require('assert').ok
 var cadence = require('../../redux')
-var cadence_ = require('../../redux_')
+var _cadence = require('../../redux_')
 var Benchmark = require('benchmark')
 
 var suite = new Benchmark.Suite('loop', { minSamples: 100 })
@@ -20,36 +20,32 @@ var m = cadence(function (async) {
     })(0)
 })
 
-function fn (deferred) {
+function fn () {
     m(function (error, result) {
-        deferred.resolve()
     })
 }
 
-var m_ = cadence_(function (async) {
+var m_ = _cadence(function (async) {
     var loop = async(function (inced) {
         if (inced == COUNT) return [ loop, inced ]
         inc(inced, async())
     })(0)
 })
 
-function fn_ (deferred) {
+function fn_ () {
     m_(function (error, result) {
-        deferred.resolve()
     })
 }
 
 for (var i = 1; i <= 4; i++) {
     suite.add({
-        name: 'cadence_ loop ' + i,
-        fn: fn_,
-        defer: true
+        name: '_cadence loop ' + i,
+        fn: fn_
     })
 
     suite.add({
-        name: 'cadence  loop ' + i,
-        fn: fn,
-        defer: true
+        name: ' cadence loop ' + i,
+        fn: fn
     })
 }
 
