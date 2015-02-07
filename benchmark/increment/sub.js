@@ -1,11 +1,11 @@
 var ok = require('assert').ok
-var minimal = require('../../minimal')
-var minimal_ = require('../../minimal_')
+var cadence = require('../../redux')
+var _cadence = require('../../_redux')
 var Benchmark = require('benchmark')
 
 var suite = new Benchmark.Suite('sub', { minSamples: 100 })
 
-var m = minimal(function (async) {
+var m = cadence(function (async) {
     async(function () { return 1 })
 })
 
@@ -16,7 +16,7 @@ function fnm (deferred) {
     })
 }
 
-var m_ = minimal_(function (async) {
+var m_ = _cadence(function (async) {
     async(function () { return 1 })
 })
 
@@ -28,37 +28,37 @@ function fnm_ (deferred) {
 }
 
 suite.add({
-    name: 'minimal  call 1',
+    name: ' cadence call 1',
     fn: fnm,
     defer: true
 })
 
 suite.add({
-    name: 'minimal_ call 1',
+    name: '_cadence call 1',
     fn: fnm_,
     defer: true
 })
 
 suite.add({
-    name: 'minimal  call 2',
+    name: ' cadence call 2',
     fn: fnm,
     defer: true
 })
 
 suite.add({
-    name: 'minimal_ call 2',
+    name: '_cadence call 2',
     fn: fnm_,
     defer: true
 })
 
 suite.add({
-    name: 'minimal  call 3',
+    name: ' cadence call 3',
     fn: fnm,
     defer: true
 })
 
 suite.add({
-    name: 'minimal_ call 3',
+    name: '_cadence call 3',
     fn: fnm_,
     defer: true
 })

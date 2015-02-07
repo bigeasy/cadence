@@ -1,6 +1,6 @@
 var ok = require('assert').ok
 var cadence = require('../../redux')
-var _cadence = require('../../redux_')
+var _cadence = require('../../_redux')
 var Benchmark = require('benchmark')
 
 var suite = new Benchmark.Suite('loop', { minSamples: 100 })
