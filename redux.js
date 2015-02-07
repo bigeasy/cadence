@@ -1,7 +1,8 @@
 ! function (definition) {
-    if (typeof module == 'object') module.exports = definition();
-    else if (typeof window != "undefined") window.cadence = definition()
-    else if (typeof define == "function") define(definition)
+    /* istanbul ignore next */
+    if (typeof module === 'object') module.exports = definition()
+    else if (typeof window !== 'undefined') window.cadence = definition()
+    else if (typeof define === 'function') define(definition)
 } (function () {
     var stack = [], push = [].push, token = {}
 
