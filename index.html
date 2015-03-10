@@ -1172,9 +1172,6 @@ array.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Forever Loop Arguments</h3>
-<p>If you want without a count and without an each array, but you do want to use
-arguments, then you pass an unreachable count.</p>
 <h3>Each Loop Additional Arguments</h3>
 <p>You can pass arguments to the each loop <strong>cadence</strong> by passing them in after the
 each loop array.</p>
@@ -1199,10 +1196,57 @@ of the previous iteration, the previous invocation of the <strong>cadence</stron
 <span class="p">})</span>
 </pre></div>
 </code></pre>
+<h3>Forever Loop Arguments</h3>
+<p>If you want to parse arguments into your loop <strong>cadence</strong> but you do not want a
+counted loop nor an each loop, then you create a forever loop by creating a
+counted loop with an unreachable count such as <code>-1</code>.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">until</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="nx">async</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">index</span><span class="p">,</span> <span class="nx">done</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">done</span><span class="p">)</span> <span class="p">[</span> <span class="nx">async</span><span class="p">,</span> <span class="nx">count</span> <span class="p">]</span>
+
+        <span class="k">return</span> <span class="o">++</span><span class="nx">count</span> <span class="o">==</span> <span class="mi">10</span>
+
+    <span class="p">})(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="kc">false</span><span class="p">)</span>
+    <span class="c1">// ^^  ^^^^^ unreachable count and initial argument.</span>
+<span class="p">})</span>
+
+<span class="nx">until</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="nx">assert</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;reduced sum&#39;</span><span class="p">)</span>
+
+<span class="p">})</span>
+</pre></div>
+</code></pre>
 <h3>Gathered Loops</h3>
 <p>Loops can gather their results into an array. To specify that a loop should
-gather results, pass an array as the first argument. The result of a gathered
-loop is the gathered array.</p>
+gather results, pass an array as the first argument to the loop starter. You can
+use an array literal. This array is only used to signal that results should be
+gathered, it is not the array used to gather results.</p>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">squares</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="nx">async</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="k">return</span> <span class="nx">index</span> <span class="o">*</span> <span class="nx">index</span>
+
+    <span class="p">})([],</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="c1">// ^^  ^ gather a counted loop.</span>
+<span class="p">})</span>
+
+<span class="nx">squares</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">array</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="nx">assert</span><span class="p">(</span><span class="nx">array</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;first gathered value&#39;</span><span class="p">)</span>
+    <span class="nx">assert</span><span class="p">(</span><span class="nx">array</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;second gathered value&#39;</span><span class="p">)</span>
+    <span class="nx">assert</span><span class="p">(</span><span class="nx">array</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;thrid gathered value&#39;</span><span class="p">)</span>
+
+<span class="p">})</span>
+</pre></div>
+</code></pre>
+<h3>Loops Nested in Cadences</h3>
+<p>All of the above loop examples can be used in any <strong>step</strong> in any <strong>cadence</strong>.</p>
 <h2>Here Be Dragons</h2>
 <p>After this point is old documentation. I&#39;m pulling anything useful up above this
 heading. Anything you read below is goofy and dubious.</p>

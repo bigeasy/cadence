@@ -1331,11 +1331,6 @@ sum(function (error, value) {
 })
 ```
 
-### Forever Loop Arguments
-
-If you want without a count and without an each array, but you do want to use
-arguments, then you pass an unreachable count.
-
 ### Each Loop Additional Arguments
 
 You can pass arguments to the each loop **cadence** by passing them in after the
@@ -1365,11 +1360,64 @@ reduce(function (error, value) {
 })
 ```
 
+### Forever Loop Arguments
+
+If you want to parse arguments into your loop **cadence** but you do not want a
+counted loop nor an each loop, then you create a forever loop by creating a
+counted loop with an unreachable count such as `-1`.
+
+```javascript
+var until = cadence(function (async) {
+
+    var count = 0
+
+    async(function (index, done) {
+
+        if (done) [ async, count ]
+
+        return ++count == 10
+
+    })(-1, false)
+    // ^^  ^^^^^ unreachable count and initial argument.
+})
+
+until(function (error, value) {
+
+    assert(value, 10, 'reduced sum')
+
+})
+```
+
 ### Gathered Loops
 
 Loops can gather their results into an array. To specify that a loop should
-gather results, pass an array as the first argument. The result of a gathered
-loop is the gathered array.
+gather results, pass an array as the first argument to the loop starter. You can
+use an array literal. This array is only used to signal that results should be
+gathered, it is not the array used to gather results.
+
+```javascript
+var squares = cadence(function (async) {
+
+    async(function (index) {
+
+        return index * index
+
+    })([], 3)
+    // ^^  ^ gather a counted loop.
+})
+
+squares(function (error, array) {
+
+    assert(array[0], 0, 'first gathered value')
+    assert(array[1], 1, 'second gathered value')
+    assert(array[2], 4, 'thrid gathered value')
+
+})
+```
+
+### Loops Nested in Cadences
+
+All of the above loop examples can be used in any **step** in any **cadence**.
 
 ## Here Be Dragons
 
