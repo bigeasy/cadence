@@ -3433,7 +3433,7 @@ from the metaphor.
 ### Assume Serial Error
 
 Instead of assuming parallel errors because Cadence encourages parallelism,
-assume serial errors because Cadence discouranges parallelism, or rather, I
+assume serial errors because Cadence discourages parallelism, or rather, I
 don't use it much, it is much easier to think in serial.
 
 Couldn't we determine, by the number and nature of callbacks, if we should catch
@@ -3461,7 +3461,7 @@ Wow! Cannot make the words.
  * Trampolines are also vital, requiring me to otherwise think about the stack.
  * I've never used parallelism. Now that I need parallelism everywhere, I am not
  not turning to the buried and unqueued parallelism of Cadence. It goes.
- * We still have parallel operations, but they are heterogenous. A catch block
+ * We still have parallel operations, but they are heterogeneous. A catch block
  will take just an error. It will be called for each error, until the catch
  block throws an error, or an error is missed by the regular expression.
  * We remove arity and arrayed callbacks. We remove fixups, which are as easily
