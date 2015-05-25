@@ -1,4 +1,4 @@
-require('proof')(7, prove)
+require('proof')(9, prove)
 
 function prove (assert) {
     var cadence = require('../../redux')
@@ -50,5 +50,24 @@ function prove (assert) {
         })
     })(function (error) {
         assert(error.message, 'raised', 'do not wait on callbacks after exception')
+    })
+
+    cadence(function (async) {
+        async([function () {
+            throw new Error('uncaught')
+        }, /^x$/, function (error) {
+        }])
+    })(function (error) {
+        assert(error.message, 'uncaught', 'catch specification missed')
+    })
+
+    cadence(function (async) {
+        async([function () {
+            throw new Error('caught')
+        }, /^caught$/, function (error) {
+            return [ error.message ]
+        }])
+    })(function (error, message) {
+        assert(message, 'caught', 'catch specification hit')
     })
 }

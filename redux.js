@@ -220,8 +220,18 @@
             if (fn.length === 1) {
                 cadence.finalizers.push({ steps: fn, vargs: vargs })
                 return step
-            } else {
+            } else if (fn.length === 2) {
                 step.catcher = fn[1]
+                fn = fn[0]
+            } else {
+                var filter = fn
+                step.catcher = function (error) {
+                    if (filter[1].test(error.code || error.message)) {
+                        return filter[2](error)
+                    } else {
+                        throw error
+                    }
+                }
                 fn = fn[0]
             }
         }
