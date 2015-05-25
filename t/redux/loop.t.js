@@ -1,4 +1,4 @@
-require('proof')(4, prove)
+require('proof')(5, prove)
 
 function prove (assert) {
     var cadence = require('../../redux')
@@ -45,6 +45,15 @@ function prove (assert) {
         })(0)
     })(function (error, i) {
         assert(i, 1, 'continued')
+    })
+
+    cadence(function (async) {
+        var loop = async(function (i) {
+            if (i == 0) return [ loop(), i + 1 ]
+            else return [ loop, i + 1 ]
+        })(0)
+    })(function (error, i) {
+        assert(i, 2, 'continue then break')
     })
 }
 
