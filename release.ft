@@ -36,6 +36,7 @@ Loops are implemented by adding an additional step to the start and end of the c
 
 # Issue by Issue
 
+ * Implement gathered parallel operations. #308.
  * Resurrect regex catch specifier. #306.
  * Rename `redux_.js` to `_redux.js`. #304.
  * Remove converage for module loading bandages. #303.

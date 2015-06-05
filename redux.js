@@ -223,7 +223,7 @@
             } else if (fn.length === 2) {
                 step.catcher = fn[1]
                 fn = fn[0]
-            } else {
+            } else if (fn.length === 3) {
                 var filter = fn
                 step.catcher = function (error) {
                     if (filter[1].test(error.code || error.message)) {
@@ -233,6 +233,9 @@
                     }
                 }
                 fn = fn[0]
+            } else {
+                step.vargs = [ step.vargs ]
+                return step
             }
         }
 
