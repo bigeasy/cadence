@@ -36,6 +36,7 @@ Loops are implemented by adding an additional step to the start and end of the c
 
 # Issue by Issue
 
+ * Test with Node.js 0.12 on Travis CI. #309.
  * Implement gathered parallel operations. #308.
  * Resurrect regex catch specifier. #306.
  * Rename `redux_.js` to `_redux.js`. #304.
