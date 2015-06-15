@@ -70,4 +70,13 @@ function prove (assert) {
     })(function (error, message) {
         assert(message, 'caught', 'catch specification hit')
     })
+
+    try {
+        cadence(function () {
+        })(function () {
+            throw new Error('thrown')
+        })
+    } catch (e) {
+        assert(e.message, 'thrown', 'panic')
+    }
 }
