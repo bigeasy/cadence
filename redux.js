@@ -28,7 +28,7 @@
     Step.prototype.callback = function (result, vargs) {
         var error = vargs.shift()
         if (error == null) {
-            push.apply(result.vargs, vargs)
+            result.vargs = vargs
         } else {
             this.errors.push(error)
         }
@@ -43,7 +43,7 @@
 
     Step.prototype.createCallback = function () {
         var self = this
-        var result = { vargs: [] }
+        var result = {}
 
         self.results.push(result)
         self.sync = false
