@@ -11,11 +11,7 @@
                           "async", "asynchronous", "control", "flow", "loop",
                           "micro-js", "step", "callback"
     ],
-    "licenses":
-    [{
-                          "type": "MIT",
-                          "url": "http://github.com/bigeasy/cadence/raw/master/LICENSE"
-    }],
+    "license":            "MIT",
     "homepage":           "http://bigeasy.github.com/cadence",
     "repository":
     {
