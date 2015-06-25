@@ -1,35 +1,37 @@
 var ok = require('assert').ok
 var cadence = require('../../redux')
-var _cadence = require('../../_redux')
+var cadence_ = require('../../_redux')
 var Benchmark = require('benchmark')
 
 var suite = new Benchmark.Suite('call', { /*minSamples: 100*/ })
 
-var m = redux(function () { return 1 })
+function body () { return 1 }
 
-function fn (deferred) {
+var m = cadence(body)
+
+function fn () {
     m(function (error, result) {
         ok(result == 1, 'callback')
     })
 }
 
-var m_ = redux_(function () { return 1 })
+var m_ = cadence_(body)
 
-function fn_ (deferred) {
+function fn_ () {
     m_(function (error, result) {
         ok(result == 1, 'callback')
     })
 }
 
-for (var i = 0; i < 3; i++)  {
-    suite.add({
-        name: '_cadence call ' + i,
-        fn: fn_
-    })
-
+for (var i = 0; i < 4; i++)  {
     suite.add({
         name: ' cadence call ' + i,
         fn: fn
+    })
+
+    suite.add({
+        name: '_cadence call ' + i,
+        fn: fn_
     })
 }
 

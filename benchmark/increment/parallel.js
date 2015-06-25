@@ -3,7 +3,7 @@ var cadence = require('../../redux')
 var _cadence = require('../../_redux')
 var Benchmark = require('benchmark')
 
-var suite = new Benchmark.Suite('loop', { minSamples: 100 })
+var suite = new Benchmark.Suite('parallel', { minSamples: 100 })
 
 var COUNT = 1024 * 4
 
@@ -46,12 +46,12 @@ function fn_ () {
 
 for (var i = 1; i <= 4; i++) {
     suite.add({
-        name: ' cadence loop ' + i,
+        name: ' cadence parallel ' + i,
         fn: fn
     })
 
     suite.add({
-        name: '_cadence loop ' + i,
+        name: '_cadence parallel ' + i,
         fn: fn_
     })
 }
