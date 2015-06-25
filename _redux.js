@@ -14,26 +14,25 @@
         this.loop = false
     }
 
-    function Step (step) {
-        this.cadence = step.cadence
+    function Step (cadence, index, vargs) {
+        this.cadence = cadence
         this.results = []
         this.errors = []
-        this.count = 0
         this.called = 0
-        this.index = step.index + 1
+        this.index = index
         this.sync = true
         this.next = null
-        this.vargs = step.vargs
+        this.vargs = vargs
     }
 
     Step.prototype.callback = function (result, vargs) {
         var error = vargs.shift()
         if (error == null) {
-            push.apply(result.vargs, vargs)
+            result.vargs = vargs
         } else {
             this.errors.push(error)
         }
-        if (++this.called === this.count) {
+        if (++this.called === this.results.length) {
             if (this.next == null) {
                 this.sync = true
             } else {
@@ -44,10 +43,9 @@
 
     Step.prototype.createCallback = function () {
         var self = this
-        var result = { vargs: [] }
+        var result = {}
 
         self.results.push(result)
-        self.count++
         self.sync = false
 
         return callback
@@ -73,11 +71,7 @@
             callback.apply(null, vargs)
         })
 
-        var step = new Step({
-            index: -2,
-            cadence: cadence,
-            vargs: []
-        })
+        var step = new Step(cadence, -1, [])
 
         return result.starter = starter
 
@@ -209,13 +203,13 @@
             }
         }
 
-        step = new Step(step)
+        step = new Step(step.cadence, step.index + 1, vargs)
 
         if (step.index == steps.length) {
             if (cadence.loop) {
                 step.index = 0
             } else {
-                cadence.done([ null ].concat(vargs))
+                cadence.done(vargs.length === 0 ? [] : [ null ].concat(vargs))
                 return null
             }
         }
@@ -226,9 +220,22 @@
             if (fn.length === 1) {
                 cadence.finalizers.push({ steps: fn, vargs: vargs })
                 return step
-            } else {
+            } else if (fn.length === 2) {
                 step.catcher = fn[1]
                 fn = fn[0]
+            } else if (fn.length === 3) {
+                var filter = fn
+                step.catcher = function (error) {
+                    if (filter[1].test(error.code || error.message)) {
+                        return filter[2](error)
+                    } else {
+                        throw error
+                    }
+                }
+                fn = fn[0]
+            } else {
+                step.vargs = [ step.vargs ]
+                return step
             }
         }
 
@@ -242,7 +249,6 @@
         if (ret.length === 2) {
             step.errors.push(ret[1])
             step.vargs = vargs
-            step.results.length = 0
             step.sync = true
         } else {
             for (var i = 0, I = step.results.length; i < I; i++) {
@@ -286,11 +292,7 @@
 
         var cadence = new Cadence({ finalizers: [], self: self }, steps, done)
 
-        var step = new Step({
-            index: -2,
-            cadence: cadence,
-            vargs: vargs
-        })
+        var step = new Step(cadence, -1, vargs)
 
         // async.self = self
 
