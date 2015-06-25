@@ -199,7 +199,10 @@
         } else {
             vargs = []
             for (var i = 0, I = step.results.length; i < I; i++) {
-                push.apply(vargs, step.results[i].vargs)
+                var vargs_ = step.results[i].vargs
+                for (var j = 0, J = vargs_.length; j < J; j++) {
+                    vargs.push(vargs_[j])
+                }
             }
         }
 
