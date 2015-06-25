@@ -43,7 +43,7 @@
 
     Step.prototype.createCallback = function () {
         var self = this
-        var result = {}
+        var result = { vargs: null, starter: null }
 
         self.results.push(result)
         self.sync = false

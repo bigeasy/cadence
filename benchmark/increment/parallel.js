@@ -46,13 +46,13 @@ function fn_ () {
 
 for (var i = 1; i <= 4; i++) {
     suite.add({
-        name: '_cadence loop ' + i,
-        fn: fn_
+        name: ' cadence loop ' + i,
+        fn: fn
     })
 
     suite.add({
-        name: ' cadence loop ' + i,
-        fn: fn
+        name: '_cadence loop ' + i,
+        fn: fn_
     })
 }
 
