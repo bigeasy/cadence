@@ -22,6 +22,22 @@ function sliced () {
     varged(slice.call(arguments))
 }
 
+function inlinable () {
+    var vargs = new Array
+    for (var i = 0, I = arguments.length; i < I; i++) {
+        vargs.push(arguments[i])
+    }
+    varged(vargs)
+}
+
+function pushed () {
+    var vargs = []
+    for (var i = 0, I = arguments.length; i < I; i++) {
+        vargs.push(arguments[i])
+    }
+    varged(vargs)
+}
+
 function arrayed () {
     var vargs = []
     for (var i = 0, I = arguments.length; i < I; i++) {
@@ -34,14 +50,42 @@ function proxied () {
     arged(arguments)
 }
 
-for (var i = 0; i < 10000; i++) {
+function callSliced () {
     sliced(1, 2, 3, 4, 5, 6, 7)
 }
 
 for (var i = 0; i < 10000; i++) {
+    callSliced()
+}
+
+function callArrayed () {
     arrayed(1, 2, 3, 4, 5, 6, 7)
 }
 
 for (var i = 0; i < 10000; i++) {
+    callArrayed()
+}
+
+function callProxied () {
     proxied(1, 2, 3, 4, 5, 6, 7)
+}
+
+for (var i = 0; i < 10000; i++) {
+    callProxied()
+}
+
+function callPushed () {
+    pushed(1, 2, 3, 4, 5, 6, 7)
+}
+
+for (var i = 0; i < 10000; i++) {
+    callPushed()
+}
+
+function callInlinble () {
+    inlinable(1, 2, 3, 4, 5, 6, 7)
+}
+
+for (var i = 0; i < 10000; i++) {
+    callInlinble()
 }
