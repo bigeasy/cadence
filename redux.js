@@ -6,12 +6,20 @@
 } (function () {
     var stack = [], push = [].push, token = {}
 
-    function Cadence (cadence, steps, done) {
+    function Cadence (cadence, steps, callback) {
         this.finalizers = cadence.finalizers
         this.self = cadence.self
         this.steps = steps
-        this.done = done
+        this.callback = callback
         this.loop = false
+    }
+
+    Cadence.prototype.done = function (vargs) {
+        if (this.finalizers.length == 0) {
+            this.callback.apply(null, vargs)
+        } else {
+            finalize(this, [], this.callback, vargs)
+        }
     }
 
     function Step (cadence, index, vargs) {
@@ -57,6 +65,12 @@
                 vargs[i] = arguments[i]
             }
             self.callback(result, vargs)
+
+            return
+
+            // This try/catch will prevent V8 from marking this function of
+            // optimization because it will only ever run once.
+            try {} catch(e) {}
         }
     }
 
@@ -67,9 +81,7 @@
 
         var result = this.results[this.results.length - 1]
 
-        var cadence = new Cadence(self.cadence, vargs, function (vargs) {
-            callback.apply(null, vargs)
-        })
+        var cadence = new Cadence(self.cadence, vargs, callback)
 
         var step = new Step(cadence, -1, [])
 
@@ -293,21 +305,13 @@
     function execute (self, steps, vargs) {
         var callback = vargs.pop()
 
-        var cadence = new Cadence({ finalizers: [], self: self }, steps, done)
+        var cadence = new Cadence({ finalizers: [], self: self }, steps, callback)
 
         var step = new Step(cadence, -1, vargs)
 
         // async.self = self
 
         invoke(step)
-
-        function done (vargs) {
-            if (cadence.finalizers.length == 0) {
-                callback.apply(null, vargs)
-            } else {
-                finalize(cadence, [], callback, vargs)
-            }
-        }
     }
 
     function cadence () {
@@ -322,6 +326,8 @@
     function _cadence (steps) {
         var f
 
+        // Preserving arity costs next to nothing; the call to `execute` in
+        // these functions will be inlined.
         switch (steps[0].length) {
         case 0:
             f = function () {
