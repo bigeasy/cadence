@@ -82,7 +82,7 @@ from a control flow library.</p>
 <p>In the above we use a catch block to catch an <code>ENOENT</code> error and return false,
 otherwise return true. If an error other than <code>ENOENT</code> is raised, the the error
 will be passed as the first argument.</p>
-<h3>What Cadence Can Do for You</h3>
+<h3 id="what-cadence-can-do-for-you">What Cadence Can Do for You</h3>
 <p>Cadence is pure-JavaScript library with no transpilers.</p>
 <p>Cadence can express all manner of asynchronous operations, including:</p>
 <p><em>TODO: Fix list formatting.</em></p>
@@ -113,7 +113,7 @@ body. You don&#39;t have to <code>bind(this)</code> or <code>var self = this</co
 </ul>
 <p>You can use Cadence in the browser too. It is not Node.js dependent and it
 minzips to ~2.25k.</p>
-<h3>Cadence In a Nutshell</h3>
+<h3 id="cadence-in-a-nutshell">Cadence In a Nutshell</h3>
 <p>Cadence runs a series of functions asynchronously, use the results of one
 function as the arguments for the next.</p>
 <p>We call the series of functions a <strong>cadence</strong>. We call an individual function in
@@ -146,7 +146,7 @@ because we also use <code>async</code> to create callbacks for asynchronous func
 to the caller. Your code does not need to be littered with <code>if (error)
 callback(error)</code> branches that are difficult to reach in your tests. Your
 asynchronous code is reduced to the happy path.</p>
-<h2>Cadence Basics</h2>
+<h2 id="cadence-basics">Cadence Basics</h2>
 <p>Cadence exports a single function which by convention is named <code>cadence</code>.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">),</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
 
@@ -194,7 +194,7 @@ asynchronous code is reduced to the happy path.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Function Body</h3>
+<h3 id="function-body">Function Body</h3>
 <p>We create the <code>find</code> function by invoking <code>cadence</code> with a single argument which
 is the function body for <code>find</code>.  The <code>cadence</code> function will build a function
 that, when invoked, will call the function body.</p>
@@ -213,7 +213,7 @@ that, when invoked, will call the function body.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>The <code>async</code> Function</h3>
+<h3 id="the-async-function">The <code>async</code> Function</h3>
 <p>The first argument to the body is the universal builder function which by
 convention is named <code>async</code>. It is named <code>async</code> because anywhere you see it,
 you know that something asynchronous is going on.</p>
@@ -232,7 +232,7 @@ you know that something asynchronous is going on.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Steps and Cadences</h3>
+<h3 id="steps-and-cadences">Steps and Cadences</h3>
 <p>When you invoke the <code>async</code> function with one or more functions, you create a
 <strong>cadence</strong>. Each function is a <strong>step</strong> in the cadence.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">find</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">,</span> <span class="nx">path</span><span class="p">,</span> <span class="nx">filter</span><span class="p">)</span> <span class="p">{</span>
@@ -250,7 +250,7 @@ you know that something asynchronous is going on.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Cadence Argument Progression</h3>
+<h3 id="cadence-argument-progression">Cadence Argument Progression</h3>
 <p>The results of one <strong>step</strong> in a <strong>cadence</strong> become the arguments of the next <strong>step</strong>.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">find</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">,</span> <span class="nx">path</span><span class="p">,</span> <span class="nx">filter</span><span class="p">)</span> <span class="p">{</span>
 
@@ -272,7 +272,7 @@ without the error. The error is shifted off the arguments so that the next
 <strong>step</strong> receives no errors, only results.</p>
 <p>There is no error for the <strong>step</strong> to check. There is no need for an <code>if
 (error)</code> at every <strong>step</strong>.</p>
-<h3>Error Propagation</h3>
+<h3 id="error-propagation">Error Propagation</h3>
 <p>If an error does occur, it propagates out to the user. No matter how deeply
 nested your <strong>cadences</strong>, an error will stop the <strong>cadence</strong> and return the
 error to the user.</p>
@@ -307,7 +307,7 @@ error to the user.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Function Body Results</h3>
+<h3 id="function-body-results">Function Body Results</h3>
 <p>The results of the final <strong>step</strong> in a <strong>cadence</strong> are the results of the
 <strong>cadence</strong>.</p>
 <p>Notice that if a <strong>step</strong> does not invoke an asynchronous function, it can
@@ -360,9 +360,9 @@ the results of the function generated by <code>cadence</code>.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h2>Cadence Step by Step</h2>
+<h2 id="cadence-step-by-step">Cadence Step by Step</h2>
 <p>Let&#39;s look at the rest of Cadence.</p>
-<h3>Our Friend Echo</h3>
+<h3 id="our-friend-echo">Our Friend Echo</h3>
 <p>In our examples we are going to use a function called echo which will invoke the
 callback with the argument given. We&#39;re also going to assume that we have <code>ok</code>
 and <code>equal</code> to assert what we believe to be true.</p>
@@ -374,7 +374,7 @@ and <code>equal</code> to assert what we believe to be true.</p>
 <span class="p">}</span>
 </pre></div>
 </code></pre>
-<h3>Creating Callback Functions</h3>
+<h3 id="creating-callback-functions">Creating Callback Functions</h3>
 <p>When you invoke <code>async</code> with no arguments, it builds a simple error first
 <strong>callback</strong> function. Cadence will receive the results given to the
 <strong>callback</strong> on your behalf and do the right thing.</p>
@@ -391,7 +391,7 @@ and <code>equal</code> to assert what we believe to be true.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Creating Cadences</h3>
+<h3 id="creating-cadences">Creating Cadences</h3>
 <p>When you invoke <code>async</code> with one or more functions, you build a <strong>cadence</strong>.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">stepper</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">)</span> <span class="p">{</span>
 
@@ -415,7 +415,7 @@ and <code>equal</code> to assert what we believe to be true.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Propagating Errors</h3>
+<h3 id="propagating-errors">Propagating Errors</h3>
 <p>Any error or exception that occurs in the function body is propagated to the
 caller by default.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">function</span> <span class="nx">brokenEcho</span> <span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
@@ -443,7 +443,7 @@ caller by default.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Propagating Exceptions</h3>
+<h3 id="propagating-exceptions">Propagating Exceptions</h3>
 <p>Exceptions are also propagated. You can throw an exception anywhere in the
 function body and it will propagate out to the user.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">stepper</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">)</span> <span class="p">{</span>
@@ -466,7 +466,7 @@ function body and it will propagate out to the user.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Function Body Arguments</h3>
+<h3 id="function-body-arguments">Function Body Arguments</h3>
 <p>The first argument to the function body is always the <code>async</code> function. The rest
 of the arguments are the parameters passed to the <code>cadence</code> generated function.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">arguable</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
@@ -504,7 +504,7 @@ easier to implement variadic functions. No messy <code>var callback = vargs.pop(
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Multiple Callback Arguments</h3>
+<h3 id="multiple-callback-arguments">Multiple Callback Arguments</h3>
 <p>Because error-first callbacks can receive multiple arguments, <strong>steps</strong> can
 receive multiple arguments and a <strong>cadence</strong> can return multiple arguments.</p>
 <p>Because a <strong>cadence</strong> can return multiple arguments a function body can also
@@ -536,7 +536,7 @@ return multiple arguments.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Synchronous Steps Using <code>return</code></h3>
+<h3 id="synchronous-steps-using-return-">Synchronous Steps Using <code>return</code></h3>
 <p>Sometimes <strong>steps</strong> do not need to call asynchronous functions. In that case we can
 simply use <code>return</code> to pass a value to the next <strong>step</strong>, but only if the value
 is not an array.</p>
@@ -563,7 +563,7 @@ is not an array.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Returning Multiple Arguments from a Step</h3>
+<h3 id="returning-multiple-arguments-from-a-step">Returning Multiple Arguments from a Step</h3>
 <p>When we want to synchronously return multiple values, we return an array of
 arguments. The elements in the array are used as the arguments to the next
 function, much like calling <code>apply</code>.</p>
@@ -591,7 +591,7 @@ function, much like calling <code>apply</code>.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Returning an Array from a Step</h3>
+<h3 id="returning-an-array-from-a-step">Returning an Array from a Step</h3>
 <p>If you want to synchronously pass an array to the next <strong>step</strong>, you cannot
 simply return the array, because the array elements will be used as the
 arguments for the next <strong>step</strong>.</p>
@@ -623,7 +623,7 @@ arguments that contians the array.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Asynchronous Trumps Synchronous</h3>
+<h3 id="asynchronous-trumps-synchronous">Asynchronous Trumps Synchronous</h3>
 <p>Asynchronous trumps synchronous. If you create a callback or a <strong>cadence</strong> using
 <code>async</code> inside a <strong>step</strong>, then the return value of the <strong>step</strong> is ignored.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">sync</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">)</span> <span class="p">{</span>
@@ -650,7 +650,7 @@ arguments that contians the array.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Cadences within Cadences</h3>
+<h3 id="cadences-within-cadences">Cadences within Cadences</h3>
 <p>You can create a <strong>cadence</strong> in a <strong>cadence</strong> and you will. You can create a
 <strong>cadence</strong> in any <strong>step</strong>. The result of the <strong>cadence</strong> is passed as an
 argument to the next <strong>step</strong>.</p>
@@ -720,7 +720,7 @@ argument to the next <strong>step</strong>.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Cadences within Cadences: Practical Application</h3>
+<h3 id="cadences-within-cadences-practical-application">Cadences within Cadences: Practical Application</h3>
 <p>You will use <strong>cadences</strong> in <strong>steps</strong> in <strong>cadences</strong> to manage your scope. It
 is a common construct.</p>
 <p>In Cadence an indent means something. It means a new scope. You stay indented
@@ -729,7 +729,7 @@ operations. When the variables are no longer needed, the indent ends.</p>
 <p>The following looks for the Unix execuable <a href="http://en.wikipedia.org/wiki/Shebang_%28Unix%29#Magic_number">magic
 number</a>. <em>TK:
 Create optional captions for code examples.</em></p>
-<pre><code class="lang-javascript"><div class="highlight"><pre><span class="err">#</span><span class="o">!</span><span class="err">/usr/bin/env node</span>
+<pre><code class="lang-javascript"><div class="highlight"><pre><span class="c">#!/usr/bin/env node</span>
 
 <span class="c1">// `sip`: sip the first `count` bytes of a file.</span>
 <span class="kd">var</span> <span class="nx">sip</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">,</span> <span class="nx">file</span><span class="p">,</span> <span class="nx">count</span><span class="p">)</span> <span class="p">{</span>
@@ -773,7 +773,7 @@ Create optional captions for code examples.</em></p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Fallthrough when a Step Returns Nothing</h3>
+<h3 id="fallthrough-when-a-step-returns-nothing">Fallthrough when a Step Returns Nothing</h3>
 <p>If you create a <strong>step</strong> that neither returns a value nor creates an
 asynchronous operation using the <code>async</code> function, then the results of that
 <strong>step</strong> are its arguments.</p>
@@ -818,7 +818,7 @@ step receives the results of the last <strong>step</strong> to produce results.<
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Parallel versus Serial</h3>
+<h3 id="parallel-versus-serial">Parallel versus Serial</h3>
 <p>Parallel and serial have a natual expression in Cadence. <em>&lt;- Erp? ed.</em></p>
 <p>The <strong>steps</strong> in a <strong>cadence</strong> run in <em>serial</em>.</p>
 <p>The asynchronous operations in a <strong>step</strong> run in <em>parallel</em>. An asynchronous
@@ -921,7 +921,7 @@ operations needed for the next <strong>step</strong>.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Callback Arity</h3>
+<h3 id="callback-arity">Callback Arity</h3>
 <p>When you don&#39;t want all of the arguments passed to a <strong>callback</strong> or none of
 them, you can specify the arity of the <strong>callback</strong> to the <code>async</code> function.</p>
 <p>If you pass an integer to the <code>async</code> function, that will create a <strong>callback</strong>
@@ -956,7 +956,7 @@ that forwards only that many arguments to the next step.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Breaking, Leaving a Cadence Early</h3>
+<h3 id="breaking-leaving-a-cadence-early">Breaking, Leaving a Cadence Early</h3>
 <p>You can leave a <strong>cadence</strong> by returning an array of arguments, the first
 argument being the <code>async</code> function.</p>
 <p>The mnemonic is that the first argument is an optional break, and <code>async</code> is
@@ -998,7 +998,7 @@ that follows it. That is why <code>return</code> makes for a nice break construc
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Forever Loops</h3>
+<h3 id="forever-loops">Forever Loops</h3>
 <p>A loops is a <strong>cadence</strong> that repeats itself. When we create a <strong>cadence</strong>, the
 <code>async</code> function returns a loop function that we can use to invoke the
 <strong>cadence</strong> as a loop.</p>
@@ -1028,7 +1028,7 @@ that follows it. That is why <code>return</code> makes for a nice break construc
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Counted Loops</h3>
+<h3 id="counted-loops">Counted Loops</h3>
 <p>We can specify a count for a loop by passing a count to the loop starter
 function. The count must be an integer greater than or equal to zero. The loop
 will run count times.</p>
@@ -1059,7 +1059,7 @@ will run count times.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Counted Loop Result</h3>
+<h3 id="counted-loop-result">Counted Loop Result</h3>
 <p>The result of a counted loop is the value returned by the last loop iteration,
 which is also the last run of the <strong>cadence</strong>.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">counted</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">)</span> <span class="p">{</span>
@@ -1081,7 +1081,7 @@ which is also the last run of the <strong>cadence</strong>.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>The Counted Loop Index Argument</h3>
+<h3 id="the-counted-loop-index-argument">The Counted Loop Index Argument</h3>
 <p>The first argument to the <strong>cadence</strong> of a counted loop is the always index of
 the current count.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">counted</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">)</span> <span class="p">{</span>
@@ -1101,7 +1101,7 @@ the current count.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Counted Loop Additional Arguments</h3>
+<h3 id="counted-loop-additional-arguments">Counted Loop Additional Arguments</h3>
 <p>While the first argument to the counted loop <strong>cadence</strong> is the always index of
 the current count, you can pass additional arguments into the loop <strong>cadence</strong>
 by specifying them after the count.</p>
@@ -1126,7 +1126,7 @@ of the previous iteration, the previous invocation of the <strong>cadence</stron
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Each Loops</h3>
+<h3 id="each-loops">Each Loops</h3>
 <p>When you pass an array as the first argument to the loop starter function, you
 create an each loop. An each loop will run the loop <strong>cadence</strong> once for each
 entry in the array. The array entry is passed into the first <strong>step</strong> of the
@@ -1150,7 +1150,7 @@ entry in the array. The array entry is passed into the first <strong>step</stron
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Each Loop Index Argument</h3>
+<h3 id="each-loop-index-argument">Each Loop Index Argument</h3>
 <p>The second argument to an each loop <strong>cadence</strong> is the index of the entry in the
 array.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">sum</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">)</span> <span class="p">{</span>
@@ -1172,7 +1172,7 @@ array.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Each Loop Additional Arguments</h3>
+<h3 id="each-loop-additional-arguments">Each Loop Additional Arguments</h3>
 <p>You can pass arguments to the each loop <strong>cadence</strong> by passing them in after the
 each loop array.</p>
 <p>The arguments after the array argument are the arguments passed to the loop
@@ -1196,7 +1196,7 @@ of the previous iteration, the previous invocation of the <strong>cadence</stron
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Forever Loop Arguments</h3>
+<h3 id="forever-loop-arguments">Forever Loop Arguments</h3>
 <p>If you want to parse arguments into your loop <strong>cadence</strong> but you do not want a
 counted loop nor an each loop, then you create a forever loop by creating a
 counted loop with an unreachable count such as <code>-1</code>.</p>
@@ -1221,7 +1221,7 @@ counted loop with an unreachable count such as <code>-1</code>.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Gathered Loops</h3>
+<h3 id="gathered-loops">Gathered Loops</h3>
 <p>Loops can gather their results into an array. To specify that a loop should
 gather results, pass an array as the first argument to the loop starter. You can
 use an array literal. This array is only used to signal that results should be
@@ -1245,24 +1245,24 @@ gathered, it is not the array used to gather results.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Loops Nested in Cadences</h3>
+<h3 id="loops-nested-in-cadences">Loops Nested in Cadences</h3>
 <p>All of the above loop examples can be used in any <strong>step</strong> in any <strong>cadence</strong>.</p>
-<h2>Here Be Dragons</h2>
+<h2 id="here-be-dragons">Here Be Dragons</h2>
 <p>After this point is old documentation. I&#39;m pulling anything useful up above this
 heading. Anything you read below is goofy and dubious.</p>
 <p>Cadence might be as verbose as something you might write yourself, in fact is
 might be more verbose, but while you&#39;ll have more characters, you&#39;ll have fewer
 conditions. I&#39;m not trying to save characters. I&#39;m not trying to save
 keystrokes. I&#39;m trying to save work. I&#39;m trying to save cognition.</p>
-<h2>Recursion</h2>
+<h2 id="recursion">Recursion</h2>
 <p>Cadence creates an error-first asynchronous function. If you need to perform a
 recursive operation in Cadence, then call the function generated by <code>cadence</code>.</p>
-<h2>Reuse</h2>
+<h2 id="reuse">Reuse</h2>
 <p>By convention steps are <em>anonymous</em> functions. We do not create <strong>step</strong>
 functions that we reuse. If we want to reuse a <strong>step</strong> or a series of
 <strong>steps</strong>, we simply create a new function using <code>cadence</code> and call that
 function the way we would any other error-first asynchronous function.</p>
-<h3>Cadences Within Steps Within Cadences</h3>
+<h3 id="cadences-within-steps-within-cadences">Cadences Within Steps Within Cadences</h3>
 <p>You can define a cadence within a step. This let&#39;s you work with results of an
 asynchronous call.</p>
 <p>Let&#39;s say that we want to get a <code>stat</code> object, but include the body of the file
@@ -1315,7 +1315,7 @@ function? Then put the array in an array as the sole element.</p>
 </pre></div>
 </code></pre>
 <p>We&#39;re going to use this construct in a bit to break out of loops</p>
-<h3>Catching Errors</h3>
+<h3 id="catching-errors">Catching Errors</h3>
 <p>Cadence encourages parallelism, and because parallel operations can also
 fail in parallel and/or raise many exceptions in parallel (fun stuff),
 its internal error handling mechanism deals with arrays of errors.</p>
@@ -1458,7 +1458,7 @@ can of course hide it using <code>_</code> or, if that is already in use, double
 <span class="p">})()</span>
 </pre></div>
 </code></pre>
-<h3>Propagating Errors</h3>
+<h3 id="propagating-errors">Propagating Errors</h3>
 <p>You can propagate all of the caught errors by throwing the <code>errors</code> array.</p>
 <p>Imagine a system where sudo is not installed (as is the case with a base
 FreeBSD.)</p>
@@ -1542,7 +1542,7 @@ cadence. You can still catch it in a calling cadence, however.</p>
 </code></pre>
 <p>As you can see, Cadence will catch exceptions as well as handle errors passed to
 callbacks.</p>
-<h3>Conditional Error Handling</h3>
+<h3 id="conditional-error-handling">Conditional Error Handling</h3>
 <p>Dealing with an array of errors means you&#39;re almost always going to want to
 filter the array to see if it contains the error you&#39;re expecting, and which error
 that might be. Because this is so common, it&#39;s built into Cadence.</p>
@@ -1630,7 +1630,7 @@ return the unexpected exception that caused the condition to fail, even if it
 was not the first exception raised by the Cadence. It makes it clear that the
 condition is failing because of additional errors.</p>
 <p>TK: Throwing errors resets the concept of unmatched.</p>
-<h4>Error Catching Example</h4>
+<h4 id="error-catching-example">Error Catching Example</h4>
 <p>Let&#39;s extend our <code>deleteIf</code> function. Let&#39;s say that if the file doesn&#39;t exist,
 we ignore the error raised when we stat the file. To catch the error we wrap our
 call to <code>stat</code> in a try/catch function pair. If the call to <code>stat</code> results in
@@ -1670,7 +1670,7 @@ the cadence function.</p>
 <p>If the error is <code>ENOENT</code>, we exit early by calling the step function directly as
 a if it were itself an error/result callback, passing <code>null</code> to indicate no
 error.</p>
-<h2>Working with Events</h2>
+<h2 id="working-with-events">Working with Events</h2>
 <p>Cadence also works with event emitting objects that do not accept an error as
 the first parameter. These are event mechanisms like the DOM events or the
 events generated by the Node.js <code>EventEmitter</code>.</p>
@@ -1749,9 +1749,9 @@ into a log file for each host.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h2>Loops</h2>
+<h2 id="loops">Loops</h2>
 <p>TK: Serial and parallel loops, but parallel doesn&#39;t really loop.</p>
-<h3>Serial Loops</h3>
+<h3 id="serial-loops">Serial Loops</h3>
 <p>TK: So, just Loops, then? What about Serial Each and Parallel Each?
 TK: Do examples look better without commas?</p>
 <p>Cadence wants you to use nesting to represent subordinate operations, so it wants
@@ -1764,7 +1764,7 @@ the sub-cadence for you when your step returns and run the sub-cadence once. If
 you <strong>do invoke</strong> the function, Cadence will run the sub-cadence as a loop.</p>
 <p>You can create <code>while</code> loops, <code>do...while</code> loops, stepped loops and <code>forEach</code>
 loops using the looper function.</p>
-<h3>Endless Loops</h3>
+<h3 id="endless-loops">Endless Loops</h3>
 <p>If you invoke without arguments, you will invoke an endless loop. You terminate
 the loop using the <code>step(error, result)</code> explicit return.</p>
 <p>Calling <code>looper()</code>.</p>
@@ -1783,7 +1783,7 @@ the loop using the <code>step(error, result)</code> explicit return.</p>
 </code></pre>
 <p>When your terminal condition is the last function, you&#39;ve basically created a
 <code>do...while</code> loop.</p>
-<h3>Loop Initializers</h3>
+<h3 id="loop-initializers">Loop Initializers</h3>
 <p>When an endless loop iterates, the result of the last function is passed as
 arguments to the first function. You can use this to create a <code>while</code> loop.</p>
 <p>To pass in an initial test value to the endless loop, you invoke the looper
@@ -1803,7 +1803,7 @@ arg2)</code> the same the way you invoke an explicit return of the <code>step</c
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Counted Loops</h3>
+<h3 id="counted-loops">Counted Loops</h3>
 <p>You can tell Cadence to loop for a fixed number of times by invoking the loop
 start function with a count of iterations.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">step</span><span class="p">)</span> <span class="p">{</span>
@@ -1818,7 +1818,7 @@ start function with a count of iterations.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Each Loops</h3>
+<h3 id="each-loops">Each Loops</h3>
 <p>You can invoke the loop passing it an array. The loop will be invoked once for
 each element in the array, passing the array element to the first function of
 the sub-cadence.</p>
@@ -1834,7 +1834,7 @@ the sub-cadence.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<h3>Gathered Loops</h3>
+<h3 id="gathered-loops">Gathered Loops</h3>
 <p>Both counted loops and each loops can be gathered into an array. If you pass an
 initial array to the callback function, then each iteration will be gathered
 into an array result.</p>
@@ -1850,7 +1850,7 @@ into an array result.</p>
 </pre></div>
 </code></pre>
 <p>You cannot gather endless loops.</p>
-<h3>Loop Labels</h3>
+<h3 id="loop-labels">Loop Labels</h3>
 <p>If you want to give up early and try again, you can use a loop label. When you
 invoke the looper function it returns a label object. You can use the label
 object to restart the loop.</p>
@@ -1871,7 +1871,7 @@ object to restart the loop.</p>
 <p>This one&#39;s tricky. Because we specified a count of <code>1</code>, the loop will only loop
 once, but because we call the <code>retry</code> label when we catch an error, the loop
 tries again.</p>
-<h3>Loop Label Quick Returns</h3>
+<h3 id="loop-label-quick-returns">Loop Label Quick Returns</h3>
 <p>Some of the things we document here are about style and syntax bashing that you
 can do. It&#39;s not necessarily a part of Cadence.</p>
 <p>Often times when working with labels, you&#39;re testing to see if you should invoke
@@ -1899,7 +1899,7 @@ so you can create a return using <code>&amp;&amp;</code>.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="k">if</span> <span class="p">(</span><span class="nx">count</span> <span class="o">!=</span> <span class="nx">stop</span><span class="p">)</span> <span class="k">return</span> <span class="nx">step</span><span class="p">(</span><span class="nx">retry</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="k">return</span> <span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span>
 </pre></div>
 </code></pre>
-<h2>Control Flow</h2>
+<h2 id="control-flow">Control Flow</h2>
 <p>Here is where you would discuss <code>step.jump</code> and the function index.</p>
 </div>
 

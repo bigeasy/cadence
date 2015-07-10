@@ -1,17 +1,16 @@
 {
-    "name":             "package",
-    "version":          "0.0.1",
+    "name":             "cadence",
+    "version":          "0.0.0",
     "author":           "Alan Gutierrez",
-    "url" :             "http://bigeasy.github.com/timezone",
+    "url" :             "http://bigeasy.github.com/cadence",
     "keywords" :        ["time", "timezone", "date"],
     "author" :          "Alan Gutierrez <alan@prettyrobots.com>",
     "contributors" :    [],
     "dependencies":
     {
-        "cadence": "0.0.24",
-        "edify": "0.0.4",
+        "cadence": "0.0.56",
+        "edify": "0.0.5",
         "less": "1.4.2",
-        "marked": "0.2.9",
         "serve-static": "1.6.3",
         "finalhandler": "0.3.0"
     }
