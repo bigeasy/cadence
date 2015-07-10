@@ -327,7 +327,9 @@
         var f
 
         // Preserving arity costs next to nothing; the call to `execute` in
-        // these functions will be inlined.
+        // these functions will be inlined. The airty function itself will never
+        // be inlined because it is in a different context than that of our
+        // dear user, but it will be compiled.
         switch (steps[0].length) {
         case 0:
             f = function () {
