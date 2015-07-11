@@ -16,9 +16,13 @@
 <h1>Cadence</h1>
 </div>
 <!-- todo: code font is too small for body text font -->
-<div class="unit description markdown"><p>Cadence builds an asynchronous function with an error-first signature. It uses a
-single <code>async</code> function to express all the control flows you&#39;ve come to expect
-from a control flow library.</p>
+<div class="unit description markdown"><p>Cadence is a control-flow library for error-first callback style of asynchronous
+programming. You can reason about asynchronous programming as if it were linear. Say good bye
+to the <a href="http://tritarget.org/blog/2012/11/28/the-pyramid-of-doom-a-javascript-style-trap/">Pyramid of
+Doom</a>.</p>
+<p>Say hello to Cadence; one step after another, with robust try/catch error
+handling, finalizers, nested asynchronous loops with break and contine, and
+tail-recursion elimination to you&#39;ll never blow your stack looping.</p>
 <p>Here&#39;s a function that will delete a file if it exists.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">)</span>
 <span class="kd">var</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
@@ -51,23 +55,25 @@ from a control flow library.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<p>A better way of doing this would be to try to delete the file, but catch an
-<code>ENOENT</code> error if the file does not exist.</p>
+<p>Of course that has a race condition, what if the file is deleted after you&#39;ve
+read the directory but before you unlink it? A better way of doing this would be
+to try to delete the file, but catch an <code>ENOENT</code> error if the file does not
+exist.</p>
 <pre><code class="lang-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">cadence</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;cadence&#39;</span><span class="p">),</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
 
 <span class="kd">var</span> <span class="nx">deleteIf</span> <span class="o">=</span> <span class="nx">cadence</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">async</span><span class="p">,</span> <span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
 
-    <span class="nx">async</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">block</span> <span class="o">=</span> <span class="nx">async</span><span class="p">([</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
 
         <span class="nx">fs</span><span class="p">.</span><span class="nx">unlink</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">async</span><span class="p">())</span>        <span class="c1">// try</span>
 
     <span class="p">},</span> <span class="sr">/^ENOENT$/</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
 
-        <span class="k">return</span> <span class="p">[</span> <span class="nx">async</span><span class="p">,</span> <span class="kc">false</span> <span class="p">]</span>         <span class="c1">// catch</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="nx">block</span><span class="p">,</span> <span class="kc">false</span> <span class="p">]</span>         <span class="c1">// catch ENOENT</span>
 
     <span class="p">}],</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
 
-        <span class="k">return</span> <span class="p">[</span> <span class="kc">true</span> <span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="kc">true</span> <span class="p">]</span>                 <span class="c1">// deleted</span>
 
     <span class="p">})</span>
 
@@ -83,9 +89,9 @@ from a control flow library.</p>
 otherwise return true. If an error other than <code>ENOENT</code> is raised, the the error
 will be passed as the first argument.</p>
 <h3 id="what-cadence-can-do-for-you">What Cadence Can Do for You</h3>
-<p>Cadence is pure-JavaScript library with no transpilers.</p>
+<p>Cadence is pure-JavaScript library control-flow library with no transpilers. The
+Cadence kernel is designed to JIT compile and get out of the way.</p>
 <p>Cadence can express all manner of asynchronous operations, including:</p>
-<p><em>TODO: Fix list formatting.</em></p>
 <ul>
 <li>serial asynchronous operations, of course</li>
 <li>parallel asynchronous operations, naturally</li>
@@ -93,7 +99,6 @@ will be passed as the first argument.</p>
 <li>each loops that can either map or reduce an array</li>
 <li><code>break</code> from labeled loops or <code>continue</code> them, even up out of nested loops to
 an outer loop</li>
-<li>single, streaming events and error event handlers</li>
 <li>asynchronous try and catch exception handling</li>
 <li>asynchronous finalizers for clean up</li>
 </ul>
@@ -112,7 +117,7 @@ try/catch blocks and finalizers.</li>
 body. You don&#39;t have to <code>bind(this)</code> or <code>var self = this</code> with Cadence.</li>
 </ul>
 <p>You can use Cadence in the browser too. It is not Node.js dependent and it
-minzips to ~2.25k.</p>
+minzips to ~2.31k.</p>
 <h3 id="cadence-in-a-nutshell">Cadence In a Nutshell</h3>
 <p>Cadence runs a series of functions asynchronously, use the results of one
 function as the arguments for the next.</p>
@@ -267,11 +272,11 @@ you know that something asynchronous is going on.</p>
 <span class="p">})</span>
 </pre></div>
 </code></pre>
-<p>The next <strong>step</strong> is called with the result of the previous <strong>step</strong>, but
+<p>The <code>async</code> function is used to create a callback that is given to <code>fs.readdir</code>.
+The next <strong>step</strong> is called with the result of the previous <strong>step</strong>, but
 without the error. The error is shifted off the arguments so that the next
-<strong>step</strong> receives no errors, only results.</p>
-<p>There is no error for the <strong>step</strong> to check. There is no need for an <code>if
-(error)</code> at every <strong>step</strong>.</p>
+<strong>step</strong> receives no errors, only results. There is no error for the <strong>step</strong> to
+check. There is no need for an <code>if (error)</code> at every <strong>step</strong>.</p>
 <h3 id="error-propagation">Error Propagation</h3>
 <p>If an error does occur, it propagates out to the user. No matter how deeply
 nested your <strong>cadences</strong>, an error will stop the <strong>cadence</strong> and return the

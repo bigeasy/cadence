@@ -17,9 +17,14 @@
 </div>
 <!-- todo: code font is too small for body text font -->
 <div class="unit description markdown">
-Cadence builds an asynchronous function with an error-first signature. It uses a
-single `async` function to express all the control flows you've come to expect
-from a control flow library.
+Cadence is a control-flow library for error-first callback style of asynchronous
+programming. You can reason about asynchronous programming as if it were linear. Say good bye
+to the [Pyramid of
+Doom](http://tritarget.org/blog/2012/11/28/the-pyramid-of-doom-a-javascript-style-trap/).
+
+Say hello to Cadence; one step after another, with robust try/catch error
+handling, finalizers, nested asynchronous loops with break and contine, and
+tail-recursion elimination to you'll never blow your stack looping.
 
 Here's a function that will delete a file if it exists.
 
@@ -55,25 +60,27 @@ deleteIf('junk.txt', function (error, deleted) {
 })
 ```
 
-A better way of doing this would be to try to delete the file, but catch an
-`ENOENT` error if the file does not exist.
+Of course that has a race condition, what if the file is deleted after you've
+read the directory but before you unlink it? A better way of doing this would be
+to try to delete the file, but catch an `ENOENT` error if the file does not
+exist.
 
 ```javascript
 var cadence = require('cadence'), fs = require('fs')
 
 var deleteIf = cadence(function (async, file) {
 
-    async([function () {
+    var block = async([function () {
 
         fs.unlink(file, async())        // try
 
     }, /^ENOENT$/, function () {
 
-        return [ async, false ]         // catch
+        return [ block, false ]         // catch ENOENT
 
     }], function () {
 
-        return [ true ]
+        return [ true ]                 // deleted
 
     })
 
@@ -91,11 +98,10 @@ will be passed as the first argument.
 
 ### What Cadence Can Do for You
 
-Cadence is pure-JavaScript library with no transpilers.
+Cadence is pure-JavaScript library control-flow library with no transpilers. The
+Cadence kernel is designed to JIT compile and get out of the way.
 
 Cadence can express all manner of asynchronous operations, including:
-
-*TODO: Fix list formatting.*
 
  * serial asynchronous operations, of course
  * parallel asynchronous operations, naturally
@@ -103,7 +109,6 @@ Cadence can express all manner of asynchronous operations, including:
  * each loops that can either map or reduce an array
  * `break` from labeled loops or `continue` them, even up out of nested loops to
    an outer loop
- * single, streaming events and error event handlers
  * asynchronous try and catch exception handling
  * asynchronous finalizers for clean up
 
@@ -122,7 +127,7 @@ Cadence has features that you don't know you want… yet:
    body. You don't have to `bind(this)` or `var self = this` with Cadence.
 
 You can use Cadence in the browser too. It is not Node.js dependent and it
-minzips to ~2.25k.
+minzips to ~2.31k.
 
 ### Cadence In a Nutshell
 
@@ -301,12 +306,11 @@ var find = cadence(function (async, path, filter) {
 })
 ```
 
+The `async` function is used to create a callback that is given to `fs.readdir`.
 The next **step** is called with the result of the previous **step**, but
 without the error. The error is shifted off the arguments so that the next
-**step** receives no errors, only results.
-
-There is no error for the **step** to check. There is no need for an `if
-(error)` at every **step**.
+**step** receives no errors, only results. There is no error for the **step** to
+check. There is no need for an `if (error)` at every **step**.
 
 ### Error Propagation
 
