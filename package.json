@@ -6,6 +6,11 @@
     "keywords" :        ["time", "timezone", "date"],
     "author" :          "Alan Gutierrez <alan@prettyrobots.com>",
     "contributors" :    [],
+    "repository":
+    {
+                          "url": "git://github.com/bigeasy/cadence.git",
+                          "type": "git"
+    },
     "dependencies":
     {
         "cadence": "0.0.56",
