@@ -258,7 +258,7 @@ var find = cadence(function (async, path, filter) {
                       // ^^^^^ ...and callbacks
     }, function (list) {
 
-        return list.some(filter)
+        return [ list.some(filter) ]
 
     })
 
@@ -279,7 +279,7 @@ var find = cadence(function (async, path, filter) {
 
     }, function (list) {
     // ^^^^^^^^ step two
-        return list.some(filter)
+        return [ list.some(filter) ]
 
     })
 
@@ -299,7 +299,7 @@ var find = cadence(function (async, path, filter) {
                       // ^^^^^ create a callback whose return value
     }, function (list) {
               // ^^^^ is the argument of the next step
-        return list.some(filter)
+        return [ list.some(filter) ]
 
     })
 
@@ -329,7 +329,7 @@ var find = cadence(function (async, path, filter) {
                       // ^^^^^ an error returned to any callback...
     }, function (list) {
 
-        return list.some(filter)
+        return [ list.some(filter) ]
 
     })
 
@@ -367,7 +367,7 @@ var find = cadence(function (async, path, filter) {
 
     }, function (list) {
 
-        return list.some(filter)
+        return [ list.some(filter) ]
      // ^^^^^^ result of final step is the result of the cadence.
     })
 
@@ -388,7 +388,7 @@ var find = cadence(function (async, path, filter) {
 
     }, function (list) {
 
-        return list.some(filter)
+        return [ list.some(filter) ]
      // ^^^^^^ result of the only cadence...
     })
 
@@ -492,7 +492,7 @@ var stepper = cadence(function (async) {
         brokenEcho(1, async())
                    // ^^^^^ this callback will propagate the error.
 
-    }, function (value) { // &lt;- we will call the next step until `brokenEcho` is fixed.
+    }, function (value) { // &lt;- the next step will not be called because of the error.
 
         brokenEcho(value, async())
 
@@ -509,7 +509,7 @@ stepper(function (error, value) {
 ### Propagating Exceptions
 
 Exceptions are also propagated. You can throw an exception anywhere in the
-function body and it will propagate out to the user.
+function body and it will propagate out to the user as the error-first error.
 
 ```javascript
 var stepper = cadence(function (async) {
@@ -555,12 +555,14 @@ Because the error-first callback conventions dictate that the error-first `callb
 last argument, you might wonder why `async` is the first.
 
 We put the `async` as the first argument, not the last, because Cadence is
-nothing without its `async` function, it will always be passed into the function
-body. Also because, a `cadence` generated function always expects a callback.
-There is no concept of optional callbacks.
+nothing without its `async` function. We're (almost) always going to need it so
+it will always be passed into the function body as the first argument.
 
-Also because, best of all, putting the `async` function at the head to make it
-easier to implement variadic functions. No messy `var callback = vargs.pop()`.
+Also a `cadence` generated function always expects a callback. There is
+no concept of optional callbacks.
+
+Best of all, putting the `async` function at the head to make it easier to
+implement variadic functions. No messy `var callback = vargs.pop()`.
 
 ```javascript
 var argumentCounter = cadence(function (async) {
@@ -580,7 +582,7 @@ arguable('a', 'b', 'c', function (error, count) {
 ### Multiple Callback Arguments
 
 Because error-first callbacks can receive multiple arguments, **steps** can
-receive multiple arguments and a **cadence** can return multiple arguments.
+receive multiple arguments and a **cadence** can return multiple results.
 
 Because a **cadence** can return multiple arguments a function body can also
 return multiple arguments.
@@ -847,7 +849,7 @@ var sip = cadence(function (async, file, count) {
             fs.read(buffer, 0, buffer.length, 0, step())
 
         }, function (bytesRead, buffer) {
-                  // ^^^^^^^^^  ^^^^^^  gotta do something async before we can return these.
+                  // ^^^^^^^^^  ^^^^^^  must close the file descriptor  before we can return these.
             async(function () {
 
                 fs.close(fd, step())
@@ -926,9 +928,7 @@ fallthrough(function (error, value) {
 
 ### Parallel versus Serial
 
-Parallel and serial have a natual expression in Cadence. *&lt;- Erp? ed.*
-
-The **steps** in a **cadence** run in *serial*.
+The **steps** in a **cadence** run in *serial*, one step after another.
 
 The asynchronous operations in a **step** run in *parallel*. An asynchronous
 operation in a **step** is a **cadence** or a function that invokes a
@@ -1043,46 +1043,9 @@ var initialize = cadence(function (step, conf) {
 })
 ```
 
-### Callback Arity
-
-When you don't want all of the arguments passed to a **callback** or none of
-them, you can specify the arity of the **callback** to the `async` function.
-
-If you pass an integer to the `async` function, that will create a **callback**
-that forwards only that many arguments to the next step.
-
-```javascript
-function echo2 (one, two, callback) {
-    setImmediate(callback, null, one, two)
-}
-
-var arity = cadence(functions (async) {
-
-    async(function () {
-
-        echo(1, async())            // &lt;- all results.
-        echo(2, async(0))           // &lt;- no results.
-        echo2(3, 4, async(1))       // &lt;- just the first result.
-        echo(5, async())            // &lt;- all results.
-
-    }, function (first, second, third) {
-
-        return [ first, second, third ]
-
-    })
-
-})
-
-arity(function (error, first, second, third) {
-
-    assert(first, 1, 'one of three returned')
-    assert(second, 3, 'two of three returned')
-    assert(third, 5, 'three of three returned')
-
-})
-```
-
 ### Breaking, Leaving a Cadence Early
+
+**TODO**: This is gone, but maybe I'll have it back if it is super cheap.
 
 You can leave a **cadence** by returning an array of arguments, the first
 argument being the `async` function.
