@@ -6,9 +6,9 @@
 } (function () {
     var stack = [], push = [].push, token = {}
 
-    function Cadence (cadence, steps, callback) {
-        this.finalizers = cadence.finalizers
-        this.self = cadence.self
+    function Cadence (self, finalizers, steps, callback) {
+        this.self = self
+        this.finalizers = finalizers
         this.steps = steps
         this.callback = callback
         this.loop = false
@@ -81,7 +81,7 @@
 
         var result = this.results[this.results.length - 1]
 
-        var cadence = new Cadence(self.cadence, vargs, callback)
+        var cadence = new Cadence(self, self.cadence.finalizers, vargs, callback)
 
         var step = new Step(cadence, -1, [])
 
@@ -305,7 +305,7 @@
     function execute (self, steps, vargs) {
         var callback = vargs.pop()
 
-        var cadence = new Cadence({ finalizers: [], self: self }, steps, callback)
+        var cadence = new Cadence(self, new Array(), steps, callback)
 
         var step = new Step(cadence, -1, vargs)
 
