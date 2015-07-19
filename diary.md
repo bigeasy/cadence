@@ -3471,3 +3471,68 @@ Wow! Cannot make the words.
  * Create a minimal Cadence that smokes the benchmarks, if at all possible. If
  not, then minimal Cadence doesn't buy us anything, and we move onto something
  else.
+
+### Designing With Cadence
+
+Do not call user callbacks from within a Cadence.
+
+```javascript
+var service = require('./service')
+
+function Notifier = function (options) {
+    this.onitem = options.onitem
+    this.onerror = options.onerror
+}
+
+Notifier.prototype.poll = cadence(function (async) {
+    var loop = async(function () {
+        setTimeout(async(), 1000)
+    ], [function () {
+        service.poll(async())
+    }, function (error) {
+        this.onerror(error)
+        return [ loop() ]
+    }], function (item) {
+        this.onitem(item)
+    })()
+})
+```
+
+Above we see a polling loop that catchers errors and calls a user specified
+callback. Now below we see that the user wants to panic on error.
+
+```javascript
+var notifier = new Notifier({
+    onerror: function (error) {
+        throw error
+    },
+    onitem: function (item) {
+        console.log(item)
+    }
+})
+
+function poll () {
+    notifier.poll(function (error) {
+        if (error) console.log(error.stack)
+        setImmediate(poll)
+    })
+}
+
+poll()
+```
+
+In this case, our dear user wants to panic on a notifier error, but if there is
+problem with the notifier loop itself, our dear user wants to retry. This is a
+convolute example, indicating that the whole contraption is whacky.
+
+Calling the user specified callback is what you need to look out for. A cadence
+is supposed to return a result. Cadence will then call an error-first callback
+outside of any Cadence error handling so that an error will propagate up and out
+and terminate the program. That's how it is supposed to work.
+
+You're not going to encounter this in everyday Cadence programming. I
+encountered it developing [Turnstile](https://github.com/bigeasy/turnstile).
+This is a queue where you fire and forget, so I wanted to have a place that
+would catch all errors, but really what I want to do is pass the error handling
+strategy as the last argument because without it there is no context for the
+error.
