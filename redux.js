@@ -113,8 +113,8 @@
             step.cadence.loop = true
             push.apply(step.vargs, vargs)
 
-            async.continue = { loopy: token, repeat: true, loop: false, cadence: cadence }
-            async.break = { loopy: token, repeat: false, loop: false, cadence: cadence }
+            label.continue = { loopy: token, repeat: true, loop: false, cadence: cadence }
+            label.break = { loopy: token, repeat: false, loop: false, cadence: cadence }
 
             return label
 
@@ -147,7 +147,7 @@
         return stack[stack.length - 1].cadence.self
     })
 
-    async.continue = { loopy: token, repeat: true, loop: false }
+    async.continue = { loopy: token, repeat: false, loop: false }
     async.break = { loopy: token, repeat: false, loop: false }
 
     function call (fn, self, vargs) {
