@@ -147,7 +147,7 @@
         return stack[stack.length - 1].cadence.self
     })
 
-    async.continue = { loopy: token, repeat: false, loop: false }
+    async.continue = { loopy: token, repeat: true, loop: false }
     async.break = { loopy: token, repeat: false, loop: false }
 
     function call (fn, self, vargs) {
