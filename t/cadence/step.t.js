@@ -1,9 +1,9 @@
-#!/usr/bin/env node
+require('proof')(2, prove)
 
-require('proof')(1, require('../..')(function (async, assert) {
+function prove (assert) {
     var cadence = require('../..')
 
-    cadence(function (async) {
+    var f = cadence(function (async) {
 
         item(1, async())
 
@@ -11,7 +11,17 @@ require('proof')(1, require('../..')(function (async, assert) {
 
         assert(number, 1, 'step')
 
-    })(async())
-}))
+    })
+
+    f(function (error) {
+        if (error) throw error
+    })
+
+    cadence(function () {
+        return []
+    })(function () {
+        assert(arguments.length, 0, 'zero arity does not prepend error')
+    })
+}
 
 function item (number, callback) { callback(null, number) }

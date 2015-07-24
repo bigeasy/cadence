@@ -1,23 +1,14 @@
-#!/usr/bin/env node
+require('proof')(1, prove)
 
-require('proof')(2, require('../..')(function (async, assert) {
+function prove (assert, callback) {
     var cadence = require('../..')
-
     cadence(function (async) {
         async(function () {
-            async()(null, 1)
-        }, function (x) {
-            assert(x, 1, 'sync')
+            setImmediate(async(), null, 1)
         })
-    })(async())
-
-    cadence(function (async) {
-        async(function () {
-            async()(null, 1)
-        }, function (x) {
-            setImmediate(async(), null, x)
-        }, function (x) {
-            assert(x, 1, 'async')
-        })
-    })(async())
-}))
+    })(function (error, number) {
+        if (error) throw error
+        assert(number, 1, 'async')
+        callback()
+    })
+}

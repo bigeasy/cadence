@@ -1,7 +1,7 @@
 require('proof')(4, prove)
 
 function prove (assert) {
-    var cadence = require('../../redux')
+    var cadence = require('../..')
 
     var events = require('events')
 

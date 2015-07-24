@@ -1,21 +1,46 @@
-require('proof')(6, prove)
+require('proof')(8, prove)
 
 function prove (assert) {
     var cadence = require('../../redux')
 
-    var f = cadence(function (async) {
+    try {
+        cadence(function (async) {
+            var loop = async(function () {
+                return [ loop ]
+            })()
+        })(function (error, result) {
+            if (error) throw error
+        })
+    } catch (error) {
+        assert(error.message, 'deprecated: use `label.break`.', 'deprecated use of label to break')
+    }
+
+    try {
+        cadence(function (async) {
+            var loop = async(function () {
+                return [ loop() ]
+            })()
+        })(function (error, result) {
+            if (error) throw error
+        })
+    } catch (error) {
+        assert(error.message, 'deprecated: use `label.continue`.', 'deprecated use of label to continue')
+    }
+
+    cadence(function (async) {
         var i = 0
         async(function () {
             if (++i == 2) return [ async.break, i ]
             else return [ async.continue ]
         })
     })(function (error, result) {
+        if (error) throw error
         assert(result, 2, 'async break and continue')
     })
 
-    var f = cadence(function (async) {
+    cadence(function (async) {
         var i = 0, loop = async(function () {
-            if (++i == 2) return [ loop, i ]
+            if (++i == 2) return [ loop.break, i ]
         })()
     })(function (error, result) {
         assert(result, 2, 'returned')
@@ -25,8 +50,8 @@ function prove (assert) {
         async(function () {
             var i = 0, outer = async(function () {
                 var j = 0, inner = async(function () {
-                    if (i == 2) return [ outer, i, j ]
-                    if (j++ == 2) return [ inner ]
+                    if (i == 2) return [ outer.break, i, j ]
+                    if (j++ == 2) return [ inner.break ]
                 })()
                 i++
             })()
@@ -39,7 +64,7 @@ function prove (assert) {
 
     cadence(function (async) {
         var loop = async(function (i) {
-            if (i == 2) return [ loop, i ]
+            if (i == 2) return [ loop.break, i ]
             else return i + 1
         })(0)
     })(function (error, i) {
@@ -48,10 +73,10 @@ function prove (assert) {
 
     cadence(function (async) {
         var loop = async(function (i) {
-            if (i % 2 == 0) return [ loop(), i + 1 ]
+            if (i % 2 == 0) return [ loop.continue, i + 1 ]
             else return [ i ]
         }, function (i) {
-            return [ loop, i ]
+            return [ loop.break, i ]
         })(0)
     })(function (error, i) {
         assert(i, 1, 'continued')
@@ -59,8 +84,8 @@ function prove (assert) {
 
     cadence(function (async) {
         var loop = async(function (i) {
-            if (i == 0) return [ loop(), i + 1 ]
-            else return [ loop, i + 1 ]
+            if (i == 0) return [ loop.continue, i + 1 ]
+            else return [ loop.break, i + 1 ]
         })(0)
     })(function (error, i) {
         assert(i, 2, 'continue then break')
