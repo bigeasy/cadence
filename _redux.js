@@ -184,103 +184,99 @@
     }
 
     function invoke (step) {
-        while (step = _invoke(step)) { }
-    }
+        for (;;) {
+            var vargs, cadence = step.cadence, steps = cadence.steps
 
-    function _invoke (step) {
-        var vargs, cadence = step.cadence, steps = cadence.steps
-
-        if (step.errors.length) {
-            if (step.catcher) {
-                rescue(step)
-            } else {
-                cadence.done([ step.errors[0] ])
-            }
-            return null
-        }
-
-        if (step.results.length == 0) {
-            vargs = step.vargs
-            if (vargs[0] && vargs[0].invoke === token) {
-                var label = vargs.shift()
-                cadence = step.cadence = label.cadence
-                cadence.loop = label.loop
-                step.index = label.index - 1
-                steps = cadence.steps
-            }
-        } else {
-            vargs = []
-            for (var i = 0, I = step.results.length; i < I; i++) {
-                var vargs_ = step.results[i].vargs
-                for (var j = 0, J = vargs_.length; j < J; j++) {
-                    vargs.push(vargs_[j])
+            if (step.errors.length) {
+                if (step.catcher) {
+                    rescue(step)
+                } else {
+                    cadence.done([ step.errors[0] ])
                 }
+                break
             }
-        }
 
-        step = new Step(step.cadence, step.index + 1, vargs)
-
-        if (step.index == steps.length) {
-            if (cadence.loop) {
-                step.index = 0
+            if (step.results.length == 0) {
+                vargs = step.vargs
+                if (vargs[0] && vargs[0].invoke === token) {
+                    var label = vargs.shift()
+                    cadence = step.cadence = label.cadence
+                    cadence.loop = label.loop
+                    step.index = label.index - 1
+                    steps = cadence.steps
+                }
             } else {
-                cadence.done(vargs.length === 0 ? [] : [ null ].concat(vargs))
-                return null
-            }
-        }
-
-        var fn = steps[step.index]
-
-        if (Array.isArray(fn)) {
-            if (fn.length === 1) {
-                cadence.finalizers.push({ steps: fn, vargs: vargs })
-                return step
-            } else if (fn.length === 2) {
-                step.catcher = fn[1]
-                fn = fn[0]
-            } else if (fn.length === 3) {
-                var filter = fn
-                step.catcher = function (error) {
-                    if (filter[1].test(error.code || error.message)) {
-                        return filter[2](error)
-                    } else {
-                        throw error
+                vargs = []
+                for (var i = 0, I = step.results.length; i < I; i++) {
+                    var vargs_ = step.results[i].vargs
+                    for (var j = 0, J = vargs_.length; j < J; j++) {
+                        vargs.push(vargs_[j])
                     }
                 }
-                fn = fn[0]
-            } else {
-                step.vargs = [ step.vargs ]
-                return step
             }
-        }
 
-        stack.push(step)
+            step = new Step(step.cadence, step.index + 1, vargs)
 
-        var ret = call(fn, cadence.self, vargs)
-               // ^^^^
-
-        stack.pop()
-
-        if (ret.length === 2) {
-            step.errors.push(ret[1])
-            step.vargs = vargs
-            step.sync = true
-        } else {
-            for (var i = 0, I = step.results.length; i < I; i++) {
-                var result = step.results[i]
-                if (result.starter) {
-                    result.starter(token)
+            if (step.index == steps.length) {
+                if (cadence.loop) {
+                    step.index = 0
+                } else {
+                    cadence.done(vargs.length === 0 ? [] : [ null ].concat(vargs))
+                    break
                 }
             }
-            step.vargs = [].concat(ret[0] === void(0) ? vargs : ret[0])
-        }
 
-        if (step.sync) {
-            return step
-        }
+            var fn = steps[step.index]
 
-        step.next = step
-        return null
+            if (Array.isArray(fn)) {
+                if (fn.length === 1) {
+                    cadence.finalizers.push({ steps: fn, vargs: vargs })
+                    continue
+                } else if (fn.length === 2) {
+                    step.catcher = fn[1]
+                    fn = fn[0]
+                } else if (fn.length === 3) {
+                    var filter = fn
+                    step.catcher = function (error) {
+                        if (filter[1].test(error.code || error.message)) {
+                            return filter[2](error)
+                        } else {
+                            throw error
+                        }
+                    }
+                    fn = fn[0]
+                } else {
+                    step.vargs = [ step.vargs ]
+                    continue
+                }
+            }
+
+            stack.push(step)
+
+            var ret = call(fn, cadence.self, vargs)
+                   // ^^^^
+
+            stack.pop()
+
+            if (ret.length === 2) {
+                step.errors.push(ret[1])
+                step.vargs = vargs
+                step.sync = true
+            } else {
+                for (var i = 0, I = step.results.length; i < I; i++) {
+                    var result = step.results[i]
+                    if (result.starter) {
+                        result.starter(token)
+                    }
+                }
+                step.vargs = [].concat(ret[0] === void(0) ? vargs : ret[0])
+            }
+
+            if (!step.sync) {
+                step.next = step
+                break
+            }
+        }
     }
 
     function finalize (cadence, errors, callback, vargs) {
@@ -414,3 +410,54 @@
 
     return cadence
 })
+
+
+/*
+
+ % node --version
+v0.12.7
+ % node benchmark/increment/call.js
+ cadence call 0 x 1,065,412 ops/sec ±0.77% (102 runs sampled)
+_cadence call 0 x 994,547 ops/sec ±0.39% (96 runs sampled)
+ cadence call 1 x 1,063,232 ops/sec ±0.38% (98 runs sampled)
+_cadence call 1 x 993,340 ops/sec ±0.27% (98 runs sampled)
+ cadence call 2 x 1,050,960 ops/sec ±0.23% (98 runs sampled)
+_cadence call 2 x 977,404 ops/sec ±0.31% (100 runs sampled)
+ cadence call 3 x 1,051,992 ops/sec ±0.34% (98 runs sampled)
+_cadence call 3 x 974,531 ops/sec ±0.39% (99 runs sampled)
+Fastest is  cadence call 1
+ % node benchmark/increment/async.js
+ cadence async 0 x 1,459,918 ops/sec ±0.80% (97 runs sampled)
+_cadence async 0 x 1,206,521 ops/sec ±0.78% (96 runs sampled)
+ cadence async 1 x 1,382,166 ops/sec ±0.81% (97 runs sampled)
+_cadence async 1 x 1,168,557 ops/sec ±0.65% (96 runs sampled)
+ cadence async 2 x 1,478,476 ops/sec ±0.39% (99 runs sampled)
+_cadence async 2 x 1,250,551 ops/sec ±0.26% (101 runs sampled)
+ cadence async 3 x 1,455,167 ops/sec ±0.21% (99 runs sampled)
+_cadence async 3 x 1,243,549 ops/sec ±0.29% (100 runs sampled)
+Fastest is  cadence async 2, cadence async 0
+ % node --version
+
+v0.10.40
+ % node benchmark/increment/call.js
+ cadence call 0 x 785,331 ops/sec ±0.36% (97 runs sampled)
+_cadence call 0 x 760,154 ops/sec ±0.49% (98 runs sampled)
+ cadence call 1 x 781,489 ops/sec ±0.35% (102 runs sampled)
+_cadence call 1 x 762,145 ops/sec ±0.26% (96 runs sampled)
+ cadence call 2 x 780,390 ops/sec ±0.45% (103 runs sampled)
+_cadence call 2 x 760,707 ops/sec ±0.24% (100 runs sampled)
+ cadence call 3 x 782,084 ops/sec ±0.31% (98 runs sampled)
+_cadence call 3 x 753,675 ops/sec ±0.32% (100 runs sampled)
+Fastest is  cadence call 0
+ % node benchmark/increment/async.js
+ cadence async 0 x 1,347,829 ops/sec ±0.50% (101 runs sampled)
+_cadence async 0 x 1,290,193 ops/sec ±0.35% (100 runs sampled)
+ cadence async 1 x 1,363,058 ops/sec ±0.59% (90 runs sampled)
+_cadence async 1 x 1,328,050 ops/sec ±0.48% (103 runs sampled)
+ cadence async 2 x 1,382,115 ops/sec ±0.32% (101 runs sampled)
+_cadence async 2 x 1,299,611 ops/sec ±0.34% (99 runs sampled)
+ cadence async 3 x 1,388,873 ops/sec ±0.42% (99 runs sampled)
+_cadence async 3 x 1,303,095 ops/sec ±0.36% (100 runs sampled)
+Fastest is  cadence async 3
+
+*/

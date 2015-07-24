@@ -221,7 +221,10 @@
                 if (cadence.loop) {
                     step.index = 0
                 } else {
-                    cadence.done(vargs.length === 0 ? [] : [ null ].concat(vargs))
+                    if (vargs.length !== 0) {
+                        vargs.unshift(null)
+                    }
+                    cadence.done(vargs)
                     break
                 }
             }
