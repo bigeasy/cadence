@@ -1,7 +1,17 @@
-require('proof')(5, prove)
+require('proof')(6, prove)
 
 function prove (assert) {
     var cadence = require('../../redux')
+
+    var f = cadence(function (async) {
+        var i = 0
+        async(function () {
+            if (++i == 2) return [ async.break, i ]
+            else return [ async.continue ]
+        })
+    })(function (error, result) {
+        assert(result, 2, 'async break and continue')
+    })
 
     var f = cadence(function (async) {
         var i = 0, loop = async(function () {

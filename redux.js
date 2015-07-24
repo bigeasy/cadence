@@ -103,23 +103,26 @@
         } else {
             var count = 0, cadence = step.cadence
 
-            label.invoke = token
+            label.loopy = token
             label.loop = false
             label.cadence = cadence
             label.index = cadence.steps.length
 
-            step.index = -1
+            step.repeat = false
             step.cadence.loop = true
             push.apply(step.vargs, vargs)
+
+            async.continue = { loopy: token, repeat: true, loop: false, cadence: cadence }
+            async.break = { loopy: token, repeat: false, loop: false, cadence: cadence }
 
             return label
 
             function label () {
                 return {
-                    invoke: token,
+                    loopy: token,
                     loop: true,
                     cadence: cadence,
-                    index: 0
+                    repeat: true
                 }
             }
         }
@@ -142,6 +145,9 @@
     async.__defineGetter__('self', function () {
         return stack[stack.length - 1].cadence.self
     })
+
+    async.continue = { loopy: token, repeat: true, loop: false }
+    async.break = { loopy: token, repeat: false, loop: false }
 
     function call (fn, self, vargs) {
         try {
@@ -198,12 +204,14 @@
 
             if (step.results.length == 0) {
                 vargs = step.vargs
-                if (vargs[0] && vargs[0].invoke === token) {
+                if (vargs[0] && vargs[0].loopy === token) {
                     var label = vargs.shift()
-                    cadence = step.cadence = label.cadence
+                    if (label.cadence) {
+                        cadence = step.cadence = label.cadence
+                        steps = cadence.steps
+                    }
+                    step.index = label.repeat ? -1 : steps.length - 1
                     cadence.loop = label.loop
-                    step.index = label.index - 1
-                    steps = cadence.steps
                 }
             } else {
                 vargs = []
