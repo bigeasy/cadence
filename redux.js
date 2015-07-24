@@ -70,6 +70,7 @@
 
             // This try/catch will prevent V8 from marking this function of
             // optimization because it will only ever run once.
+            /* istanbul ignore next */
             try {} catch(e) {}
         }
     }
