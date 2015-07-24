@@ -3,8 +3,6 @@ var cadence = require('../../redux')
 var _cadence = require('../../_redux')
 var Benchmark = require('benchmark')
 
-Benchmark.options.minSamples = 500
-
 var suite = new Benchmark.Suite('sub', { minSamples: 100 })
 
 function body (async) {
