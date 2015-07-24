@@ -15,15 +15,3 @@ A Swiss Army asynchronous control flow function for JavaScript.
 To learn everything you want to know about Cadence start here:
 
     http://bigeasy.github.io/cadence
-
-Structure
-
-`./cadence.js` ~ Outgoing Cadence library. Used in production, but performance
-is not what it should be. Cadence Redux forgoes the overloading of the `async`
-function with special parameters, adds functionality using the `async` function
-as a namespace for special operations like `async.forEach` and `async.map`.
-
-`./redux.js` ~ Build to this. It is the bomb.
-
-`./_redux.js` ~ The previous version of Cadence Redux. Used for benchmarking
-incremental performance improvements.
