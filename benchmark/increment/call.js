@@ -3,25 +3,19 @@ var cadence = require('../../redux')
 var cadence_ = require('../../_redux')
 var Benchmark = require('benchmark')
 
-var suite = new Benchmark.Suite('call', { /*minSamples: 100*/ })
+Benchmark.options.minSamples = 500
+
+var suite = new Benchmark.Suite('call', { minSamples: 1000 })
 
 function body () { return 1 }
 
 var m = cadence(body)
 
-function fn () {
-    m(function (error, result) {
-        ok(result == 1, 'callback')
-    })
-}
+function fn () { m(function () {}) }
 
 var m_ = cadence_(body)
 
-function fn_ () {
-    m_(function (error, result) {
-        ok(result == 1, 'callback')
-    })
-}
+function fn_ () { m_(function () {}) }
 
 for (var i = 0; i < 4; i++)  {
     suite.add({
@@ -43,4 +37,4 @@ suite.on('complete', function() {
     console.log('Fastest is ' + this.filter('fastest').pluck('name'));
 })
 
-suite.run()
+suite.run({ minSamples: 500 })

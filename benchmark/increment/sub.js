@@ -3,65 +3,37 @@ var cadence = require('../../redux')
 var _cadence = require('../../_redux')
 var Benchmark = require('benchmark')
 
+Benchmark.options.minSamples = 500
+
 var suite = new Benchmark.Suite('sub', { minSamples: 100 })
 
-var m = cadence(function (async) {
+function body (async) {
     async(function () { return 1 })
-})
-
-function fnm (deferred) {
-    m(function (error, result) {
-        deferred.resolve()
-        ok(result == 1, 'callback')
-    })
 }
 
-var m_ = _cadence(function (async) {
-    async(function () { return 1 })
-})
+var m = cadence(body)
 
-function fnm_ (deferred) {
-    m_(function (error, result) {
-        deferred.resolve()
-        ok(result == 1, 'callback')
-    })
+function fn () {
+    m(function () {})
 }
 
-suite.add({
-    name: ' cadence call 1',
-    fn: fnm,
-    defer: true
-})
+var m_ = _cadence(body)
 
-suite.add({
-    name: '_cadence call 1',
-    fn: fnm_,
-    defer: true
-})
+function fn_ (deferred) {
+    m_(function () {})
+}
 
-suite.add({
-    name: ' cadence call 2',
-    fn: fnm,
-    defer: true
-})
+for (var i = 0; i < 4; i++) {
+    suite.add({
+        name: ' cadence call ' + i,
+        fn: fn
+    })
 
-suite.add({
-    name: '_cadence call 2',
-    fn: fnm_,
-    defer: true
-})
-
-suite.add({
-    name: ' cadence call 3',
-    fn: fnm,
-    defer: true
-})
-
-suite.add({
-    name: '_cadence call 3',
-    fn: fnm_,
-    defer: true
-})
+    suite.add({
+        name: '_cadence call ' + i,
+        fn: fn_
+    })
+}
 
 suite.on('cycle', function(event) {
     console.log(String(event.target));

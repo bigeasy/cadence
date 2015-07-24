@@ -6,12 +6,20 @@
 } (function () {
     var stack = [], push = [].push, token = {}
 
-    function Cadence (cadence, steps, done) {
+    function Cadence (cadence, steps, callback) {
         this.finalizers = cadence.finalizers
         this.self = cadence.self
         this.steps = steps
-        this.done = done
+        this.callback = callback
         this.loop = false
+    }
+
+    Cadence.prototype.done = function (vargs) {
+        if (this.finalizers.length == 0) {
+            this.callback.apply(null, vargs)
+        } else {
+            finalize(this, [], this.callback, vargs)
+        }
     }
 
     function Step (cadence, index, vargs) {
@@ -57,6 +65,12 @@
                 vargs[i] = arguments[i]
             }
             self.callback(result, vargs)
+
+            return
+
+            // This try/catch will prevent V8 from marking this function of
+            // optimization because it will only ever run once.
+            try {} catch(e) {}
         }
     }
 
@@ -67,9 +81,7 @@
 
         var result = this.results[this.results.length - 1]
 
-        var cadence = new Cadence(self.cadence, vargs, function (vargs) {
-            callback.apply(null, vargs)
-        })
+        var cadence = new Cadence(self.cadence, vargs, callback)
 
         var step = new Step(cadence, -1, [])
 
@@ -293,21 +305,13 @@
     function execute (self, steps, vargs) {
         var callback = vargs.pop()
 
-        var cadence = new Cadence({ finalizers: [], self: self }, steps, done)
+        var cadence = new Cadence({ finalizers: [], self: self }, steps, callback)
 
         var step = new Step(cadence, -1, vargs)
 
         // async.self = self
 
         invoke(step)
-
-        function done (vargs) {
-            if (cadence.finalizers.length == 0) {
-                callback.apply(null, vargs)
-            } else {
-                finalize(cadence, [], callback, vargs)
-            }
-        }
     }
 
     function cadence () {
@@ -322,6 +326,10 @@
     function _cadence (steps) {
         var f
 
+        // Preserving arity costs next to nothing; the call to `execute` in
+        // these functions will be inlined. The airty function itself will never
+        // be inlined because it is in a different context than that of our
+        // dear user, but it will be compiled.
         switch (steps[0].length) {
         case 0:
             f = function () {
@@ -406,47 +414,3 @@
 
     return cadence
 })
-
-// % node benchmark/increment/loop.js
-//  cadence loop 1 x 467 ops/sec ±0.80% (93 runs sampled)
-// _cadence loop 1 x 472 ops/sec ±0.99% (92 runs sampled)
-//  cadence loop 2 x 469 ops/sec ±0.86% (94 runs sampled)
-// _cadence loop 2 x 467 ops/sec ±1.58% (91 runs sampled)
-//  cadence loop 3 x 455 ops/sec ±0.97% (91 runs sampled)
-// _cadence loop 3 x 467 ops/sec ±1.26% (91 runs sampled)
-//  cadence loop 4 x 465 ops/sec ±1.46% (91 runs sampled)
-// _cadence loop 4 x 460 ops/sec ±2.14% (86 runs sampled)
-// Fastest is _cadence loop 1, cadence loop 2,_cadence loop 3,_cadence loop 2, cadence loop 4,_cadence loop 4
-
-// % node benchmark/increment/call.js
-//  cadence call 0 x 785,362 ops/sec ±0.85% (93 runs sampled)
-// _cadence call 0 x 702,759 ops/sec ±0.86% (98 runs sampled)
-//  cadence call 1 x 787,596 ops/sec ±0.77% (101 runs sampled)
-// _cadence call 1 x 695,270 ops/sec ±0.83% (96 runs sampled)
-//  cadence call 2 x 792,054 ops/sec ±0.84% (99 runs sampled)
-// _cadence call 2 x 693,710 ops/sec ±0.88% (100 runs sampled)
-//  cadence call 3 x 794,482 ops/sec ±0.83% (98 runs sampled)
-// _cadence call 3 x 694,428 ops/sec ±0.85% (96 runs sampled)
-// Fastest is  cadence call 3
-
-// % node benchmark/increment/async.js
-//  cadence async 0 x 1,261,444 ops/sec ±0.72% (96 runs sampled)
-// _cadence async 0 x 1,094,193 ops/sec ±0.76% (98 runs sampled)
-//  cadence async 1 x 1,241,830 ops/sec ±0.89% (96 runs sampled)
-// _cadence async 1 x 1,076,718 ops/sec ±0.87% (97 runs sampled)
-//  cadence async 2 x 1,242,406 ops/sec ±0.77% (99 runs sampled)
-// _cadence async 2 x 1,093,476 ops/sec ±0.84% (99 runs sampled)
-//  cadence async 3 x 1,258,202 ops/sec ±0.75% (98 runs sampled)
-// _cadence async 3 x 1,112,983 ops/sec ±0.71% (101 runs sampled)
-// Fastest is  cadence async 0, cadence async 3
-
-// % node benchmark/increment/async.js
-//  cadence parallel 1 x 5,984 ops/sec ±0.92% (98 runs sampled)
-// _cadence parallel 1 x 6,049 ops/sec ±0.71% (96 runs sampled)
-//  cadence parallel 2 x 6,001 ops/sec ±0.91% (97 runs sampled)
-// _cadence parallel 2 x 6,009 ops/sec ±1.21% (98 runs sampled)
-//  cadence parallel 3 x 5,991 ops/sec ±0.83% (98 runs sampled)
-// _cadence parallel 3 x 6,027 ops/sec ±0.87% (97 runs sampled)
-//  cadence parallel 4 x 5,927 ops/sec ±0.95% (96 runs sampled)
-// _cadence parallel 4 x 6,016 ops/sec ±0.95% (99 runs sampled)
-// Fastest is _cadence parallel 1,_cadence parallel 3,_cadence parallel 4, cadence parallel 2,_cadence parallel 2

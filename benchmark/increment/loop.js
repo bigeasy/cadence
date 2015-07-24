@@ -3,6 +3,8 @@ var cadence = require('../../redux')
 var _cadence = require('../../_redux')
 var Benchmark = require('benchmark')
 
+Benchmark.options.minSamples = 500
+
 var suite = new Benchmark.Suite('loop', { minSamples: 100 })
 
 var COUNT = 10
@@ -22,17 +24,11 @@ function body (async) {
 
 var m = cadence(body)
 
-function fn () {
-    m(function (error, result) {
-    })
-}
+function fn () { m(function () {}) }
 
 var m_ = _cadence(body)
 
-function fn_ () {
-    m_(function (error, result) {
-    })
-}
+function fn_ () { m_(function () {}) }
 
 for (var i = 1; i <= 4; i++) {
     suite.add({
