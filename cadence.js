@@ -408,15 +408,6 @@ function Sink (async, self, ee) {
     this._callback = async()
 }
 
-Sink.prototype._invoke = function (fn, vargs) {
-    try {
-        var ret = fn.apply(this._self, vargs)
-        return [ ret ]
-    } catch (e) {
-        return [ ret, e ]
-    }
-}
-
 Sink.prototype._register = function (event, fn) {
     this._ee.on(event, fn)
     this._listeners.push({ event: event, fn: fn })
@@ -425,7 +416,7 @@ Sink.prototype._register = function (event, fn) {
 Sink.prototype.error = function (filter) {
     this._register('error', function (error) {
         if (filter) {
-            error = this._invoke(filter, [ error ])[1]
+            error = call(filter, this._self, [ error ])[1]
         }
         if (error) {
             this._terminate([ error ])
@@ -461,7 +452,7 @@ Sink.prototype.on = function (event, listener) {
         for (var i = 0; i < I; i++) {
             vargs[i] = arguments[i]
         }
-        var ret = this._invoke(listener, vargs)
+        var ret = call(listener, this._self, vargs)
         if (ret.length === 2) {
             this._terminate([ ret[1] ])
         }
