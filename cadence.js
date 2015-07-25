@@ -302,16 +302,11 @@ function execute (self, steps, vargs) {
 
 function cadence () {
     var I = arguments.length
-    var vargs = new Array(I)
+    var steps = new Array
     for (var i = 0; i < I; i++) {
-        vargs[i] = arguments[i]
+        steps.push(arguments[i])
     }
-    return _cadence(vargs)
-}
-
-function _cadence (steps) {
     var f
-
     // Preserving arity costs next to nothing; the call to `execute` in
     // these functions will be inlined. The airty function itself will never
     // be inlined because it is in a different context than that of our
@@ -378,7 +373,7 @@ function _cadence (steps) {
         for (var i = 0, I = steps[0].length; i < I; i++) {
             args[i] = '_' + i
         }
-        var f = (new Function('execute', 'steps', 'async', '                \n\
+        f = (new Function('execute', 'steps', 'async', '                    \n\
             return function (' + args.join(',') + ') {                      \n\
                 var I = arguments.length                                    \n\
                 var vargs = new Array(I + 1)                                \n\
