@@ -98,7 +98,6 @@ Step.prototype.starter = function (step, result, vargs) {
     } else {
         var count = 0, cadence = step.cadence
 
-        step.repeat = false
         step.cadence.loop = true
         push.apply(step.vargs, vargs)
 
