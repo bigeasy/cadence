@@ -1,0 +1,73 @@
+ % node --version
+v0.10.40
+ % vim benchmark/increment/call.js
+ % node benchmark/increment/call.js
+ cadence call 1 x 755,343 ops/sec ±1.16% (96 runs sampled)
+_cadence call 1 x 742,462 ops/sec ±0.66% (99 runs sampled)
+ cadence call 2 x 786,471 ops/sec ±0.52% (97 runs sampled)
+_cadence call 2 x 746,575 ops/sec ±0.17% (103 runs sampled)
+ cadence call 3 x 793,364 ops/sec ±0.25% (100 runs sampled)
+_cadence call 3 x 748,861 ops/sec ±0.09% (101 runs sampled)
+ cadence call 4 x 794,984 ops/sec ±0.18% (98 runs sampled)
+_cadence call 4 x 748,048 ops/sec ±0.22% (101 runs sampled)
+Fastest is  cadence call 4, cadence call 3
+ % node benchmark/increment/async.js
+ cadence async 1 x 1,385,655 ops/sec ±0.26% (93 runs sampled)
+_cadence async 1 x 1,449,893 ops/sec ±0.73% (103 runs sampled)
+ cadence async 2 x 1,395,450 ops/sec ±0.34% (95 runs sampled)
+_cadence async 2 x 1,453,994 ops/sec ±0.07% (103 runs sampled)
+ cadence async 3 x 1,416,872 ops/sec ±0.33% (99 runs sampled)
+_cadence async 3 x 1,451,727 ops/sec ±0.25% (102 runs sampled)
+ cadence async 4 x 1,404,850 ops/sec ±0.21% (101 runs sampled)
+_cadence async 4 x 1,443,437 ops/sec ±0.40% (103 runs sampled)
+Fastest is _cadence async 2,_cadence async 3
+ % node benchmark/increment/loop.js
+ cadence loop 1 x 162,080 ops/sec ±0.43% (97 runs sampled)
+_cadence loop 1 x 164,787 ops/sec ±0.42% (102 runs sampled)
+ cadence loop 2 x 164,904 ops/sec ±0.21% (101 runs sampled)
+_cadence loop 2 x 167,261 ops/sec ±0.24% (101 runs sampled)
+ cadence loop 3 x 165,073 ops/sec ±0.23% (101 runs sampled)
+_cadence loop 3 x 166,853 ops/sec ±0.08% (100 runs sampled)
+ cadence loop 4 x 162,365 ops/sec ±0.52% (98 runs sampled)
+_cadence loop 4 x 167,426 ops/sec ±0.23% (102 runs sampled)
+Fastest is _cadence loop 4,_cadence loop 2
+ % brew switch node 0.12.7
+Cleaning /Users/alan/.usr/Cellar/node/0.10.26
+Cleaning /Users/alan/.usr/Cellar/node/0.10.36
+Cleaning /Users/alan/.usr/Cellar/node/0.10.40
+Cleaning /Users/alan/.usr/Cellar/node/0.11.16
+Cleaning /Users/alan/.usr/Cellar/node/0.12.4
+Cleaning /Users/alan/.usr/Cellar/node/0.12.7
+1868 links created for /Users/alan/.usr/Cellar/node/0.12.7
+ % node --version
+v0.12.7
+ % node benchmark/increment/call.js
+ cadence call 1 x 1,106,257 ops/sec ±0.23% (102 runs sampled)
+_cadence call 1 x 1,067,207 ops/sec ±0.51% (98 runs sampled)
+ cadence call 2 x 1,090,988 ops/sec ±0.36% (101 runs sampled)
+_cadence call 2 x 1,074,394 ops/sec ±0.31% (98 runs sampled)
+ cadence call 3 x 1,109,304 ops/sec ±0.07% (101 runs sampled)
+_cadence call 3 x 1,062,890 ops/sec ±0.12% (100 runs sampled)
+ cadence call 4 x 1,101,826 ops/sec ±0.20% (102 runs sampled)
+_cadence call 4 x 1,055,211 ops/sec ±0.13% (99 runs sampled)
+Fastest is  cadence call 3, cadence call 1
+ % node benchmark/increment/async.js
+ cadence async 1 x 1,199,205 ops/sec ±0.72% (99 runs sampled)
+_cadence async 1 x 1,419,867 ops/sec ±0.54% (96 runs sampled)
+ cadence async 2 x 1,139,199 ops/sec ±0.41% (99 runs sampled)
+_cadence async 2 x 1,494,969 ops/sec ±0.44% (102 runs sampled)
+ cadence async 3 x 1,158,088 ops/sec ±0.67% (98 runs sampled)
+_cadence async 3 x 1,478,522 ops/sec ±0.45% (102 runs sampled)
+ cadence async 4 x 1,141,512 ops/sec ±0.79% (97 runs sampled)
+_cadence async 4 x 1,484,854 ops/sec ±0.12% (103 runs sampled)
+Fastest is _cadence async 2
+ % node benchmark/increment/loop.js
+ cadence loop 1 x 88,285 ops/sec ±0.94% (93 runs sampled)
+_cadence loop 1 x 102,507 ops/sec ±1.52% (94 runs sampled)
+ cadence loop 2 x 73,012 ops/sec ±1.56% (95 runs sampled)
+_cadence loop 2 x 83,481 ops/sec ±1.73% (89 runs sampled)
+ cadence loop 3 x 57,768 ops/sec ±3.36% (82 runs sampled)
+_cadence loop 3 x 77,906 ops/sec ±2.13% (87 runs sampled)
+ cadence loop 4 x 53,912 ops/sec ±2.50% (89 runs sampled)
+_cadence loop 4 x 63,120 ops/sec ±1.49% (85 runs sampled)
+Fastest is _cadence loop 1

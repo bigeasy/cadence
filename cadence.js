@@ -27,7 +27,7 @@ function Step (cadence, index, vargs) {
     this.vargs = vargs
 }
 
-Step.prototype.callback = function (result, vargs) {
+Step.prototype.callback = function (vargs, result) {
     var error = vargs.shift()
     if (error == null) {
         result.vargs = vargs
@@ -50,23 +50,7 @@ Step.prototype.createCallback = function () {
     self.results.push(result)
     self.sync = false
 
-    return callback
-
-    function callback () {
-        var I = arguments.length
-        var vargs = new Array(I)
-        for (var i = 0; i < I; i++) {
-            vargs[i] = arguments[i]
-        }
-        self.callback(result, vargs)
-
-        return
-
-        // This try/catch will prevent V8 from marking this function of
-        // optimization because it will only ever run once.
-        /* istanbul ignore next */
-        try {} catch(e) {}
-    }
+    return variadic(self.callback, self, result)
 }
 
 Step.prototype.createCadence = function (vargs) {
@@ -80,22 +64,14 @@ Step.prototype.createCadence = function (vargs) {
 
     var step = new Step(cadence, -1, [])
 
-    return result.starter = starter
-
-    function starter () {
-        var I = arguments.length
-        var vargs = new Array(I)
-        for (var i = 0; i < I; i++) {
-            vargs[i] = arguments[i]
-        }
-        return self.starter(step, result, vargs)
-    }
+    return result.starter = variadic(self.starter, self, [ step, result ])
 }
 
-Step.prototype.starter = function (step, result, vargs) {
+Step.prototype.starter = function (vargs, closure) {
     if (vargs[0] === token) {
-        invoke(step)
+        invoke(closure[0])
     } else {
+        var step = closure[0], result = closure[1]
         var count = 0, cadence = step.cadence
 
         step.repeat = false
@@ -122,10 +98,6 @@ function async () {
         return step.createCallback()
     }
 }
-
-async.__defineGetter__('self', function () {
-    return stack[stack.length - 1].cadence.self
-})
 
 async.continue = { loopy: token, repeat: true, loop: false }
 async.break = { loopy: token, repeat: false, loop: false }
@@ -171,8 +143,9 @@ function rescue (step) {
 }
 
 function invoke (step) {
+    var vargs, cadence = step.cadence, steps = cadence.steps
+    async.self = cadence.self
     for (;;) {
-        var vargs, cadence = step.cadence, steps = cadence.steps
 
         if (step.errors.length) {
             if (step.catcher) {
@@ -304,14 +277,10 @@ function execute (self, steps, vargs) {
 
 function cadence () {
     var I = arguments.length
-    var vargs = new Array(I)
+    var steps = new Array(I)
     for (var i = 0; i < I; i++) {
-        vargs[i] = arguments[i]
+        steps[i] = arguments[i]
     }
-    return _cadence(vargs)
-}
-
-function _cadence (steps) {
     var f
 
     // Preserving arity costs next to nothing; the call to `execute` in
@@ -380,7 +349,7 @@ function _cadence (steps) {
         for (var i = 0, I = steps[0].length; i < I; i++) {
             args[i] = '_' + i
         }
-        var f = (new Function('execute', 'steps', 'async', '                \n\
+        f = (new Function('execute', 'steps', 'async', '                \n\
             return function (' + args.join(',') + ') {                      \n\
                 var I = arguments.length                                    \n\
                 var vargs = new Array(I + 1)                                \n\
@@ -395,8 +364,6 @@ function _cadence (steps) {
 
     f.toString = function () { return steps[0].toString() }
 
-    f.isCadence = true
-
     return f
 }
 
@@ -408,15 +375,6 @@ function Sink (async, self, ee) {
     this._callback = async()
 }
 
-Sink.prototype._invoke = function (fn, vargs) {
-    try {
-        var ret = fn.apply(this._self, vargs)
-        return [ ret ]
-    } catch (e) {
-        return [ ret, e ]
-    }
-}
-
 Sink.prototype._register = function (event, fn) {
     this._ee.on(event, fn)
     this._listeners.push({ event: event, fn: fn })
@@ -425,7 +383,7 @@ Sink.prototype._register = function (event, fn) {
 Sink.prototype.error = function (filter) {
     this._register('error', function (error) {
         if (filter) {
-            error = this._invoke(filter, [ error ])[1]
+            error = call(filter, this._self, [ error ])[1]
         }
         if (error) {
             this._terminate([ error ])
@@ -461,7 +419,7 @@ Sink.prototype.on = function (event, listener) {
         for (var i = 0; i < I; i++) {
             vargs[i] = arguments[i]
         }
-        var ret = this._invoke(listener, vargs)
+        var ret = call(listener, this._self, vargs)
         if (ret.length === 2) {
             this._terminate([ ret[1] ])
         }
@@ -469,24 +427,26 @@ Sink.prototype.on = function (event, listener) {
     return this
 }
 
-function variadic (f) {
+function variadic (f, self, closure) {
     return function () {
         var I = arguments.length
         var vargs = new Array
         for (var i = 0; i < I; i++) {
             vargs.push(arguments[i])
         }
-        return f.call(this, vargs)
+        return f.call(self, vargs, closure)
+        // This try/catch will prevent V8 from marking this function of
+        // optimization because it will only ever run once.
+        /* istanbul ignore next */
+        try {} catch(e) {}
     }
 }
 
 async.ee = function (ee) {
-    var async = this
-    return new Sink(this, async.self, ee)
+    return new Sink(this, this.self, ee)
 }
 
 async.forEach = variadic(function (steps) {
-    var async = this
     return variadic(function (vargs) {
         var loop, array = vargs.shift(), index = -1
         steps.unshift(variadic(function (vargs) {
@@ -494,12 +454,11 @@ async.forEach = variadic(function (steps) {
             if (index === array.length) return [ loop.break ].concat(vargs)
             return [ array[index], index ].concat(vargs)
         }))
-        return loop = async.apply(null, steps).apply(null, vargs)
-    })
-})
+        return loop = this.apply(null, steps).apply(null, vargs)
+    }, this)
+}, async)
 
 async.map = variadic(function (steps) {
-    var async = this
     return variadic(function (vargs) {
         var loop, array = vargs.shift(), index = -1, gather = []
         steps.unshift(variadic(function (vargs) {
@@ -511,7 +470,7 @@ async.map = variadic(function (steps) {
             gather.push.apply(gather, vargs)
         }))
         return loop = async.apply(null, steps).apply(null, vargs)
-    })
-})
+    }, this)
+}, async)
 
 module.exports = cadence
