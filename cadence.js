@@ -123,10 +123,6 @@ function async () {
     }
 }
 
-async.__defineGetter__('self', function () {
-    return stack[stack.length - 1].cadence.self
-})
-
 async.continue = { loopy: token, repeat: true, loop: false }
 async.break = { loopy: token, repeat: false, loop: false }
 
@@ -173,6 +169,8 @@ function rescue (step) {
 function invoke (step) {
     for (;;) {
         var vargs, cadence = step.cadence, steps = cadence.steps
+
+        async.self = cadence.self
 
         if (step.errors.length) {
             if (step.catcher) {
