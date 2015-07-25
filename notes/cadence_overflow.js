@@ -1,4 +1,4 @@
-var cadence = require('./redux')
+var cadence = require('..')
 var fs = require('fs')
 
 var got

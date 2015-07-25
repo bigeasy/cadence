@@ -2,7 +2,7 @@ require('superstack')
 
 Error.stackTraceLimit = Infinity
 
-var cadence = require('../redux')
+var cadence = require('..')
 
 var f = cadence(function (async) {
     async(function () {

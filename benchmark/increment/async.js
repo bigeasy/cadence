@@ -1,6 +1,5 @@
-var ok = require('assert').ok
-var cadence = require('../../redux')
-var cadence_ = require('../../_redux')
+var cadence = require('../../cadence')
+var cadence_ = require('../../_cadence')
 var Benchmark = require('benchmark')
 
 var suite = new Benchmark.Suite('async', { /*minSamples: 100*/ })
@@ -19,7 +18,7 @@ function fn_ () {
     m_(function () {})
 }
 
-for (var i = 0; i < 4; i++)  {
+for (var i = 1; i <= 4; i++)  {
     suite.add({
         name: ' cadence async ' + i,
         fn: fn

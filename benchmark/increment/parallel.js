@@ -1,6 +1,5 @@
-var ok = require('assert').ok
-var cadence = require('../../redux')
-var _cadence = require('../../_redux')
+var cadence = require('../../cadence')
+var _cadence = require('../../_cadence')
 var Benchmark = require('benchmark')
 
 var suite = new Benchmark.Suite('parallel', { minSamples: 100 })
@@ -33,15 +32,13 @@ function body (async) {
 var m = cadence(body)
 
 function fn () {
-    m(function (error, result) {
-    })
+    m(function () {})
 }
 
 var m_ = _cadence(body)
 
 function fn_ () {
-    m_(function (error, result) {
-    })
+    m_(function () {})
 }
 
 for (var i = 1; i <= 4; i++) {

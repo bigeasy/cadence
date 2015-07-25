@@ -1,4 +1,4 @@
-var cadence = require('cadence/redux')
+var cadence = require('..')
 var fs = require('fs')
 
 function slurp1 (filename, callback) {

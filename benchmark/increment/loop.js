@@ -1,6 +1,5 @@
-var ok = require('assert').ok
-var cadence = require('../../redux')
-var _cadence = require('../../_redux')
+var cadence = require('../../cadence')
+var _cadence = require('../../_cadence')
 var Benchmark = require('benchmark')
 
 var suite = new Benchmark.Suite('loop', { minSamples: 100 })
@@ -15,7 +14,7 @@ function inc (count, callback) {
 
 function body (async) {
     var loop = async(function (inced) {
-        if (inced == COUNT) return [ loop, inced ]
+        if (inced == COUNT) return [ loop.break, inced ]
         inc(inced, async())
     })(0)
 }

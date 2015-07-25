@@ -1,4 +1,4 @@
-var cadence = require('cadence')
+var cadence = require('..')
 var fs = require('fs')
 
 cadence(function (async) {
