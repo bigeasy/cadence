@@ -408,15 +408,6 @@ function Sink (async, self, ee) {
     this._callback = async()
 }
 
-Sink.prototype._invoke = function (fn, vargs) {
-    try {
-        var ret = fn.apply(this._self, vargs)
-        return [ ret ]
-    } catch (e) {
-        return [ ret, e ]
-    }
-}
-
 Sink.prototype._register = function (event, fn) {
     this._ee.on(event, fn)
     this._listeners.push({ event: event, fn: fn })
@@ -425,7 +416,7 @@ Sink.prototype._register = function (event, fn) {
 Sink.prototype.error = function (filter) {
     this._register('error', function (error) {
         if (filter) {
-            error = this._invoke(filter, [ error ])[1]
+            error = call(filter, this._self, [ error ])[1]
         }
         if (error) {
             this._terminate([ error ])
@@ -435,14 +426,10 @@ Sink.prototype.error = function (filter) {
 }
 
 Sink.prototype.end = function (event) {
-    this._register(event, function () {
-        var I = arguments.length
-        var vargs = new Array(I)
-        for (var i = 0; i < I; i++) {
-            vargs[i] = arguments[i]
-        }
-        this._terminate([ null ].concat(vargs))
-    }.bind(this))
+    this._register(event, variadic(function (vargs) {
+        vargs.unshift(null)
+        this._terminate(vargs)
+    }, this))
     return this
 }
 
@@ -455,28 +442,23 @@ Sink.prototype._terminate = function (vargs) {
 }
 
 Sink.prototype.on = function (event, listener) {
-    this._register(event, function () {
-        var I = arguments.length
-        var vargs = new Array(I)
-        for (var i = 0; i < I; i++) {
-            vargs[i] = arguments[i]
-        }
-        var ret = this._invoke(listener, vargs)
+    this._register(event, variadic(function (vargs) {
+        var ret = call(listener, this._self, vargs)
         if (ret.length === 2) {
             this._terminate([ ret[1] ])
         }
-    }.bind(this))
+    }, this))
     return this
 }
 
-function variadic (f) {
+function variadic (f, self) {
     return function () {
         var I = arguments.length
         var vargs = new Array
         for (var i = 0; i < I; i++) {
             vargs.push(arguments[i])
         }
-        return f.call(this, vargs)
+        return f.call(self, vargs)
     }
 }
 
@@ -486,7 +468,6 @@ async.ee = function (ee) {
 }
 
 async.forEach = variadic(function (steps) {
-    var async = this
     return variadic(function (vargs) {
         var loop, array = vargs.shift(), index = -1
         steps.unshift(variadic(function (vargs) {
@@ -494,12 +475,11 @@ async.forEach = variadic(function (steps) {
             if (index === array.length) return [ loop.break ].concat(vargs)
             return [ array[index], index ].concat(vargs)
         }))
-        return loop = async.apply(null, steps).apply(null, vargs)
-    })
-})
+        return loop = this.apply(null, steps).apply(null, vargs)
+    }, this)
+}, async)
 
 async.map = variadic(function (steps) {
-    var async = this
     return variadic(function (vargs) {
         var loop, array = vargs.shift(), index = -1, gather = []
         steps.unshift(variadic(function (vargs) {
@@ -510,8 +490,8 @@ async.map = variadic(function (steps) {
         steps.push(variadic(function (vargs) {
             gather.push.apply(gather, vargs)
         }))
-        return loop = async.apply(null, steps).apply(null, vargs)
-    })
-})
+        return loop = this.apply(null, steps).apply(null, vargs)
+    }, this)
+}, async)
 
 module.exports = cadence
