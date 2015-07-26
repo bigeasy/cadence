@@ -18,6 +18,7 @@ Cadence.prototype.done = function (vargs) {
 
 function Step (cadence, index, vargs) {
     this.cadence = cadence
+    this.cadences = []
     this.results = []
     this.errors = []
     this.called = 0
@@ -45,7 +46,7 @@ Step.prototype.callback = function (result, vargs) {
 
 Step.prototype.createCallback = function () {
     var self = this
-    var result = { vargs: [], starter: null }
+    var result = { vargs: [] }
 
     self.results.push(result)
     self.sync = false
@@ -70,41 +71,35 @@ Step.prototype.createCallback = function () {
 }
 
 Step.prototype.createCadence = function (vargs) {
-    var self = this
-
     var callback = this.createCallback()
 
-    var result = this.results[this.results.length - 1]
-
-    var cadence = new Cadence(self.cadence, vargs, callback)
+    var cadence = new Cadence(this.cadence, vargs, callback)
 
     var step = new Step(cadence, -1, [])
 
-    return result.starter = starter
+    this.cadences.push(step)
 
-    function starter () {
+    return looper
+
+    function looper () {
         var I = arguments.length
         var vargs = new Array(I)
         for (var i = 0; i < I; i++) {
             vargs[i] = arguments[i]
         }
-        return self.starter(step, result, vargs)
+        return step.loop(vargs)
     }
 }
 
-Step.prototype.starter = function (step, result, vargs) {
-    if (vargs[0] === token) {
-        invoke(step)
-    } else {
-        var count = 0, cadence = step.cadence
+Step.prototype.loop = function (vargs) {
+    var cadence = this.cadence
 
-        step.cadence.loop = true
-        push.apply(step.vargs, vargs)
+    cadence.loop = true
+    this.vargs = vargs
 
-        return {
-            continue: { loopy: token, repeat: true, loop: false, cadence: cadence },
-            break: { loopy: token, repeat: false, loop: false, cadence: cadence }
-        }
+    return {
+        continue: { loopy: token, repeat: true, loop: false, cadence: cadence },
+        break: { loopy: token, repeat: false, loop: false, cadence: cadence }
     }
 }
 
@@ -252,11 +247,8 @@ function invoke (step) {
             step.vargs = vargs
             step.sync = true
         } else {
-            for (var i = 0, I = step.results.length; i < I; i++) {
-                var result = step.results[i]
-                if (result.starter) {
-                    result.starter(token)
-                }
+            for (var i = 0, I = step.cadences.length; i < I; i++) {
+                invoke(step.cadences[i])
             }
             step.vargs = [].concat(ret[0] === void(0) ? vargs : ret[0])
         }
