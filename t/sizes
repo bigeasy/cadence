@@ -19,7 +19,7 @@ for file in $@; do
   fi
   for field in 0 1 2 3; do
     eval val=\$b_$field
-    val=`echo $val / 1024 | bc -l`
+    val=`awk -v val="$val" 'BEGIN { printf "%.2f", val / 1024 }'`
     eval k_$field=$val
   done
   printf "%-24s" $file

@@ -2,11 +2,6 @@
 
 set -e
 
-if [ "$TRAVIS" = "true" ]; then
-  echo '$ sudo apt-get install bc' && echo ''
-  sudo apt-get install -q -q bc 2> /dev/null > /dev/null
-fi
-
 t/sizes cadence.js | sed 's/^/    /'
 
 echo ""
