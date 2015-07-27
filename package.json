@@ -5,7 +5,7 @@
       "A Swiss Army asynchronous control flow function for highly-parallel control flows.",
 
     "author":             "Alan Gutierrez <alan@prettyrobots.com>",
-    "version":            "0.2.0",
+    "version":            "0.2.1",
     "keywords":
     [
                           "async", "asynchronous", "control", "flow", "loop",
