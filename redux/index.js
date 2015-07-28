@@ -423,7 +423,6 @@ function variadic (f) {
 }
 
 cadence(function (async) {
-    console.log(!!async.forEach)
     async.forEach = variadic(function (steps) {
         var async = this
         return variadic(function (vargs) {
