@@ -18,14 +18,6 @@ function Cadence (parent, finalizers, self, steps, vargs, callback) {
     this.vargs = vargs
 }
 
-Cadence.prototype.done = function (vargs) {
-    if (this.finalizers.length == 0) {
-        this.callback.apply(null, vargs)
-    } else {
-        finalize(this, [], this.callback, vargs)
-    }
-}
-
 Cadence.prototype.resolveCallback = function (result, vargs) {
     var error = vargs.shift()
     if (error == null) {
@@ -124,6 +116,7 @@ function call (fn, self, vargs) {
 }
 
 function rescue (cadence) {
+    var errors
     if (cadence.errors.length === 0) {
         invoke(cadence)
     } else {
@@ -146,7 +139,8 @@ function rescue (cadence) {
 
         function done (error) {
             if (error) {
-                cadence.done([ error ])
+                cadence.errors = [ error ]
+                cadence.finalize()
             } else {
                 rescue(cadence)
             }
@@ -165,7 +159,7 @@ function invoke (cadence) {
             if (cadence.catcher) {
                 rescue(cadence)
             } else {
-                cadence.done([ cadence.errors[0] ])
+                cadence.finalize()
             }
             break
         }
@@ -185,7 +179,7 @@ function invoke (cadence) {
                 iterator.loop = label.loop
             }
         } else {
-            vargs = []
+            cadence.vargs = vargs = []
             for (var i = 0, I = cadence.results.length; i < I; i++) {
                 var vargs_ = cadence.results[i].vargs
                 for (var j = 0, J = vargs_.length; j < J; j++) {
@@ -207,7 +201,7 @@ function invoke (cadence) {
                 if (vargs.length !== 0) {
                     vargs.unshift(null)
                 }
-                cadence.done(vargs)
+                cadence.finalize()
                 break
             }
         }
@@ -262,22 +256,23 @@ function invoke (cadence) {
     }
 }
 
-function finalize (cadence, errors, callback, vargs) {
-    if (cadence.finalizers.length == 0) {
-        if (errors.length === 0) {
-            callback.apply(null, vargs)
+Cadence.prototype.finalize = function () {
+    var vargs, cadence = this
+    if (this.finalizers.length == 0) {
+        if (this.errors.length === 0) {
+            (this.callback).apply(null, this.vargs)
         } else {
-            callback.apply(null, [ errors[0] ])
+            (this.callback).apply(null, [ this.errors[0] ])
         }
     } else {
-        var finalizer = cadence.finalizers.pop()
+        var finalizer = this.finalizers.pop()
         execute(cadence.self, finalizer.steps, finalizer.vargs.concat(done))
     }
     function done (error) {
         if (error) {
-            errors.push(error)
+            cadence.errors.push(error)
         }
-        finalize(cadence, errors, callback, vargs)
+        cadence.finalize()
     }
 }
 
