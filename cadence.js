@@ -115,15 +115,16 @@ function call (fn, self, vargs) {
     return [ ret ]
 }
 
-function rescue (cadence) {
+Cadence.prototype.rescue = function () {
     var errors
-    if (cadence.errors.length === 0) {
-        invoke(cadence)
+    if (this.errors.length === 0) {
+        invoke(this)
     } else {
-        var error = cadence.errors.shift()
+        var error = this.errors.shift()
+        var cadence = this
 
-        execute(cadence.self, [
-            cadence.catcher,
+        execute(this.self, [
+            this.catcher,
             function () {
                 var I = arguments.length
                 var vargs = new Array(I)
@@ -142,7 +143,7 @@ function rescue (cadence) {
                 cadence.errors = [ error ]
                 cadence.finalize()
             } else {
-                rescue(cadence)
+                cadence.rescue()
             }
         }
     }
@@ -177,7 +178,7 @@ function invoke (cadence) {
 
         if (cadence.errors.length) {
             if (cadence.catcher) {
-                rescue(cadence)
+                cadence.rescue()
             } else {
                 cadence.finalize()
             }
