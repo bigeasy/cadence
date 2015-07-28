@@ -118,7 +118,7 @@ function call (fn, self, vargs) {
 Cadence.prototype.rescue = function () {
     var steps = [ this.catcher ]
     var vargs = [ this.errors[0], this.errors ]
-    var cadence = new Cadence(null, [], this.self, steps, vargs, done.bind(this))
+    var cadence = new Cadence(this, [], this.self, steps, vargs, done.bind(this))
 
     invoke(cadence)
 
