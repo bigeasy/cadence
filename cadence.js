@@ -116,35 +116,23 @@ function call (fn, self, vargs) {
 }
 
 Cadence.prototype.rescue = function () {
-    var errors
-    if (this.errors.length === 0) {
-        invoke(this)
-    } else {
-        var error = this.errors.shift()
-        var cadence = this
+    var steps = [ this.catcher ]
+    var vargs = [ this.errors[0], this.errors ]
+    var cadence = new Cadence(null, [], this.self, steps, vargs, done.bind(this))
 
-        execute(this.self, [
-            this.catcher,
-            function () {
-                var I = arguments.length
-                var vargs = new Array(I)
-                for (var i = 0; i < I; i++) {
-                    vargs[i] = arguments[i]
-                }
-                if (vargs[0] !== error) {
-                    cadence.vargs = vargs
-                    cadence.results.length = 0
-                }
-            }
-        ], [ error, done ])
+    invoke(cadence)
 
-        function done (error) {
-            if (error) {
-                cadence.errors = [ error ]
-                cadence.finalize()
-            } else {
-                cadence.rescue()
+    function done (error) {
+        if (error) {
+            this.errors = [ error ]
+            this.finalize()
+        } else {
+            if (vargs !== cadence.vargs) {
+                this.vargs = cadence.vargs.slice(1)
             }
+            this.errors = new Array
+            this.catcher = null
+            invoke(this)
         }
     }
 }
@@ -283,8 +271,6 @@ function execute (self, steps, vargs) {
     var callback = vargs.pop()
 
     var cadence = new Cadence(null, [], self, steps, vargs, callback)
-
-    // async.self = self
 
     invoke(cadence)
 }

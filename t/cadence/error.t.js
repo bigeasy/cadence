@@ -36,8 +36,8 @@ function prove (assert) {
         async([function () {
             async()(new Error('one'))
             async()(new Error('two'))
-        }, function (error) {
-            if (error.message != 'one') throw error
+        }, function (error, errors) {
+            throw errors[1]
         }])
     })(function (error) {
         assert(error.message, 'two', 'propagated second error')
