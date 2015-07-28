@@ -1,4 +1,4 @@
-require('proof')(10, prove)
+require('proof')(11, prove)
 
 function prove (assert) {
     var cadence = require('../..')
@@ -79,4 +79,16 @@ function prove (assert) {
     } catch (e) {
         assert(e.message, 'thrown', 'panic')
     }
+
+    cadence(function (async) {
+        async([function () {
+            throw new Error('breaker')
+        }, function (error) {
+            return [ async.break, 1 ]
+        }], function () {
+            return [ 2 ]
+        })
+    })(function (error, result) {
+        assert(result, 1, 'break from within catch')
+    })
 }

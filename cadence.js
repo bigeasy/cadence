@@ -7,7 +7,7 @@ function Cadence (parent, finalizers, self, steps, vargs, callback) {
     this.steps = steps
     this.callback = callback
     this.loop = false
-    this.cadence = cadence
+    this.cadence = this
     this.cadences = []
     this.results = []
     this.errors = []
@@ -116,25 +116,18 @@ function call (fn, self, vargs) {
 }
 
 Cadence.prototype.rescue = function () {
-    var steps = [ this.catcher ]
-    var vargs = [ this.errors[0], this.errors ]
-    var cadence = new Cadence(this, [], this.self, steps, vargs, done.bind(this))
-
-    invoke(cadence)
-
-    function done (error) {
-        if (error) {
-            this.errors = [ error ]
-            this.finalize()
-        } else {
-            if (vargs !== cadence.vargs) {
-                this.vargs = cadence.vargs.slice(1)
-            }
-            this.errors = new Array
-            this.catcher = null
-            invoke(this)
-        }
-    }
+    var errors = this.errors, catcher = this.catcher
+    this.errors = new Array
+    this.results = new Array
+    this.catcher = null
+    this.called = 0
+    this.waiting = true
+    var callback = this.createCallback()
+    var steps = [ function () { return catcher(errors[0], errors) } ]
+    var rescue = new Cadence(this, [], cadence.self, steps, this.vargs, callback)
+    rescue.waiting = true
+    rescue.cadence = this
+    invoke(rescue)
 }
 
 Cadence.prototype.finalize = function () {
@@ -162,7 +155,6 @@ function invoke (cadence) {
         var vargs, steps = cadence.steps
 
         async.self = cadence.self
-        async.cadence = cadence
 
         if (cadence.errors.length) {
             if (cadence.catcher) {
@@ -177,7 +169,7 @@ function invoke (cadence) {
             vargs = cadence.vargs
             if (vargs[0] && vargs[0].loopy === token) {
                 var label = vargs.shift()
-                var destination = label.cadence || cadence
+                var destination = label.cadence || cadence.cadence
                 var iterator = cadence
                 while (destination !== iterator) {
                     iterator.loop = false
@@ -269,9 +261,7 @@ function invoke (cadence) {
 
 function execute (self, steps, vargs) {
     var callback = vargs.pop()
-
     var cadence = new Cadence(null, [], self, steps, vargs, callback)
-
     invoke(cadence)
 }
 
