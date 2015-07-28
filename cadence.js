@@ -84,7 +84,7 @@ Cadence.prototype.startLoop = function (vargs) {
     this.vargs = vargs
 
     return {
-        continue: { loopy: token, repeat: true, loop: false, cadence: this },
+        continue: { loopy: token, repeat: true, loop: true, cadence: this },
         break: { loopy: token, repeat: false, loop: false, cadence: this }
     }
 }
