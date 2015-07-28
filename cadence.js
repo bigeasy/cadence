@@ -103,7 +103,7 @@ Step.prototype.starter = function (step, result, vargs) {
         push.apply(step.vargs, vargs)
 
         return {
-            continue: { loopy: token, repeat: true, loop: false, cadence: cadence },
+            continue: { loopy: token, repeat: true, loop: true, cadence: cadence },
             break: { loopy: token, repeat: false, loop: false, cadence: cadence }
         }
     }
