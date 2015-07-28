@@ -18,14 +18,6 @@ function Cadence (parent, finalizers, self, steps, vargs, callback) {
     this.vargs = vargs
 }
 
-Cadence.prototype.done = function (vargs) {
-    if (this.finalizers.length == 0) {
-        this.callback.apply(null, vargs)
-    } else {
-        finalize(this, [], this.callback, vargs)
-    }
-}
-
 Cadence.prototype.resolveCallback = function (result, vargs) {
     var error = vargs.shift()
     if (error == null) {
@@ -123,14 +115,16 @@ function call (fn, self, vargs) {
     return [ ret ]
 }
 
-function rescue (cadence) {
-    if (cadence.errors.length === 0) {
-        invoke(cadence)
+Cadence.prototype.rescue = function () {
+    var errors
+    if (this.errors.length === 0) {
+        invoke(this)
     } else {
-        var error = cadence.errors.shift()
+        var error = this.errors.shift()
+        var cadence = this
 
-        execute(cadence.self, [
-            cadence.catcher,
+        execute(this.self, [
+            this.catcher,
             function () {
                 var I = arguments.length
                 var vargs = new Array(I)
@@ -146,11 +140,32 @@ function rescue (cadence) {
 
         function done (error) {
             if (error) {
-                cadence.done([ error ])
+                cadence.errors = [ error ]
+                cadence.finalize()
             } else {
-                rescue(cadence)
+                cadence.rescue()
             }
         }
+    }
+}
+
+Cadence.prototype.finalize = function () {
+    var vargs, cadence = this
+    if (this.finalizers.length == 0) {
+        if (this.errors.length === 0) {
+            (this.callback).apply(null, this.vargs)
+        } else {
+            (this.callback).apply(null, [ this.errors[0] ])
+        }
+    } else {
+        var finalizer = this.finalizers.pop()
+        execute(cadence.self, finalizer.steps, finalizer.vargs.concat(done))
+    }
+    function done (error) {
+        if (error) {
+            cadence.errors.push(error)
+        }
+        cadence.finalize()
     }
 }
 
@@ -163,9 +178,9 @@ function invoke (cadence) {
 
         if (cadence.errors.length) {
             if (cadence.catcher) {
-                rescue(cadence)
+                cadence.rescue()
             } else {
-                cadence.done([ cadence.errors[0] ])
+                cadence.finalize()
             }
             break
         }
@@ -185,7 +200,7 @@ function invoke (cadence) {
                 iterator.loop = label.loop
             }
         } else {
-            vargs = []
+            cadence.vargs = vargs = []
             for (var i = 0, I = cadence.results.length; i < I; i++) {
                 var vargs_ = cadence.results[i].vargs
                 for (var j = 0, J = vargs_.length; j < J; j++) {
@@ -207,7 +222,7 @@ function invoke (cadence) {
                 if (vargs.length !== 0) {
                     vargs.unshift(null)
                 }
-                cadence.done(vargs)
+                cadence.finalize()
                 break
             }
         }
@@ -259,25 +274,6 @@ function invoke (cadence) {
             cadence.waiting = true
             break
         }
-    }
-}
-
-function finalize (cadence, errors, callback, vargs) {
-    if (cadence.finalizers.length == 0) {
-        if (errors.length === 0) {
-            callback.apply(null, vargs)
-        } else {
-            callback.apply(null, [ errors[0] ])
-        }
-    } else {
-        var finalizer = cadence.finalizers.pop()
-        execute(cadence.self, finalizer.steps, finalizer.vargs.concat(done))
-    }
-    function done (error) {
-        if (error) {
-            errors.push(error)
-        }
-        finalize(cadence, errors, callback, vargs)
     }
 }
 
@@ -484,67 +480,67 @@ module.exports = cadence
 
  % node --version
 v0.10.40
- % node benchmark/increment/call.js
- cadence call 1 x 706,040 ops/sec ±0.32% (96 runs sampled)
-_cadence call 1 x 687,558 ops/sec ±0.29% (95 runs sampled)
- cadence call 2 x 705,161 ops/sec ±0.39% (91 runs sampled)
-_cadence call 2 x 699,459 ops/sec ±0.26% (103 runs sampled)
- cadence call 3 x 703,959 ops/sec ±0.40% (98 runs sampled)
-_cadence call 3 x 694,343 ops/sec ±0.43% (103 runs sampled)
- cadence call 4 x 703,278 ops/sec ±0.17% (101 runs sampled)
-_cadence call 4 x 705,599 ops/sec ±0.48% (97 runs sampled)
-Fastest is  cadence call 1, cadence call 2,_cadence call 4
+% node benchmark/increment/call.js
+ cadence call 1 x 1,427,310 ops/sec ±0.45% (93 runs sampled)
+_cadence call 1 x 712,629 ops/sec ±0.22% (100 runs sampled)
+ cadence call 2 x 1,423,094 ops/sec ±0.49% (96 runs sampled)
+_cadence call 2 x 710,861 ops/sec ±0.30% (101 runs sampled)
+ cadence call 3 x 1,435,402 ops/sec ±0.21% (97 runs sampled)
+_cadence call 3 x 712,608 ops/sec ±0.39% (101 runs sampled)
+ cadence call 4 x 1,415,863 ops/sec ±0.40% (100 runs sampled)
+_cadence call 4 x 709,602 ops/sec ±0.33% (95 runs sampled)
+Fastest is  cadence call 3, cadence call 1
  % node benchmark/increment/async.js
- cadence async 1 x 1,146,211 ops/sec ±0.65% (101 runs sampled)
-_cadence async 1 x 1,163,469 ops/sec ±0.23% (103 runs sampled)
- cadence async 2 x 1,138,957 ops/sec ±0.48% (98 runs sampled)
-_cadence async 2 x 1,154,732 ops/sec ±0.33% (100 runs sampled)
- cadence async 3 x 1,130,315 ops/sec ±0.72% (101 runs sampled)
-_cadence async 3 x 1,171,068 ops/sec ±0.45% (96 runs sampled)
- cadence async 4 x 1,187,923 ops/sec ±0.38% (102 runs sampled)
-_cadence async 4 x 1,189,578 ops/sec ±0.31% (97 runs sampled)
-Fastest is _cadence async 4, cadence async 4
+ cadence async 1 x 975,945 ops/sec ±0.26% (102 runs sampled)
+_cadence async 1 x 1,161,702 ops/sec ±0.32% (101 runs sampled)
+ cadence async 2 x 954,778 ops/sec ±0.50% (95 runs sampled)
+_cadence async 2 x 1,159,735 ops/sec ±0.51% (100 runs sampled)
+ cadence async 3 x 960,031 ops/sec ±0.29% (97 runs sampled)
+_cadence async 3 x 1,152,847 ops/sec ±0.33% (100 runs sampled)
+ cadence async 4 x 946,351 ops/sec ±0.52% (98 runs sampled)
+_cadence async 4 x 1,168,242 ops/sec ±0.33% (102 runs sampled)
+Fastest is _cadence async 4
  % node benchmark/increment/loop.js
- cadence loop 1 x 160,060 ops/sec ±0.42% (103 runs sampled)
-_cadence loop 1 x 164,899 ops/sec ±0.28% (102 runs sampled)
- cadence loop 2 x 158,695 ops/sec ±0.38% (100 runs sampled)
-_cadence loop 2 x 166,223 ops/sec ±0.51% (101 runs sampled)
- cadence loop 3 x 162,292 ops/sec ±0.33% (99 runs sampled)
-_cadence loop 3 x 165,486 ops/sec ±0.44% (100 runs sampled)
- cadence loop 4 x 160,072 ops/sec ±0.32% (102 runs sampled)
-_cadence loop 4 x 164,396 ops/sec ±0.27% (102 runs sampled)
-Fastest is _cadence loop 2
+ cadence loop 1 x 184,840 ops/sec ±0.87% (95 runs sampled)
+_cadence loop 1 x 162,873 ops/sec ±0.71% (100 runs sampled)
+ cadence loop 2 x 188,180 ops/sec ±0.47% (98 runs sampled)
+_cadence loop 2 x 162,390 ops/sec ±0.36% (101 runs sampled)
+ cadence loop 3 x 189,586 ops/sec ±0.51% (99 runs sampled)
+_cadence loop 3 x 164,139 ops/sec ±0.36% (97 runs sampled)
+ cadence loop 4 x 187,982 ops/sec ±0.42% (98 runs sampled)
+_cadence loop 4 x 162,942 ops/sec ±0.37% (100 runs sampled)
+Fastest is  cadence loop 3
  % node --version
 v0.12.7
  % node benchmark/increment/call.js
- cadence call 1 x 1,035,031 ops/sec ±0.35% (99 runs sampled)
-_cadence call 1 x 1,037,330 ops/sec ±0.65% (100 runs sampled)
- cadence call 2 x 1,025,747 ops/sec ±0.39% (100 runs sampled)
-_cadence call 2 x 1,035,335 ops/sec ±0.41% (97 runs sampled)
- cadence call 3 x 1,038,427 ops/sec ±0.40% (100 runs sampled)
-_cadence call 3 x 1,027,024 ops/sec ±0.58% (98 runs sampled)
- cadence call 4 x 1,031,719 ops/sec ±0.33% (99 runs sampled)
-_cadence call 4 x 1,026,186 ops/sec ±0.24% (99 runs sampled)
-Fastest is  cadence call 3,_cadence call 1
+ cadence call 1 x 2,527,716 ops/sec ±0.55% (97 runs sampled)
+_cadence call 1 x 1,025,080 ops/sec ±0.54% (101 runs sampled)
+ cadence call 2 x 2,437,420 ops/sec ±0.45% (100 runs sampled)
+_cadence call 2 x 1,039,714 ops/sec ±0.46% (99 runs sampled)
+ cadence call 3 x 2,556,287 ops/sec ±0.40% (98 runs sampled)
+_cadence call 3 x 1,026,920 ops/sec ±0.60% (99 runs sampled)
+ cadence call 4 x 2,528,288 ops/sec ±0.81% (100 runs sampled)
+_cadence call 4 x 1,025,602 ops/sec ±0.37% (100 runs sampled)
+Fastest is  cadence call 3
  % node benchmark/increment/async.js
- cadence async 1 x 1,497,986 ops/sec ±0.71% (99 runs sampled)
-_cadence async 1 x 1,485,923 ops/sec ±0.58% (101 runs sampled)
- cadence async 2 x 1,450,796 ops/sec ±0.66% (96 runs sampled)
-_cadence async 2 x 1,519,108 ops/sec ±0.29% (99 runs sampled)
- cadence async 3 x 1,521,727 ops/sec ±0.50% (92 runs sampled)
-_cadence async 3 x 1,503,341 ops/sec ±0.31% (103 runs sampled)
- cadence async 4 x 1,504,095 ops/sec ±0.37% (101 runs sampled)
-_cadence async 4 x 1,469,961 ops/sec ±0.56% (101 runs sampled)
-Fastest is _cadence async 2, cadence async 3, cadence async 1
+ cadence async 1 x 1,900,433 ops/sec ±0.68% (98 runs sampled)
+_cadence async 1 x 1,474,964 ops/sec ±0.73% (101 runs sampled)
+ cadence async 2 x 1,964,361 ops/sec ±0.46% (99 runs sampled)
+_cadence async 2 x 1,449,702 ops/sec ±0.47% (97 runs sampled)
+ cadence async 3 x 1,926,580 ops/sec ±0.54% (96 runs sampled)
+_cadence async 3 x 1,457,632 ops/sec ±0.57% (99 runs sampled)
+ cadence async 4 x 1,935,882 ops/sec ±0.45% (94 runs sampled)
+_cadence async 4 x 1,452,339 ops/sec ±0.19% (103 runs sampled)
+Fastest is  cadence async 2
  % node benchmark/increment/loop.js
- cadence loop 1 x 109,737 ops/sec ±1.39% (89 runs sampled)
-_cadence loop 1 x 102,187 ops/sec ±1.61% (90 runs sampled)
- cadence loop 2 x 88,741 ops/sec ±1.64% (90 runs sampled)
-_cadence loop 2 x 83,240 ops/sec ±1.44% (87 runs sampled)
- cadence loop 3 x 79,677 ops/sec ±2.63% (91 runs sampled)
-_cadence loop 3 x 76,962 ops/sec ±1.48% (92 runs sampled)
- cadence loop 4 x 63,574 ops/sec ±1.20% (84 runs sampled)
-_cadence loop 4 x 63,654 ops/sec ±4.41% (85 runs sampled)
+ cadence loop 1 x 144,910 ops/sec ±1.52% (88 runs sampled)
+_cadence loop 1 x 98,825 ops/sec ±1.30% (95 runs sampled)
+ cadence loop 2 x 110,863 ops/sec ±1.60% (90 runs sampled)
+_cadence loop 2 x 82,455 ops/sec ±2.08% (87 runs sampled)
+ cadence loop 3 x 94,945 ops/sec ±1.60% (82 runs sampled)
+_cadence loop 3 x 64,096 ops/sec ±1.79% (84 runs sampled)
+ cadence loop 4 x 75,567 ops/sec ±3.36% (83 runs sampled)
+_cadence loop 4 x 68,424 ops/sec ±1.83% (87 runs sampled)
 Fastest is  cadence loop 1
 
 */

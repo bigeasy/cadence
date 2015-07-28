@@ -267,7 +267,9 @@ function invoke (cadence) {
             for (var i = 0, I = cadence.cadences.length; i < I; i++) {
                 invoke(cadence.cadences[i])
             }
-            cadence.vargs = [].concat(ret[0] === void(0) ? vargs : ret[0])
+            if (ret[0] !== void(0)) {
+                cadence.vargs = Array.isArray(ret[0]) ? ret[0] : [ ret[0] ]
+            }
         }
 
         if (!cadence.sync) {
