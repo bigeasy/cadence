@@ -148,6 +148,26 @@ function rescue (cadence) {
     }
 }
 
+Cadence.prototype.finalize = function () {
+    var vargs, cadence = this
+    if (this.finalizers.length == 0) {
+        if (this.errors.length === 0) {
+            (this.callback).apply(null, this.vargs)
+        } else {
+            (this.callback).apply(null, [ this.errors[0] ])
+        }
+    } else {
+        var finalizer = this.finalizers.pop()
+        execute(cadence.self, finalizer.steps, finalizer.vargs.concat(done))
+    }
+    function done (error) {
+        if (error) {
+            cadence.errors.push(error)
+        }
+        cadence.finalize()
+    }
+}
+
 function invoke (cadence) {
     for (;;) {
         var vargs, steps = cadence.steps
@@ -253,26 +273,6 @@ function invoke (cadence) {
             cadence.waiting = true
             break
         }
-    }
-}
-
-Cadence.prototype.finalize = function () {
-    var vargs, cadence = this
-    if (this.finalizers.length == 0) {
-        if (this.errors.length === 0) {
-            (this.callback).apply(null, this.vargs)
-        } else {
-            (this.callback).apply(null, [ this.errors[0] ])
-        }
-    } else {
-        var finalizer = this.finalizers.pop()
-        execute(cadence.self, finalizer.steps, finalizer.vargs.concat(done))
-    }
-    function done (error) {
-        if (error) {
-            cadence.errors.push(error)
-        }
-        cadence.finalize()
     }
 }
 
