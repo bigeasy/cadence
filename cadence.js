@@ -123,8 +123,8 @@ Cadence.prototype.rescue = function () {
     this.called = 0
     this.waiting = true
     var callback = this.createCallback()
-    var steps = [ function () { return catcher(errors[0], errors) } ]
-    var rescue = new Cadence(this, [], cadence.self, steps, this.vargs, callback)
+    var steps = [ function () { return catcher.call(this, errors[0], errors) } ]
+    var rescue = new Cadence(this, [], this.self, steps, this.vargs, callback)
     rescue.waiting = true
     rescue.cadence = this
     invoke(rescue)

@@ -1,4 +1,4 @@
-require('proof')(11, prove)
+require('proof')(12, prove)
 
 function prove (assert) {
     var cadence = require('../..')
@@ -9,15 +9,17 @@ function prove (assert) {
         assert(error.message, 'bogus', 'thrown exception')
     })
 
+    var object = { a: 1 }
     cadence(function (async) {
         async(function () {
             return 1
         }, [function () {
             throw new Error('bogus')
         }, function (error) {
+            assert(object === this, 'this')
             assert(error.message, 'bogus', 'caught')
         }])
-    })(function (error, result) {
+    }).call(object, function (error, result) {
         assert(result, 1, 'propagate vargs')
     })
 
