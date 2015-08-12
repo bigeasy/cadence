@@ -1,16 +1,17 @@
-require('proof')(3, prove)
+require('proof')(4, prove)
 
 function prove (assert) {
     var cadence = require('../..')
 
-    var count = 0
+    var count = 0, object = []
     cadence(function (async) {
         async([function () {
+            assert(object === this, 'this')
             assert(count, 1, 'incremented')
         }], function () {
             count++
         })
-    })(function (error) {
+    }).call(object, function (error) {
         if (error) throw error
     })
 
