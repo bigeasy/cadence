@@ -21,9 +21,7 @@ function get (callback) {
 
 function redo (count) {
     get(function (error, result) {
-               // ^^^^, result, ...
         if (error) throw error
-        // console.log('length: ', result.length)
         if (count > 0) redo(count - 1)
         else console.log(process.hrtime(start))
     })

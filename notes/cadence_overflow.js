@@ -7,18 +7,18 @@ var start = process.hrtime()
 
 var get = cadence(body)
 
-function body (smedly, times) {
+function body (async, times) {
     var got, count = 0
-    var loop = smedly(function () {
+    var loop = async(function () {
         if (got) {
-            return got
+            return [ got ]
         } else {
-            fs.readFile(__filename, 'utf8', smedly())
+            fs.readFile(__filename, 'utf8', async())
         }
     }, function (result) {
         got = result
         if (++count == times) {
-            return [ loop ]
+            return [ loop.break ]
         }
     })() // <- overhead is next to nothing, trampoline
 }
