@@ -194,6 +194,7 @@ function invoke (cadence) {
         cadence.results = []
         cadence.errors = []
         cadence.sync = true
+        cadence.waiting = false
 
         if (cadence.index == steps.length) {
             if (cadence.loop) {
