@@ -1,13 +1,16 @@
-var fs = require('fs')
-var domain = require('domain')
+var cadence = require('../cadence')
 
-fs.readFile(__filename, function (error) {
-    if (error) throw error
-    var d = domain.create()
-    d.on('error', function (error) {
-        console.log(error)
-    })
-    d.run(function () {
-        throw Error
+function echo (value, callback) {
+//    setImmediate(callback, null, value)
+    callback(null, value)
+}
+
+var f = cadence(function (async) {
+    async(function () {
+        echo(1, async())
+    }, function (value) {
+        console.log(value)
     })
 })
+
+f(function (error) { if (error) throw error })

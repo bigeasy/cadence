@@ -1,4 +1,4 @@
-var cadence = require('./cadence')
+var cadence = require('../cadence')
 
 function echo (value, callback) {
     callback(null, value)

@@ -6,6 +6,7 @@ var start = process.hrtime()
 
 function get (callback) {
     if (got) {
+        // callback(null, got)
         setImmediate(callback, null, got) // <- has lots of overhead, not as
                                           // much as timeout, but more than nothing
     } else {
