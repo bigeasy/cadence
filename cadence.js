@@ -18,8 +18,7 @@ function Cadence (parent, finalizers, self, steps, vargs, callback) {
     this.vargs = vargs
 }
 
-Cadence.prototype.resolveCallback = function (result, vargs) {
-    var error = vargs.shift()
+Cadence.prototype.resolveCallback = function (result, error, vargs) {
     if (error == null) {
         result.vargs = vargs
     } else {
@@ -43,13 +42,13 @@ Cadence.prototype.createCallback = function () {
 
     return callback
 
-    function callback () {
+    function callback (error) {
         var I = arguments.length
-        var vargs = new Array(I)
-        for (var i = 0; i < I; i++) {
-            vargs[i] = arguments[i]
+        var vargs = new Array
+        for (var i = 1; i < I; i++) {
+            vargs[i - 1] = arguments[i]
         }
-        self.resolveCallback(result, vargs)
+        self.resolveCallback(result, error, vargs)
 
         return
 
