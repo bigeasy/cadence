@@ -369,10 +369,6 @@ function variadic (f, self) {
     }
 }
 
-async.ee = function (ee) {
-    throw new Error('deprecated: use `Delta`.')
-}
-
 async.forEach = variadic(function (steps) {
     return variadic(function (vargs) {
         var loop, array = vargs.shift(), index = -1
