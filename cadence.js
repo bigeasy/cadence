@@ -131,7 +131,7 @@ Cadence.prototype.rescue = function () {
 
 Cadence.prototype.finalize = function () {
     var vargs, cadence = this
-    if (this.finalizers.length == 0) {
+    if (this.parent || this.finalizers.length == 0) {
         if (this.errors.length === 0) {
             (this.callback).apply(null, this.vargs)
         } else {
