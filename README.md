@@ -1,35 +1,121 @@
 Cadence is a control-flow library for error-first callback style of asynchronous
-programming. You can reason about asynchronous programming as if it were linear. Say good bye
-to the [Pyramid of
+programming. You can reason about asynchronous programming as if it were linear.
+
+Cadence is my solution to the problem of the [Pyramid of
 Doom](http://tritarget.org/blog/2012/11/28/the-pyramid-of-doom-a-javascript-style-trap/).
 
-Say hello to Cadence; one step after another, with robust try/catch error
-handling, finalizers, nested asynchronous loops with break and contine, and
-tail-recursion elimination to you'll never blow your stack looping.
+Cadence is one step after another, with robust try/catch error handling,
+finalizers, nested asynchronous loops with break and contine, and tail-recursion
+elimination to you'll never blow your stack looping.
 
-Here's a function that will delete a file if it exists.
+Cadence is tiny and fast. Cadence pure-JavaScript. Linear-esque logic without
+transpilers or future versions of JavaScript.
+
+### Cadence In a Nutshell
+
+Cadence runs a series of functions asynchronously, using the results of one
+function as the arguments for the next.
+
+We call the series of functions a **cadence**. We call an individual function in
+a cadence a **step**.
+
+We create **cadences** using the universal builder method `async`. We also use
+`async` to create **callbacks** inside the **steps**. The `async` function is a
+universal builder because we also use it to create both **cadences** and
+**calbacks**.
 
 ```javascript
-var cadence = require('cadence')
-var fs = require('fs')
-var path = require('path')
+// `cat`: write a file to a stream.
+var cat = cadence(function (async, file, stream) {
+                         // ^^^^^ our universal builder function.
+    async(function () {
+ //       ^^^^^^^^ create a cadence of one or more steps.
+        fs.readFile(file, 'utf8', async())
+                               // ^^^^^^^ create a callback.
 
-var deleteIf = cadence(function (async, file) {
+    }, function (body) {
+              // ^^^^ the result is passed to the next step.
+        stream.write(body)
+
+    })
+})
+
+cat(__filename, process.stdout, function (error) {
+                                       // ^^^^^ any error, anywhere inside `cat` is propagated out
+    if (error) throw error
+})
+```
+
+Note that **steps** do not receive errors. Errors get propagated up and out to
+the caller. Your code does not need to be littered with `if (error)
+callback(error)` branches that are difficult to reach in your tests. **Your
+asynchronous code is reduced to the happy path.**
+
+Here an example of a function that will return true if a regex matches the
+contents of a file.
+
+```javascript
+var cadence = require('cadence'), fs = require('fs')
+
+var grep = cadence(function (async, file) {
 
     async(function () {
 
-        fs.readdir(path.dirname(file), async())
+        fs.readFile(file, 'utf8', async())
 
-    }, function (files) {
+    }, function (body) {
 
-        if (!files.some(function (f) { return f == file }).length) {
-            return [ async, false ]
-        }
-        fs.unlink(file, async())
+        return [ regex.test(body) ]
 
-    }, function () {
+    })
 
-        return [ true ]
+})
+
+grep(__filename, /readFile/, function (error, deleted) {
+    if (error) console.log(error)
+    else if (found) console.log('found readFile')
+    else console.log('did not find readFile')
+})
+```
+
+The example above shows a basic Cadence function. The first argument to the
+Cadence function body is `async`, a helper function that creates **cadences**
+and **callbacks**. The function above has a single **cadence** defined by
+calling `async` with a series of functions.
+
+The functions are the **steps** in the **cadence**. The results of one **step**
+are passed onto the next **step**. (This was inspired by Tim Caswell's
+[step](https://github.com/creationix/step) module.)
+
+When a **step** calls an asynchronous function, it creates a callback using
+`async()`. The results of the callback are passed onto the next **step**.
+
+Any error encountered in any step is propagated up and out of the Cadence
+function and becomes the `error` result given to the callback provided to the
+Cadence function.
+
+### Major Benefit: Try/Catch and Finalize
+
+Cadence implements an asynchronous try/catch block that propagates error-first
+callback errors and converts thrown exceptions into error-first callback errors.
+When uses consistently, you end up having an asynchronous call stack.
+
+```javascript
+var cadence = require('cadence'), fs = require('fs')
+
+var deleteIf = cadence(function (async, file) {
+
+    async([function () {
+
+        fs.unlink(file, async())        // try
+
+    }, /^ENOENT$/, function () {
+
+        return [ async.break, false ]   // catch ENOENT
+
+    }], function () {
+
+        return [ true ]                 // deleted
 
     })
 
@@ -41,43 +127,21 @@ deleteIf('junk.txt', function (error, deleted) {
 })
 ```
 
-Of course that has a race condition, what if the file is deleted after you've
-read the directory but before you unlink it? A better way of doing this would be
-to try to delete the file, but catch an `ENOENT` error if the file does not
-exist.
+In the above we use a catch block to catch an `ENOENT` error and return `false`,
+otherwise return `true`. If an error other than `ENOENT` is raised, the the
+error will be passed as the first argument. The try/catch block is the try
+**step** and the catch **step** paired together in an array. You can see how we
+can return `async.break` from any **step** to leave the **cadence** early.
 
-```javascript
-var cadence = require('cadence'), fs = require('fs')
-
-var deleteIf = cadence(function (async, file) {
-
-    var block = async([function () {
-
-        fs.unlink(file, async())        // try
-
-    }, /^ENOENT$/, function () {
-
-        return [ block, false ]         // catch ENOENT
-
-    }], function () {
-
-        return [ true ]                 // deleted
-
-    })()
-
-})
-
-deleteIf('junk.txt', function (error, deleted) {
-    if (error) console.log(error)
-    console.log('junk.txt: was deleted ' + deleted)
-})
-```
-
-In the above we use a catch block to catch an `ENOENT` error and return false,
-otherwise return true. If an error other than `ENOENT` is raised, the the error
-will be passed as the first argument.
+Until you use it, it is hard desrcibe how much easier it is to program
+asynchronous Node.js when you have this asynchronous stack. You're no longer
+dealing with mystery errors merging from a univeral error handler, your error
+handing can have context; you know the nature of the error, because you know the
+function you called that raised the error.
 
 ### What Cadence Can Do for You
+
+*Ed: Older benefit list, all still true, but needs tidy.*
 
 Cadence is pure-JavaScript library control-flow library with no transpilers. The
 Cadence kernel is designed to JIT compile and get out of the way.
@@ -99,7 +163,7 @@ Cadence has features that you don't know you want… yet:
    trampoline, so that asynchronous functions that callback in the same tick do
    not add a stack frame.
  * Do you have a strategy to test every one of those `if (error)` branches?
-   Cadence handles your erorrs for you and propagates them up and out to the
+   Cadence handles your errors for you and propagates them up and out to the
    user.
  * What about cleaning up after an error? You can't just `if (error)
    callback(error)` if you have files open or databases on the line. Cadence has
@@ -108,48 +172,9 @@ Cadence has features that you don't know you want… yet:
    body. You don't have to `bind(this)` or `var self = this` with Cadence.
 
 You can use Cadence in the browser too. It is not Node.js dependent and it
-minzips to ~2.31k.
+minzips to ~2.31k. Great for use with Browserfy.
 
-### Cadence In a Nutshell
-
-Cadence runs a series of functions asynchronously, use the results of one
-function as the arguments for the next.
-
-We call the series of functions a **cadence**. We call an individual function in
-a cadence a **step**.
-
-We create cadences using the universal builder method `async`. It is a universal
-because we also use `async` to create callbacks for asynchronous functions.
-
-```javascript
-// `cat`: write a file to standard out.
-var cat = cadence(function (async, file) {
-
-    async(function () {
- //       ^^^^^^^^ create a cadence of one or more steps.
-        fs.readFile(file, 'utf8', async())
-                               // ^^^^^^^ create a callback.
-
-    }, function (body) {
-              // ^^^^ the result is passed to the next step.
-
-        process.stdout.write(body)
-
-    })
-})
-
-cat(__filename, function (error) {
-                       // ^^^^^ any error, anywhere inside `cat` is propagated out
-    if (error) throw error
-})
-```
-
-Note that **steps** do not have receive errors. Errors get propagated up and out
-to the caller. Your code does not need to be littered with `if (error)
-callback(error)` branches that are difficult to reach in your tests. Your
-asynchronous code is reduced to the happy path.
-
-## Cadence Basics
+## Cadence Step by Step
 
 Cadence exports a single function which by convention is named `cadence`.
 
@@ -184,23 +209,7 @@ find(__dirname, isJavaScript, function (error, found) {
 })
 ```
 
-Let's look closer at the `find` function.
-
-```javascript
-var find = cadence(function (async, path, filter) {
-
-    async(function () {
-
-        fs.readdir(path, async())
-
-    }, function (list) {
-
-        return list.some(filter)
-
-    })
-
-})
-```
+To learn more about Cadence, let's look closer at the `find` function.
 
 ### Function Body
 
@@ -210,7 +219,7 @@ that, when invoked, will call the function body.
 
 ```javascript
 var find = cadence(function (async, path, filter) {
-                //        ^ function body
+                // ^^^^^^^^ function body
     async(function (  {
 
         fs.readdir(path, async())
@@ -254,7 +263,7 @@ When you invoke the `async` function with one or more functions, you create a
 ```javascript
 var find = cadence(function (async, path, filter) {
 
-    async(function () { // &lt;- let's create a cadence
+    async(function () { // <- let's create a cadence
        // ^^^^^^^^ step one
         fs.readdir(path, async())
 
