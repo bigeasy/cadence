@@ -1,15 +1,16 @@
 Cadence is a control-flow library for error-first callback style of asynchronous
-programming. You can reason about asynchronous programming as if it were linear.
+programming.
 
 Cadence is my solution to the problem of the [Pyramid of
 Doom](http://tritarget.org/blog/2012/11/28/the-pyramid-of-doom-a-javascript-style-trap/).
 
-Cadence is one step after another, with robust try/catch error handling,
-finalizers, nested asynchronous loops with break and contine, and tail-recursion
-elimination to you'll never blow your stack looping.
+Cadence is one step after another, with robust try/catch error handling for
+asynchronous errors, finalizers for clean up, nested asynchronous loops with
+break and continue, and tail-recursion elimination to you'll never blow your
+stack looping.
 
-Cadence is tiny and fast. Cadence pure-JavaScript. Linear-esque logic without
-transpilers or future versions of JavaScript.
+Cadence does all this in pure-Javascript with no transpilers and without ES6+
+features. Cadence is classic Javascript. Cadence is tiny. Cadence is fast.
 
 ### Cadence In a Nutshell
 
