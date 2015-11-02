@@ -58,7 +58,7 @@ contents of a file.
 ```javascript
 var cadence = require('cadence'), fs = require('fs')
 
-var grep = cadence(function (async, file) {
+var grep = cadence(function (async, file, regex) {
 
     async(function () {
 
@@ -179,9 +179,15 @@ minzips to ~2.31k. Great for use with Browserfy.
 
 Cadence exports a single function which by convention is named `cadence`.
 
+The `cadence` function is a function builder. It creates an asynchronous
+function that expects an error-first callback as its final argument, the
+asynchronous style used in many of the modules that ship with Node.js.
+
 ```javascript
+// import cadence
 var cadence = require('cadence'), fs = require('fs')
 
+// create an error-first callback style asynchronous function
 var find = cadence(function (async, path, filter) {
 
     async(function () {
@@ -195,10 +201,7 @@ var find = cadence(function (async, path, filter) {
     })
 })
 
-function isJavaScript (file) {
-    return /\.js$/.test(file)
-}
-
+// call the function with function arguments and an error-first callback
 find(__dirname, isJavaScript, function (error, found) {
 
     if (error) {
@@ -208,6 +211,10 @@ find(__dirname, isJavaScript, function (error, found) {
     }
 
 })
+
+function isJavaScript (file) {
+    return /\.js$/.test(file)
+}
 ```
 
 To learn more about Cadence, let's look closer at the `find` function.
@@ -326,10 +333,6 @@ var find = cadence(function (async, path, filter) {
 
 })
 
-function isJavaScript (file) {
-    return /\.js$/.test(file)
-}
-
 find(__dirname, isJavaScript, function (error, found) {
                                      // ^^^^^ ...propagates out to here.
     if (error) {
@@ -339,15 +342,43 @@ find(__dirname, isJavaScript, function (error, found) {
     }
 
 })
+
+function isJavaScript (file) {
+    return /\.js$/.test(file)
+}
 ```
 
-### Function Body Results
+### Synchronous versus Asynchronous Steps
+
+In our `find` function, we can see that there are two ways for a **step** to
+produce a result.
+
+When the `async()` function is called, a **callback** is created. The results
+passed to the **callback** are the arguments given to the step. Alternatively,
+the **step** can use `return` to retun an array of results where are used as the
+argument to the next **step**.
+
+```javascript
+var find = cadence(function (async, path, filter) {
+
+    async(function () {
+
+        fs.readdir(path, async())
+                      // ^^^^^ create a callback whose return value
+    }, function (list) {
+              // ^^^^ is the argument of the next step
+        return [ list.some(filter) ]
+
+    })
+
+})
+```
+
+### Cadence Return Values
 
 The results of the final **step** in a **cadence** are the results of the
-**cadence**.
-
-Notice that if a **step** does not invoke an asynchronous function, it can
-simply return a result.
+**cadence**. In the case, the final **step** is a synchronous `return`, but the
+final **step** could as easily be the result of another asynchronous call.
 
 ```javascript
 var find = cadence(function (async, path, filter) {
@@ -400,48 +431,102 @@ find(__dirname, isJavaScript, function (error, found) {
 })
 ```
 
-## Cadence Step by Step
+## Cadence In Detail
 
-Let's look at the rest of Cadence.
+*Ed: Hate to be a bum, but there needs to be some transition from the above,
+which I believe does a good job, to the below, which allows us to look at finer
+points.*
+
+Now let's look at Cadence in some more detail.
+
+We'll go over some of what we covered in Cadence Step by Step, but with
+attention to detail using contrived examples that illustrate the point.
+
+*Note: It is difficult to both illustrate the every edge case in the use of
+Cadence and come up with real world examples that are concise. We're going to
+show some trival functions that do frivolous things, but show you exactly how
+Cadence works.*
+
+We now get the gist of how Cadence uses **cadences** composed of **steps** to
+create asynchronous control flows. Let's start looking at the details of control
+flows and work toward advanced Cadence features.
 
 ### Our Friend Echo
 
-In our examples we are going to use a function called echo which will invoke the
-callback with the argument given. We're also going to assume that we have `ok`
-and `equal` to assert what we believe to be true.
+In our detailed examples we are going to use a function called echo which will
+invoke the callback with the argument given. We're also going to assume that we
+have `ok`, `equal` and `deepEqual` to assert what we believe to be true.
 
 ```javascript
 var ok = require('assert').ok
 var equal = require('assert').equal
+var deepEqual = require('assert').deepEqual
 
 function echo (value, callback) {
     setImmediate(callback, null, value)
 }
 ```
 
-### Creating Callback Functions
+
+### Function Bodies with No Cadence
 
 When you invoke `async` with no arguments, it builds a simple error first
 **callback** function. Cadence will receive the results given to the
 **callback** on your behalf and do the right thing.
 
 ```javascript
-var calledback = cadence(function (async) {
-
+var minimal = cadence(function (async) {
     echo(1, async())
-
 })
 
-calledback(function (error, value) {
-
+minimal(function (error, value) {
     equal(value, 1, 'called back')
+})
+```
 
+In this case, we did nothing but call an asynchronous function giving it an
+error-frist callback. It was the last thing we did so it became the result of
+the generated function `minimal`.
+
+Similarly, you can return a value from a Cadence function body using `return`.
+
+```javascript
+var minimal = cadence(function (async) {
+    return [ 1 ]
+})
+
+minimal(function (error, value) {
+    equal(value, 1, 'called back')
+})
+```
+
+### More on Funtion Body Return Values
+
+The results of all the **cadences** and **callbacks** in the function body are
+the results of the function generated by `cadence`.
+
+```javascript
+var resulting = cadence(function (async) {
+    async(function () {
+        echo(1, async())
+    })
+})
+
+resulting(function (error, value) {
+    equal(value, 2, 'incremented')
 })
 ```
 
 ### Creating Cadences
 
+*Ed: This is duplicated, and dumb. Really, let's use the examples above to
+introduce details, and as a later project make an all baby-steps walk through,
+or maybe a more rule by rule walk though. Cadence Rule: A Function Body is a
+Single Step, Cadence Rule: Asynchronous Trumps Synchronous, Cadence Rule: Always
+Poke a Hamster.*
+
 When you invoke `async` with one or more functions, you build a **cadence**.
+Each function in the cadence is called a **step**.
 
 ```javascript
 var stepper = cadence(function (async) {
@@ -466,7 +551,7 @@ stepper(function (error, value) {
 })
 ```
 
-### Propagating Errors
+### More on Propagating Errors
 
 Any error or exception that occurs in the function body is propagated to the
 caller by default.
@@ -483,7 +568,7 @@ var stepper = cadence(function (async) {
         brokenEcho(1, async())
                    // ^^^^^ this callback will propagate the error.
 
-    }, function (value) { // &lt;- the next step will not be called because of the error.
+    }, function (value) { // <- the next step will not be called because of the error.
 
         brokenEcho(value, async())
 
@@ -509,7 +594,7 @@ var stepper = cadence(function (async) {
 
         throw new Error('out of service')
 
-    }, function () { // &lt;- will not be called.
+    }, function () { // <- will not be called.
 
         echo(1, async())
 
@@ -542,15 +627,14 @@ arguable(1, function (error, value) {
 })
 ```
 
+### Variadic Functions
+
 Because the error-first callback conventions dictate that the error-first `callback` is the
 last argument, you might wonder why `async` is the first.
 
 We put the `async` as the first argument, not the last, because Cadence is
 nothing without its `async` function. We're (almost) always going to need it so
 it will always be passed into the function body as the first argument.
-
-Also a `cadence` generated function always expects a callback. There is
-no concept of optional callbacks.
 
 Best of all, putting the `async` function at the head to make it easier to
 implement variadic functions. No messy `var callback = vargs.pop()`.
@@ -559,7 +643,7 @@ implement variadic functions. No messy `var callback = vargs.pop()`.
 var argumentCounter = cadence(function (async) {
 
     var vargs = Array.prototype.slice.call(arguments, 1)
-    step(vargs.length, async())
+    async(vargs.length, async())
 
 })
 
@@ -569,6 +653,9 @@ arguable('a', 'b', 'c', function (error, count) {
 
 })
 ```
+
+A `cadence` generated function always expects a callback. There is
+no concept of optional callbacks.
 
 ### Multiple Callback Arguments
 
@@ -586,23 +673,22 @@ function echo2 (one, two, callback) {
 var multi = cadence(function (async)
     async(function () {
 
-        echo2('a', 'b', step())
+        echo2('a', 'b', async())            // <- multiple results
 
-    }, function (first, second) {
+    }, function (first, second) {           // <- multiple arguments
 
         assert(first, 'a', 'one of two in step')
         assert(second, 'a', 'two of two in step')
 
-        echo2(first, second, step())
+        echo2(first, second, async())       // <- multiple results returned
 
     })
 })
 
-multi(function (error, first, second) {
-
+multi(function (error, first, second) {     // <- multiple results received
+    if (error) throw error
     assert(first, 'a', 'one of two results')
     assert(second, 'a', 'two of two results')
-
 })
 ```
 
@@ -613,26 +699,25 @@ simply use `return` to pass a value to the next **step**, but only if the value
 is not an array.
 
 ```javascript
-var sync = cadence(function (async) {
+var synchronous = cadence(function (async) {
 
     async(function () {
 
-        return 1
+        return 1                        // <- single value returned
 
-    }, function (value) {
+    }, function (value) {               // <- single value received
 
         equal(value, 1, 'return number')
 
-        echo(value, step())
+        echo(value, async())
 
     })
 
 })
 
-sync(function (error, value) {
-
+synchronous(function (error, value) {
+    if (error) throw error
     equal(value, 1, 'sync worked')
-
 })
 ```
 
@@ -643,24 +728,24 @@ arguments. The elements in the array are used as the arguments to the next
 function, much like calling `apply`.
 
 ```javascript
-var sync = cadence(function (async) {
+var synchronous = cadence(function (async) {
 
     async(function () {
 
-        return [ 1, 2 ]
+        return [ 1, 2 ]                 // <- two values returned
 
-    }, function (first, second) {
+    }, function (first, second) {       // <- two values received
 
         equal(first, 1, 'one of two')
         equal(second, 2, 'two of two')
 
-        echo(first + second, step())
+        echo(first + second, async())
 
     })
 
 })
 
-sync(function (error, value) {
+synchronous(function (error, value) {
 
     equal(value, 3, 'multiple argument sync worked')
 
@@ -677,26 +762,26 @@ To synchronously pass an array to the next step, you return an array of
 arguments that contians the array.
 
 ```javascript
-var sync = cadence(function (async) {
+var synchronous = cadence(function (async) {
 
     async(function () {
 
         var values = [ 1, 2, 3 ]
 
-        return [ values ]
+        return [ values ]           // <- array returned
 
-    }, function (values) {
+    }, function (values) {          // <- array received
 
         ok(Array.isArray(values), 'is an array')
         equal(values.length, 3, 'is an array of three elements')
 
-        echo(values.reduce(function (sum, value) { return sum + value }), step())
+        echo(values.reduce(function (sum, value) { return sum + value }), async())
 
     })
 
 })
 
-sync(function (error, value) {
+synchronous(function (error, value) {
 
     equal(value, 6, 'array as a synchronous worked')
 
@@ -709,24 +794,24 @@ Asynchronous trumps synchronous. If you create a callback or a **cadence** using
 `async` inside a **step**, then the return value of the **step** is ignored.
 
 ```javascript
-var sync = cadence(function (async) {
+var trump = cadence(function (async) {
 
     async(function () {
 
-        echo(2, async())
+        echo(2, async())        // <- callback created
 
-        return 1
+        return 1                // <- value returned
 
-    }, function (value) {
+    }, function (value) {       // <- callback value received, return value ignored
 
         equal(value, 2, 'async trumps sync')
-        echo(value, step())
+        echo(value, async())
 
     })
 
 })
 
-sync(function (error, value) {
+trump(function (error, value) {
 
     equal(value, 2, 'async wins')
 
@@ -746,7 +831,7 @@ var sync = cadence(function (async) {
 
     async(function () {
 
-        async(function () { // &lt;- a cadence in a step.
+        async(function () { // <- a cadence in a step.
 
             echo(1, async())
 
@@ -759,7 +844,7 @@ var sync = cadence(function (async) {
     }, function (value) {
 
         equal(value, 2, 'sub-cadence output')
-        echo(value, step())
+        echo(value, async())
 
     })
 
@@ -785,7 +870,7 @@ var sync = cadence(function (async) {
 
         }, function (value) {
 
-            async(function () { // &lt;- one step cadence, three cadences deep.
+            async(function () { // <- one step cadence, three cadences deep.
 
                 echo(value + 1, async())
                              // ^^^^^ this result goes up two cadences.
@@ -796,7 +881,7 @@ var sync = cadence(function (async) {
     }, function (value) {
 
         equal(value, 2, 'sub-cadence output')
-        echo(value, step())
+        echo(value, async())
 
     })
 
@@ -819,8 +904,7 @@ when you have variables that need to be in scope for multiple asynchronous
 operations. When the variables are no longer needed, the indent ends.
 
 The following looks for the Unix execuable [magic
-number](http://en.wikipedia.org/wiki/Shebang_%28Unix%29#Magic_number). *TK:
-Create optional captions for code examples.*
+number](http://en.wikipedia.org/wiki/Shebang_%28Unix%29#Magic_number).
 
 ```javascript
 #!/usr/bin/env node
@@ -830,24 +914,24 @@ var sip = cadence(function (async, file, count) {
 
     async(function () {
 
-        fs.open(file, step())
+        fs.open(file, async())
 
     }, function (fd) {
               // ^^ we need to use this for more than one step.
         async(function () {
 
             var buffer = new Buffer(count)
-            fs.read(buffer, 0, buffer.length, 0, step())
+            fs.read(buffer, 0, buffer.length, 0, async())
 
         }, function (bytesRead, buffer) {
                   // ^^^^^^^^^  ^^^^^^  must close the file descriptor  before we can return these.
             async(function () {
 
-                fs.close(fd, step())
+                fs.close(fd, async())
 
             }, function () {
 
-                return buffer.slice(0, bytesRead) // &lt;- we're three cadences deep
+                return buffer.slice(0, bytesRead) // <- we're three cadences deep
 
             })
 
@@ -904,7 +988,7 @@ var fallthrough = cadence(function (async) {
     }, function (value) {
 
         equal(value, 2, 'returned value from step before last')
-                // &lt;- no return or `async`, outcome is also a fall through.
+                // <- no return or `async`, outcome is also a fall through.
     })
 
 })
@@ -937,10 +1021,10 @@ var parallel = cadence(functions (async) {
 
     async(function () {
 
-        echo(1, async())            // &lt;- first async call.
-        echo(2, async())            // &lt;- second async call.
+        echo(1, async())            // <- first async call.
+        echo(2, async())            // <- second async call.
 
-    }, function (first, second) {   // &lt;- called when both echoes complete.
+    }, function (first, second) {   // <- called when both echoes complete.
 
         return [ first, second ]
 
@@ -964,11 +1048,11 @@ var parallel = cadence(functions (async) {
 
     async(function () {
 
-        var first = async()         // &lt;- first callback.
-        var second = async()        // &lt;- second callback.
+        var first = async()         // <- first callback.
+        var second = async()        // <- second callback.
 
-        second(null, 1)             // &lt;- call second first, and right now.
-        echo(1, first)              // &lt;- call first on next tick.
+        second(null, 1)             // <- call second first, and right now.
+        echo(1, first)              // <- call first on next tick.
 
     }, function (first, second) {
 
@@ -988,19 +1072,96 @@ parallel(function (error, first, second) {
 })
 ```
 
-Parallel loops can be found below. That is the model for a bunch of identical
-asynchronous operations running in parallel, or *homogeneous* parallel
-operations. There you will see `async` but once, yet something parallel is going
-on, so the above is a aphorism, not a hard rule.
+*TK: But, parallel has changed.*
 
-*TK: This might be moved to a usage section. The example can stay. The statement
-above, plus the example. Anyway, on to arity.*
+### Practical Application: Parallels as Funnels
 
-Although there are mechanisms for homogeneous parallel operations, that sort of
+*TK: Example of opening file and database.*
+
+### Gathered Parallels
+
+With gathered parrallels, instead of passing the asynchronous results into the
+next **step** as individual arguments, they are passed as an array of arguments.
+
+The asynchronous results of the **step** are gathered in an array and the array
+is passed to the next **step**. The next **step** receives only one argument, an
+array containing all the asynchronous results of the previous **step**.
+
+We indicate that we want gathered results by placing an empty array after the
+**step** whose results we want to gather.
+
+```javascript
+var parallel = cadence(functions (async) {
+    var array = [ 1, 2, 3, 4, 5 ]
+
+    async(function () {
+
+        for (var i = 1; i < array.length; i++) {
+            echo(array[i] + array[i - 1], async())
+        }
+
+        echo(1, async())            // <- first async call.
+        echo(2, async())            // <- second async call.
+
+    }, [], function (array) {       // <- called when both echoes complete.
+
+        equal(array[0], 1, 'first element')
+        equal(array[1], 2, 'second selement')
+
+        return array.length
+
+    })
+})
+
+parallel(function (error, length) {
+
+    assert(length, 2, 'length of array')
+
+})
+```
+
+You can probably imagine how when combinded with a loop, you could do a
+reasonable amount of work in parallel.
+
+```javascript
+var parallel = cadence(functions (async) {
+    var array = [ 1, 2, 3, 4, 5 ]
+
+    async(function () {
+
+        for (var i = 1; i < array.length; i++) {
+            echo(array[i] + array[i - 1], async())
+        }
+
+    }, [], function (array) {       // <- called when both echoes complete.
+
+        deepEqual(array, [ 3, 5, 7, 9 ], 'summed')
+
+        return [ array ]
+
+    })
+})
+
+parallel(function (error, array) {
+
+    deepEqual(array, [ 3, 5, 7, 9 ], 'summed returned')
+
+})
+```
+
+However, it is much better, I believe to do parallel work using a work queue,
+which is why I've created [Turnstile](https://github.com/bigeasy/turnstile) and
+[Reactor](https://github.com/bigeasy/reactor).
+
+## Practical Example of Parallel Gathering: Directory Listings
+
+**TK**
+
+**TK: Although there are mechanisms for homogeneous parallel operations, that sort of
 parallelism is best obtained at the serivce level. Instead of having a
 highly-parallel directory listing in your web server, let your web server serve
 many directory listings in parallel, each being worked through in serial. You
-will get similar performance, but with a lot less complexity.
+will get similar performance, but with a lot less complexity.*
 
 The complexity comes in the error handling. If you can't read one file in a
 directory, you probably can't read any of them. Now you have an array of errors
@@ -1014,15 +1175,15 @@ operations needed for the next **step**.
 The following is a contrived initialization example.
 
 ```javascript
-var initialize = cadence(function (step, conf) {
+var initialize = cadence(function (async, conf) {
 
-    step(function () {
+    async(function () {
 
-        db.connect(step())                      // &lt;- connect to database.
-        fs.readFile(conf, 'utf8', step())       // &lt;- *and* slurp configuration.
+        db.connect(async())                     // <- connect to database.
+        fs.readFile(conf, 'utf8', async())      // <- *and* slurp configuration.
 
-    }, function (conn, conf) {                  // &lt;- initialize the connection
-                                                //       with the configuration.
+    }, function (conn, conf) {                  // <- initialize the connection
+                                                //    with the configuration.
         conf = JSON.parse(conf)
 
         conn.encoding = conf.encoding || 'UTF-8'
@@ -1036,23 +1197,18 @@ var initialize = cadence(function (step, conf) {
 
 ### Breaking, Leaving a Cadence Early
 
-**TODO**: This is gone, but maybe I'll have it back if it is super cheap.
-
 You can leave a **cadence** by returning an array of arguments, the first
-argument being the `async` function.
-
-The mnemonic is that the first argument is an optional break, and `async` is
-what you're breaking out of.
+argument being the `async.break` property.
 
 ```javascript
 var early = cadence(function (async) {
     async(function () {
 
-        return [ async, 2 ]         // &lt;- the `async` means break.
+        return [ async.break, 2 ]   // <- the `async` means break.
 
     }, function () {
 
-        echo(1, value())            // &lt;- never called.
+        echo(1, value())            // <- never called.
 
     })
 })
@@ -1073,7 +1229,7 @@ module.exports = cadence(function (async) {
 
     async(function () {
 
-        if (config) return [ async, config ]
+        if (config) return [ async.break, config ]
 
         fs.readFile('./config.json', 'utf8', step())
 
@@ -1088,7 +1244,7 @@ module.exports = cadence(function (async) {
 
 ### Forever Loops
 
-A loops is a **cadence** that repeats itself. When we create a **cadence**, the
+A loop is a **cadence** that repeats itself. When we create a **cadence**, the
 `async` function returns a loop function that we can use to invoke the
 **cadence** as a loop.
 
@@ -1105,7 +1261,7 @@ var loopy = cadence(function (async) {
     async(function () {
 
         if (count == 10) {
-            return [ async, count ]     // &lt;- break and return count.
+            return [ async.break, count ]   // <- break and return count.
         } else {
             count++
         }
@@ -1121,100 +1277,9 @@ loopy(function (error, value) {
 })
 ```
 
-### Counted Loops
+### Loop Arguments
 
-
-We can specify a count for a loop by passing a count to the loop starter
-function. The count must be an integer greater than or equal to zero. The loop
-will run count times.
-
-
-```javascript
-var counted = cadence(function (async) {
-
-    var count = 0
-
-    async(function () {
-
-        async(function () {
-
-            count++
-
-        })(4)
-        // ^ the above cadence is run four times.
-    }, function () { // &lt;- not called until loop in previous step finishes.
-
-        return count
-
-    })
-
-})
-
-counted(function (error, value) {
-
-    assert(value, 4, 'counted')
-
-})
-```
-
-### Counted Loop Result
-
-The result of a counted loop is the value returned by the last loop iteration,
-which is also the last run of the **cadence**.
-
-
-```javascript
-var counted = cadence(function (async) {
-
-    var count = 0
-
-    async(function () {
-
-        return ++count
-              // ^^^^^ returned as loop result on last run of the cadence.
-    })(4)
-    // ^ the above cadence is run four times.
-})
-
-counted(function (error, value) {
-
-    assert(value, 4, 'counted')
-
-})
-```
-
-### The Counted Loop Index Argument
-
-The first argument to the **cadence** of a counted loop is the always index of
-the current count.
-
-
-```javascript
-var counted = cadence(function (async) {
-
-    async(function (index) {
-
-        return index + 1
-            // ^^^^^ on the last run of the cadence, index is three.
-    })(4)
-    // ^ the above cadence is run four times.
-})
-
-counted(function (error, value) {
-
-    assert(value, 4, 'counted')
-
-})
-```
-
-### Counted Loop Additional Arguments
-
-While the first argument to the counted loop **cadence** is the always index of
-the current count, you can pass additional arguments into the loop **cadence**
-by specifying them after the count.
-
-The arguments after the index argument are the arguments passed to the loop
-starter on the first iteration.
+You can pass arguments into a loop by passing them to the loop constructor.
 
 On subsequent iterations the arguments after the index argument are the results
 of the previous iteration, the previous invocation of the **cadence**.
@@ -1222,12 +1287,13 @@ of the previous iteration, the previous invocation of the **cadence**.
 ```javascript
 var reduce = cadence(function (async) {
 
-    async(function (index, sum) {
-                        // ^^^ initial argument or result of last iteration.
-        return index + 1 + sum
+    var index = 0
+    async(function (sum) {
+                 // ^^^ initial argument or result of last iteration.
+        return sum + index++
 
-    })(4, 0)
-       // ^ initial argument.
+    })(0)
+    // ^ initial argument.
 })
 
 reduce(function (error, value) {
@@ -1237,24 +1303,24 @@ reduce(function (error, value) {
 })
 ```
 
-### Each Loops
+### For Each Loops
 
-When you pass an array as the first argument to the loop starter function, you
-create an each loop. An each loop will run the loop **cadence** once for each
-entry in the array. The array entry is passed into the first **step** of the
-**cadence** as the first argument.
+You can create for each loops using `cadence.forEach`. The `cadence.forEach`
+function returns a loop initializer function. You call it with an array of items
+to iterate over. Iteration is serial, one item after the next.
+
+The argument given to the loop body is the value of the current array element
+followed by the current index.
 
 ```javascript
 var sum = cadence(function (async) {
-
     var sum = 0
-
-    async(function (number) {
-                 // ^^^^^^ one array element at a time.
-        return sum + number
-
-    })([ 1, 2, 3 ])
-    // ^^^^^^^^^^^ array argument to loop function.
+    async.forEach(function (value) {
+        return sum + value
+    })([ 1, 2, 3, 4 ])
+})(function (error, sum) {
+    if (error) throw error
+    assert(sum, 10, 'reduce')
 })
 
 sum(function (error, value) {
@@ -1274,7 +1340,7 @@ var sum = cadence(function (async) {
 
     var sum = 0
 
-    async(function (number, index) {
+    async.forEach(function (number, index) {
                          // ^^^^^ index of array entry.
         return sum + (number - index)
 
@@ -1289,10 +1355,10 @@ sum(function (error, value) {
 })
 ```
 
-### Each Loop Additional Arguments
+### For Each Loop Additional Arguments
 
-You can pass arguments to the each loop **cadence** by passing them in after the
-each loop array.
+You can pass arguments to the for each loop **cadence** by passing them in after
+the each loop array.
 
 The arguments after the array argument are the arguments passed to the loop
 starter on the first iteration.
@@ -1303,8 +1369,8 @@ of the previous iteration, the previous invocation of the **cadence**.
 ```javascript
 var reduce = cadence(function (async) {
 
-    async(function (number, index, sum) {
-                                // ^^^ initial argument or result of last iteration.
+    async.forEach(function (number, index, sum) {
+                                        // ^^^ initial argument or result of last iteration.
         return sum + number
 
     })([ 1, 2, 3 ], 0)
@@ -1313,62 +1379,32 @@ var reduce = cadence(function (async) {
 
 reduce(function (error, value) {
 
+    if (error) throw error
     assert(value, 10, 'reduced sum')
 
 })
 ```
 
-### Forever Loop Arguments
+### Mapped Loops
 
-If you want to parse arguments into your loop **cadence** but you do not want a
-counted loop nor an each loop, then you create a forever loop by creating a
-counted loop with an unreachable count such as `-1`.
-
-```javascript
-var until = cadence(function (async) {
-
-    var count = 0
-
-    async(function (index, done) {
-
-        if (done) [ async, count ]
-
-        return ++count == 10
-
-    })(-1, false)
-    // ^^  ^^^^^ unreachable count and initial argument.
-})
-
-until(function (error, value) {
-
-    assert(value, 10, 'reduced sum')
-
-})
-```
-
-### Gathered Loops
-
-Loops can gather their results into an array. To specify that a loop should
-gather results, pass an array as the first argument to the loop starter. You can
-use an array literal. This array is only used to signal that results should be
-gathered, it is not the array used to gather results.
+You can perform asynchronous array mapping using `async.map`. The result of the
+mapping is passed  to the next **step**. Just as in `async.forEach`, the first
+argument is the array alue,
 
 ```javascript
 var squares = cadence(function (async) {
 
-    async(function (index) {
+    async.map(function (value, index) {
 
-        return index * index
+        return value * index
 
-    })([], 3)
+    })([ 1, 2, 3 ], 3)
     // ^^  ^ gather a counted loop.
 })
 
 squares(function (error, array) {
 
-    assert(array[0], 0, 'first gathered value')
-    assert(array[1], 1, 'second gathered value')
-    assert(array[2], 4, 'thrid gathered value')
+    deepEqual(array, [ 0, 2, 6 ], 'mapped')
 
 })
 ```
