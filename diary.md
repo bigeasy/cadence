@@ -1,6 +1,6 @@
 # Design
 
-[Merlin Mann](http://youlooknicetoday.com/)  writes about time and attention and
+[Merlin Mann](http://youlooknicetoday.com/) writes about time and attention and
 creative work. His thesis is that if you give your time and attention to any
 endeavour, you are rewarded with insights into your endeavour. Give it your time
 and attention and it will give you direction. Take the direction.
@@ -3542,3 +3542,15 @@ error.
 I believe that my exmaples would be better expressed in a giant proof test, so
 that I can have namespaces for each test, and so I can copy and paste from it,
 so each step in the proof test becomes part of my documentation.
+
+### Design Decsions
+
+ * The `cadence` builder function itself is not optimized. It is not slow. Is is
+ quite fast, but it is not itself optimized. I'm going to focus optimization
+ energy on it. Cadence functions are generally meant to be build and named, and
+ not anonymous.
+
+### The Rules of Cadence
+
+ * The function body is a cadence with a single step.
+ * The `async` function is only valid when used within a `step`.
