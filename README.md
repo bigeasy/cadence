@@ -1479,3 +1479,5 @@ multiply([[ 1, 2, 3 ], [ 4, 5, 6 ], [ 7, 8, 9 ]], function (error, matrix) {
  * Design Decisions
  * Thinking in Cadence ~ Asynchronous Functions, Error-First Callbacks,
  Asynchrnous Returns, Asynchronous Stacks, Turning the Corner.
+ * Major Benefit: Errors Up and Out
+ * Major Benefit: Trampoline
