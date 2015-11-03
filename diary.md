@@ -3536,3 +3536,9 @@ This is a queue where you fire and forget, so I wanted to have a place that
 would catch all errors, but really what I want to do is pass the error handling
 strategy as the last argument because without it there is no context for the
 error.
+
+### Documentation
+
+I believe that my exmaples would be better expressed in a giant proof test, so
+that I can have namespaces for each test, and so I can copy and paste from it,
+so each step in the proof test becomes part of my documentation.
