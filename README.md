@@ -1290,7 +1290,9 @@ var reduce = cadence(function (async) {
     var index = 0
     async(function (sum) {
                  // ^^^ initial argument or result of last iteration.
-        return sum + index++
+
+        if [ index == 5 ] return [ async.break, sum ]
+        else return sum + index++
 
     })(0)
     // ^ initial argument.
@@ -1411,4 +1413,69 @@ squares(function (error, array) {
 
 ### Loops Nested in Cadences
 
-All of the above loop examples can be used in any **step** in any **cadence**.
+All of the above loop examples can be used in any **step** in any **cadence**,
+not just the function body.
+
+Loops can contain loops.
+
+```
+var multiply = cadence(function (async, matrix) {
+    async(function () {
+        var i = 0, j = 0
+        async(function () {
+            if (i == matrix.length) return [ async.break ]
+            async(function () {
+                if (j == matrix[i].length) return [ async.break ]
+                echo(matrix[i][j] * 5, async())
+            }, function (value) {
+                matrix[i][j] = value
+                j++
+            })()
+        }, function () {
+            j = 0
+            i++
+        })()
+    }, function () {
+        return [ matrix ]
+    })
+})
+
+multiply([[ 1, 2, 3 ], [ 4, 5, 6 ], [ 7, 8, 9 ]], function (error, matrix) {
+    if (error) throw error
+    deepEqual(matrix, [[ 5, 10, 15 ], [ 20, 25, 30 ], [ 35, 40, 45 ]])
+})
+```
+
+The above is a contrived example that multiples each element in an array of
+arrays by five. It is much easier to express using `async.map`.
+
+```
+var multiply = cadence(function (async, matrix) {
+    async.map(function (array) {
+        async.map(function (value) {
+            echo(value * 5, async())
+        })(array)
+    })(matrix)
+})
+
+multiply([[ 1, 2, 3 ], [ 4, 5, 6 ], [ 7, 8, 9 ]], function (error, matrix) {
+    if (error) throw error
+    deepEqual(matrix, [[ 5, 10, 15 ], [ 20, 25, 30 ], [ 35, 40, 45 ]])
+})
+```
+
+### Loop Labels
+
+
+### What's Missing?
+
+ * Quafliied catch blocks.
+ * Details of catch, I believe.
+ * Finalizers; how to use them, where to use them.
+
+### Accompanying Documents and Apendexes
+
+ * The Rules of Cadence
+ * Design Decisions
+ * Thinking in Cadence ~ Asynchronous Functions, Error-First Callbacks,
+ Asynchrnous Returns, Asynchronous Stacks, Turning the Corner.
