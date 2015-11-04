@@ -1,28 +1,27 @@
 Cadence is a control-flow library for error-first callback style of asynchronous
-programming.
-
-Cadence is my solution to the problem of the [Pyramid of
+programming. Cadence is my solution to the problem of the [Pyramid of
 Doom](http://tritarget.org/blog/2012/11/28/the-pyramid-of-doom-a-javascript-style-trap/).
 
-Cadence is one step after another, with robust try/catch error handling for
-asynchronous errors, finalizers for clean up, nested asynchronous loops with
-break and continue, and tail-recursion elimination to you'll never blow your
-stack looping.
+Cadence is one step after another, with robust **try/catch** error handling for
+asynchronous errors, **finalizers** for clean up, **nested** asynchronous
+**loops** with **break and continue**, and **tail-recursion elimination** to
+you'll never blow your stack looping.
 
-Cadence does all this in pure-Javascript with no transpilers and without ES6+
-features. Cadence is classic Javascript. Cadence is tiny. Cadence is fast.
+Cadence does all this in **pure-Javascript** with **no transpilers** and without
+ES6+ features. Cadence is classic Javascript. Cadence is tiny. Cadence is fast.
 
 ### Cadence In a Nutshell
 
 Cadence runs a series of functions asynchronously, using the results of one
-function as the arguments for the next.
+function as the arguments for the next. (This was inspired by Tim Caswell's
+[step](https://github.com/creationix/step) module.)
 
 We call the series of functions a **cadence**. We call an individual function in
 a cadence a **step**.
 
 We create **cadences** using the universal builder method `async`. We also use
 `async` to create **callbacks** inside the **steps**. The `async` function is a
-universal builder because we also use it to create both **cadences** and
+universal builder because we use it to create both **cadences** and
 **calbacks**.
 
 ```javascript
@@ -33,7 +32,6 @@ var cat = cadence(function (async, file, stream) {
  //       ^^^^^^^^ create a cadence of one or more steps.
         fs.readFile(file, 'utf8', async())
                                // ^^^^^^^ create a callback.
-
     }, function (body) {
               // ^^^^ the result is passed to the next step.
         stream.write(body)
@@ -47,12 +45,15 @@ cat(__filename, process.stdout, function (error) {
 })
 ```
 
-Note that **steps** do not receive errors. Errors get propagated up and out to
-the caller. Your code does not need to be littered with `if (error)
-callback(error)` branches that are difficult to reach in your tests. **Your
-asynchronous code is reduced to the happy path.**
+Errors get propagated up and out of the function to the caller. The next
+**step** does not receive an error argument and does not have to check the error
+argument.
 
-Here an example of a function that will return true if a regex matches the
+This menas that your code does not need to be littered with `if (error)
+callback(error)` branches that are difficult to reach in your tests. This is a
+major benefit of Cadence. Your asynchronous code is reduced to the happy path.
+
+Here an example of a function that will return `true` if a regex matches the
 contents of a file.
 
 ```javascript
@@ -66,7 +67,7 @@ var grep = cadence(function (async, file, regex) {
 
     }, function (body) {
 
-        return [ regex.test(body) ]
+        return regex.test(body)
 
     })
 
@@ -79,27 +80,19 @@ grep(__filename, /readFile/, function (error, deleted) {
 })
 ```
 
-The example above shows a basic Cadence function. The first argument to the
-Cadence function body is `async`, a helper function that creates **cadences**
-and **callbacks**. The function above has a single **cadence** defined by
-calling `async` with a series of functions.
+The Cadence function above returns a value to the user's callback. The result of
+the function is the result of **cadence** defined in the function. The last
+**step** of a **cadence** is the result of a **cadence**. The result of a
+**step** is either results of any **callbacks** or nested **cadences**, or else
+a value returned using `return`.
 
-The functions are the **steps** in the **cadence**. The results of one **step**
-are passed onto the next **step**. (This was inspired by Tim Caswell's
-[step](https://github.com/creationix/step) module.)
-
-When a **step** calls an asynchronous function, it creates a callback using
-`async()`. The results of the callback are passed onto the next **step**.
-
-Any error encountered in any step is propagated up and out of the Cadence
-function and becomes the `error` result given to the callback provided to the
-Cadence function.
+*TK: Stopped here. Keep rewriting.*
 
 ### Major Benefit: Try/Catch and Finalize
 
 Cadence implements an asynchronous try/catch block that propagates error-first
 callback errors and converts thrown exceptions into error-first callback errors.
-When uses consistently, you end up having an asynchronous call stack.
+When uses consistently, you end up with an asynchronous call stack.
 
 ```javascript
 var cadence = require('cadence'), fs = require('fs')
@@ -1481,3 +1474,16 @@ multiply([[ 1, 2, 3 ], [ 4, 5, 6 ], [ 7, 8, 9 ]], function (error, matrix) {
  Asynchrnous Returns, Asynchronous Stacks, Turning the Corner.
  * Major Benefit: Errors Up and Out
  * Major Benefit: Trampoline
+
+## The Rules of Cadence
+
+Here is Cadence presented as a set or rules to follow. It acts as both a
+refernece and a glossary. Ordering is subject to change.
+
+The first argument to a cadence funtction body is the universal builder function
+async.
+
+A Cadence function body is a cadence with a single step.
+
+Result of a Cadence function is the result of all cadences and steps in the the
+function body.

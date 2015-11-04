@@ -1,5 +1,11 @@
 require('proof')(2, require('../..')(prove))
 
+// Beware: The test below is not Proof as I'd use it in any other program. Here
+// I'm using Proof to test examples of Cadence that are meant to be stand alone
+// programs. Because of this, each step is entirely stand alone, dupcliating
+// invocations to Cadence, holding onto generated callbacks, and doing a lot of
+// strange stuff. Have a look at any other Proof test for a better notion of how
+// to use Proof.
 function prove (async, assert) {
     var cadence = require('../..')
 
@@ -10,6 +16,29 @@ function prove (async, assert) {
     var deepEqual = assert.deepEqual
 
     async(function () {
+        var next = async()
+        var fs = require('fs')
+
+        // `cat`: write a file to a stream.
+        var cat = cadence(function (async, file, stream) {
+                                 // ^^^^^ our universal builder function.
+            async(function () {
+         //       ^^^^^^^^ create a cadence of one or more steps.
+                fs.readFile(file, 'utf8', async())
+                                       // ^^^^^^^ create a callback.
+            }, function (body) {
+                      // ^^^^ the result is passed to the next step.
+                stream.write(body)
+
+            })
+        })
+
+        cat(__filename, process.stdout, function (error) {
+                                               // ^^^^^ any error, anywhere inside `cat` is propagated out
+            if (error) throw error
+            next()
+        })
+    }, function () {
         var next = async()
 
         var multiply = cadence(function (async, matrix) {
