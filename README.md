@@ -1459,7 +1459,6 @@ multiply([[ 1, 2, 3 ], [ 4, 5, 6 ], [ 7, 8, 9 ]], function (error, matrix) {
 
 ### Loop Labels
 
-
 ### What's Missing?
 
  * Quafliied catch blocks.
@@ -1487,3 +1486,5 @@ A Cadence function body is a cadence with a single step.
 
 Result of a Cadence function is the result of all cadences and steps in the the
 function body.
+
+Notes: Terminating an asynchronous stack.
