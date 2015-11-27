@@ -1,0 +1,128 @@
+ % node --version
+v0.10.40
+ % node benchmark/increment/call.js
+ cadence call 1 x 1,715,800 ops/sec ±0.77% (96 runs sampled)
+_cadence call 1 x 1,688,708 ops/sec ±0.51% (99 runs sampled)
+ cadence call 2 x 1,683,922 ops/sec ±0.65% (96 runs sampled)
+_cadence call 2 x 1,726,069 ops/sec ±0.77% (97 runs sampled)
+ cadence call 3 x 1,763,061 ops/sec ±0.48% (102 runs sampled)
+_cadence call 3 x 1,760,064 ops/sec ±0.44% (100 runs sampled)
+ cadence call 4 x 1,767,246 ops/sec ±0.62% (95 runs sampled)
+_cadence call 4 x 1,754,827 ops/sec ±0.58% (100 runs sampled)
+Fastest is  cadence call 4, cadence call 3
+ % node benchmark/increment/async.js
+_cadence async 1 x 1,728,250 ops/sec ±0.59% (98 runs sampled)
+ cadence async 1 x 1,545,877 ops/sec ±1.49% (95 runs sampled)
+_cadence async 2 x 1,738,477 ops/sec ±0.81% (96 runs sampled)
+ cadence async 2 x 1,607,457 ops/sec ±0.75% (99 runs sampled)
+_cadence async 3 x 1,746,804 ops/sec ±0.62% (100 runs sampled)
+ cadence async 3 x 1,598,713 ops/sec ±0.61% (98 runs sampled)
+_cadence async 4 x 1,754,021 ops/sec ±0.48% (101 runs sampled)
+ cadence async 4 x 1,574,563 ops/sec ±0.58% (100 runs sampled)
+Fastest is _cadence async 4,_cadence async 3,_cadence async 2
+ % node benchmark/increment/loop.js
+ cadence loop 1 x 198,822 ops/sec ±0.43% (101 runs sampled)
+_cadence loop 1 x 234,348 ops/sec ±0.49% (102 runs sampled)
+ cadence loop 2 x 198,113 ops/sec ±0.45% (102 runs sampled)
+_cadence loop 2 x 234,194 ops/sec ±0.44% (97 runs sampled)
+ cadence loop 3 x 200,168 ops/sec ±0.43% (102 runs sampled)
+_cadence loop 3 x 235,350 ops/sec ±0.60% (98 runs sampled)
+ cadence loop 4 x 201,019 ops/sec ±0.41% (102 runs sampled)
+_cadence loop 4 x 235,591 ops/sec ±0.53% (100 runs sampled)
+Fastest is _cadence loop 4,_cadence loop 3
+ % node --version
+v0.12.7
+ % node benchmark/increment/call.js
+ cadence call 1 x 2,311,556 ops/sec ±0.80% (98 runs sampled)
+_cadence call 1 x 2,781,165 ops/sec ±0.57% (96 runs sampled)
+ cadence call 2 x 2,271,405 ops/sec ±0.63% (100 runs sampled)
+_cadence call 2 x 2,729,348 ops/sec ±0.51% (100 runs sampled)
+ cadence call 3 x 2,254,842 ops/sec ±0.51% (99 runs sampled)
+_cadence call 3 x 2,731,708 ops/sec ±0.51% (100 runs sampled)
+ cadence call 4 x 2,245,340 ops/sec ±0.72% (99 runs sampled)
+_cadence call 4 x 2,671,314 ops/sec ±0.53% (99 runs sampled)
+Fastest is _cadence call 1
+ % node benchmark/increment/async.js
+_cadence async 1 x 1,982,551 ops/sec ±0.70% (97 runs sampled)
+ cadence async 1 x 1,826,482 ops/sec ±0.63% (97 runs sampled)
+_cadence async 2 x 2,062,100 ops/sec ±0.71% (92 runs sampled)
+ cadence async 2 x 1,823,002 ops/sec ±0.53% (95 runs sampled)
+_cadence async 3 x 2,056,063 ops/sec ±0.59% (93 runs sampled)
+ cadence async 3 x 1,789,918 ops/sec ±0.54% (98 runs sampled)
+_cadence async 4 x 2,039,767 ops/sec ±0.58% (98 runs sampled)
+ cadence async 4 x 1,790,183 ops/sec ±0.53% (100 runs sampled)
+Fastest is _cadence async 2
+ % node benchmark/increment/loop.js
+ cadence loop 1 x 135,694 ops/sec ±1.74% (89 runs sampled)
+_cadence loop 1 x 128,124 ops/sec ±1.87% (88 runs sampled)
+ cadence loop 2 x 98,083 ops/sec ±1.68% (84 runs sampled)
+_cadence loop 2 x 101,438 ops/sec ±2.41% (91 runs sampled)
+ cadence loop 3 x 80,377 ops/sec ±2.02% (84 runs sampled)
+_cadence loop 3 x 74,177 ops/sec ±2.20% (70 runs sampled)
+ cadence loop 4 x 71,233 ops/sec ±4.28% (78 runs sampled)
+_cadence loop 4 x 78,648 ops/sec ±1.53% (81 runs sampled)
+Fastest is  cadence loop 1
+ % node --version
+v4.2.2
+ % node benchmark/increment/call.js
+ cadence call 1 x 2,272,857 ops/sec ±0.50% (101 runs sampled)
+_cadence call 1 x 2,277,395 ops/sec ±0.76% (97 runs sampled)
+ cadence call 2 x 2,240,401 ops/sec ±0.50% (100 runs sampled)
+_cadence call 2 x 2,219,671 ops/sec ±0.90% (93 runs sampled)
+ cadence call 3 x 2,226,526 ops/sec ±0.36% (100 runs sampled)
+_cadence call 3 x 2,279,254 ops/sec ±0.36% (101 runs sampled)
+ cadence call 4 x 2,229,795 ops/sec ±0.62% (99 runs sampled)
+_cadence call 4 x 2,281,735 ops/sec ±0.49% (99 runs sampled)
+Fastest is _cadence call 3,_cadence call 4, cadence call 1
+ % node benchmark/increment/async.js
+_cadence async 1 x 1,968,228 ops/sec ±0.77% (92 runs sampled)
+ cadence async 1 x 2,081,144 ops/sec ±0.77% (95 runs sampled)
+_cadence async 2 x 1,952,405 ops/sec ±0.66% (95 runs sampled)
+ cadence async 2 x 2,016,212 ops/sec ±0.40% (97 runs sampled)
+_cadence async 3 x 1,948,807 ops/sec ±0.75% (97 runs sampled)
+ cadence async 3 x 1,987,519 ops/sec ±0.87% (88 runs sampled)
+_cadence async 4 x 1,979,690 ops/sec ±0.48% (96 runs sampled)
+ cadence async 4 x 1,994,259 ops/sec ±0.79% (95 runs sampled)
+Fastest is  cadence async 1
+ % node benchmark/increment/loop.js
+ cadence loop 1 x 45,260 ops/sec ±0.72% (98 runs sampled)
+_cadence loop 1 x 87,279 ops/sec ±4.15% (65 runs sampled)
+ cadence loop 2 x 86,072 ops/sec ±4.25% (67 runs sampled)
+_cadence loop 2 x 80,727 ops/sec ±0.91% (97 runs sampled)
+ cadence loop 3 x 90,370 ops/sec ±4.15% (96 runs sampled)
+_cadence loop 3 x 83,168 ops/sec ±2.65% (92 runs sampled)
+ cadence loop 4 x 103,344 ops/sec ±6.19% (76 runs sampled)
+_cadence loop 4 x 113,519 ops/sec ±6.43% (91 runs sampled)
+Fastest is _cadence loop 4
+ % node --version
+v5.1.0
+ % node benchmark/increment/call.js
+ cadence call 1 x 2,295,638 ops/sec ±0.46% (100 runs sampled)
+_cadence call 1 x 2,297,872 ops/sec ±0.38% (97 runs sampled)
+ cadence call 2 x 2,249,024 ops/sec ±0.57% (100 runs sampled)
+_cadence call 2 x 2,218,503 ops/sec ±0.63% (97 runs sampled)
+ cadence call 3 x 2,284,110 ops/sec ±0.50% (102 runs sampled)
+_cadence call 3 x 2,197,159 ops/sec ±0.67% (97 runs sampled)
+ cadence call 4 x 2,255,583 ops/sec ±0.34% (101 runs sampled)
+_cadence call 4 x 2,194,383 ops/sec ±0.80% (94 runs sampled)
+Fastest is _cadence call 1, cadence call 1
+ % node benchmark/increment/async.js
+_cadence async 1 x 1,877,184 ops/sec ±0.71% (96 runs sampled)
+ cadence async 1 x 2,028,177 ops/sec ±0.54% (89 runs sampled)
+_cadence async 2 x 1,962,168 ops/sec ±0.53% (97 runs sampled)
+ cadence async 2 x 1,977,955 ops/sec ±1.09% (94 runs sampled)
+_cadence async 3 x 1,969,411 ops/sec ±0.62% (94 runs sampled)
+ cadence async 3 x 1,996,260 ops/sec ±0.37% (97 runs sampled)
+_cadence async 4 x 1,967,220 ops/sec ±0.44% (100 runs sampled)
+ cadence async 4 x 1,984,608 ops/sec ±0.56% (100 runs sampled)
+Fastest is  cadence async 1
+ % node benchmark/increment/loop.js
+ cadence loop 1 x 45,478 ops/sec ±0.72% (98 runs sampled)
+_cadence loop 1 x 81,143 ops/sec ±1.75% (66 runs sampled)
+ cadence loop 2 x 83,330 ops/sec ±2.62% (76 runs sampled)
+_cadence loop 2 x 85,004 ops/sec ±3.19% (89 runs sampled)
+ cadence loop 3 x 80,724 ops/sec ±1.00% (98 runs sampled)
+_cadence loop 3 x 92,811 ops/sec ±4.83% (82 runs sampled)
+ cadence loop 4 x 80,320 ops/sec ±1.24% (98 runs sampled)
+_cadence loop 4 x 109,307 ops/sec ±6.58% (79 runs sampled)
+Fastest is _cadence loop 4
