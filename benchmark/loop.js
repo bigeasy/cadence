@@ -3,9 +3,10 @@ var cadence = require('..')
 var loop = cadence(function (async) {
     var count = 0
     async(function () {
-        async(function (i) {
+        var loop = async(function (i) {
+            if (i == (256 * 10)) return [ loop.break, i ]
             return count++
-        })(256 * 10)
+        })()
     }, function () {
         return [ count ]
     })
