@@ -117,8 +117,6 @@ function call (fn, self, vargs) {
 function invoke (cadence) {
     var vargs, fn
     for (;;) {
-        async.self = cadence.self
-
         if (cadence.errors.length) {
             if (cadence.catcher) {
                 var catcher = cadence.catcher, errors = cadence.errors
