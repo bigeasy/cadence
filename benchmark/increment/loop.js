@@ -4,7 +4,7 @@ var Benchmark = require('benchmark')
 
 var suite = new Benchmark.Suite('loop', { minSamples: 100 })
 
-var COUNT = 10
+var COUNT = 1024
 
 var m = cadence(function () { return 1 })
 
