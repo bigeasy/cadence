@@ -115,11 +115,8 @@ function call (fn, self, vargs) {
 }
 
 function invoke (cadence) {
+    var vargs, fn
     for (;;) {
-        var vargs, steps = cadence.steps, fn
-
-        async.self = cadence.self
-
         if (cadence.errors.length) {
             if (cadence.catcher) {
                 var catcher = cadence.catcher, errors = cadence.errors
@@ -154,7 +151,7 @@ function invoke (cadence) {
                     }
                 }
             }
-            fn = steps[cadence.index++]
+            fn = cadence.steps[cadence.index++]
         }
 
         if (fn == null) {
@@ -168,7 +165,7 @@ function invoke (cadence) {
                     })
                 }
             } else if (cadence.loop) {
-                fn = steps[0]
+                fn = cadence.steps[0]
                 cadence.index = 1
             } else if (cadence.errors.length) {
                 (cadence.callback).apply(null, [ cadence.errors[0] ])

@@ -179,13 +179,7 @@ function invoke (cadence) {
             }
         }
 
-        cadence.called = 0
-        cadence.cadences = []
         cadence.results = []
-        cadence.errors = []
-        cadence.sync = true
-        cadence.waiting = false
-        cadence.catcher = null
 
         if (Array.isArray(fn)) {
             if (fn.length === 1) {
@@ -208,7 +202,15 @@ function invoke (cadence) {
                 cadence.vargs = [ vargs ]
                 continue
             }
+        } else {
+            cadence.catcher = null
         }
+
+        cadence.called = 0
+        cadence.cadences = []
+        cadence.errors = []
+        cadence.sync = true
+        cadence.waiting = false
 
         stack.push(cadence)
 
