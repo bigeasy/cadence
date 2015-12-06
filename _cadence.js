@@ -18,8 +18,7 @@ function Cadence (parent, finalizers, self, steps, vargs, callback) {
     this.vargs = vargs
 }
 
-Cadence.prototype.resolveCallback = function (result, vargs) {
-    var error = vargs.shift()
+Cadence.prototype.resolveCallback = function (result, error, vargs) {
     if (error == null) {
         result.vargs = vargs
     } else {
@@ -43,13 +42,13 @@ Cadence.prototype.createCallback = function () {
 
     return callback
 
-    function callback () {
+    function callback (error) {
         var I = arguments.length
-        var vargs = new Array(I)
-        for (var i = 0; i < I; i++) {
-            vargs[i] = arguments[i]
+        var vargs = new Array
+        for (var i = 1; i < I; i++) {
+            vargs[i - 1] = arguments[i]
         }
-        self.resolveCallback(result, vargs)
+        self.resolveCallback(result, error, vargs)
 
         return
 
@@ -115,77 +114,71 @@ function call (fn, self, vargs) {
     return [ ret ]
 }
 
-Cadence.prototype.rescue = function () {
-    var errors = this.errors, catcher = this.catcher
-    this.errors = new Array
-    this.results = new Array
-    this.catcher = null
-    this.called = 0
-    this.waiting = true
-    var callback = this.createCallback()
-    var steps = [ function () { return catcher.call(this, errors[0], errors) } ]
-    var rescue = new Cadence(this, [], this.self, steps, this.vargs, callback)
-    rescue.waiting = true
-    rescue.cadence = this
-    invoke(rescue)
-}
-
-Cadence.prototype.finalize = function () {
-    var vargs, cadence = this
-    if (this.finalizers.length == 0) {
-        if (this.errors.length === 0) {
-            (this.callback).apply(null, this.vargs)
-        } else {
-            (this.callback).apply(null, [ this.errors[0] ])
-        }
-    } else {
-        var finalizer = this.finalizers.pop()
-        execute(cadence.self, finalizer.steps, finalizer.vargs.concat(done))
-    }
-    function done (error) {
-        if (error) {
-            cadence.errors.push(error)
-        }
-        cadence.finalize()
-    }
-}
-
 function invoke (cadence) {
     for (;;) {
-        var vargs, steps = cadence.steps
+        var vargs, steps = cadence.steps, fn
 
         async.self = cadence.self
 
         if (cadence.errors.length) {
             if (cadence.catcher) {
-                cadence.rescue()
-            } else {
-                cadence.finalize()
-            }
-            break
-        }
-
-        if (cadence.results.length == 0) {
-            vargs = cadence.vargs
-            if (vargs[0] && vargs[0].loopy === token) {
-                var label = vargs.shift()
-                var destination = label.cadence || cadence.cadence
-                var iterator = cadence
-                while (destination !== iterator) {
-                    iterator.loop = false
-                    iterator.index = iterator.steps.length
-                    iterator = iterator.parent
+                var catcher = cadence.catcher, errors = cadence.errors
+                fn = function () {
+                    return catcher.call(this, errors[0], errors)
                 }
-                iterator.index = label.repeat ? 0 : iterator.steps.length
-                iterator.loop = label.loop
+            } else {
+                fn = null
+                cadence.loop = false
             }
         } else {
-            cadence.vargs = vargs = []
-            for (var i = 0, I = cadence.results.length; i < I; i++) {
-                var vargs_ = cadence.results[i].vargs
-                for (var j = 0, J = vargs_.length; j < J; j++) {
-                    vargs.push(vargs_[j])
+            if (cadence.results.length == 0) {
+                vargs = cadence.vargs
+                if (vargs[0] && vargs[0].loopy === token) {
+                    var label = vargs.shift()
+                    var destination = label.cadence || cadence.cadence
+                    var iterator = cadence
+                    while (destination !== iterator) {
+                        iterator.loop = false
+                        iterator.index = iterator.steps.length
+                        iterator = iterator.parent
+                    }
+                    iterator.index = label.repeat ? 0 : iterator.steps.length
+                    iterator.loop = label.loop
                 }
+            } else {
+                cadence.vargs = vargs = []
+                for (var i = 0, I = cadence.results.length; i < I; i++) {
+                    var vargs_ = cadence.results[i].vargs
+                    for (var j = 0, J = vargs_.length; j < J; j++) {
+                        vargs.push(vargs_[j])
+                    }
+                }
+            }
+            fn = steps[cadence.index++]
+        }
+
+        if (fn == null) {
+            if (cadence.finalizers.length) {
+                var finalizer = cadence.finalizers.shift()
+                fn = function () {
+                    async(function () {
+                        return finalizer.vargs
+                    }, finalizer.steps[0], function () {
+                        return vargs
+                    })
+                }
+            } else if (cadence.loop) {
+                fn = steps[0]
+                cadence.index = 1
+            } else if (cadence.errors.length) {
+                (cadence.callback).apply(null, [ cadence.errors[0] ])
+                break
+            } else {
+                if (vargs.length !== 0) {
+                    vargs.unshift(null)
+                }
+                (cadence.callback).apply(null, vargs)
+                break
             }
         }
 
@@ -195,20 +188,7 @@ function invoke (cadence) {
         cadence.errors = []
         cadence.sync = true
         cadence.waiting = false
-
-        if (cadence.index == steps.length) {
-            if (cadence.loop) {
-                cadence.index = 0
-            } else {
-                if (vargs.length !== 0) {
-                    vargs.unshift(null)
-                }
-                cadence.finalize()
-                break
-            }
-        }
-
-        var fn = steps[cadence.index++]
+        cadence.catcher = null
 
         if (Array.isArray(fn)) {
             if (fn.length === 1) {
@@ -359,57 +339,6 @@ function cadence () {
     return f
 }
 
-function Sink (async, self, ee) {
-    this._async = async
-    this._self = self
-    this._ee = ee
-    this._listeners = []
-    this._callback = async()
-}
-
-Sink.prototype._register = function (event, fn) {
-    this._ee.on(event, fn)
-    this._listeners.push({ event: event, fn: fn })
-}
-
-Sink.prototype.error = function (filter) {
-    this._register('error', function (error) {
-        if (filter) {
-            error = call(filter, this._self, [ error ])[1]
-        }
-        if (error) {
-            this._terminate([ error ])
-        }
-    }.bind(this))
-    return this
-}
-
-Sink.prototype.end = function (event) {
-    this._register(event, variadic(function (vargs) {
-        vargs.unshift(null)
-        this._terminate(vargs)
-    }, this))
-    return this
-}
-
-Sink.prototype._terminate = function (vargs) {
-    for (var i = 0, I = this._listeners.length; i < I; i++) {
-        var listener = this._listeners[i]
-        this._ee.removeListener(listener.event, listener.fn)
-    }
-    this._callback.apply(null, vargs)
-}
-
-Sink.prototype.on = function (event, listener) {
-    this._register(event, variadic(function (vargs) {
-        var ret = call(listener, this._self, vargs)
-        if (ret.length === 2) {
-            this._terminate([ ret[1] ])
-        }
-    }, this))
-    return this
-}
-
 function variadic (f, self) {
     return function () {
         var I = arguments.length
@@ -419,11 +348,6 @@ function variadic (f, self) {
         }
         return f.call(self, vargs)
     }
-}
-
-async.ee = function (ee) {
-    var async = this
-    return new Sink(this, async.self, ee)
 }
 
 async.forEach = variadic(function (steps) {

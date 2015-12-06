@@ -3549,6 +3549,8 @@ so each step in the proof test becomes part of my documentation.
  quite fast, but it is not itself optimized. I'm going to focus optimization
  energy on it. Cadence functions are generally meant to be build and named, and
  not anonymous.
+ * Finalizers once ran at the end of the cadence. This is no more. At times it
+ seems like a cool feature to reintroduce.
 
 ### The Rules of Cadence
 
