@@ -18,6 +18,24 @@ function Cadence (parent, finalizers, self, steps, vargs, callback) {
     this.vargs = vargs
 }
 
+// TODO Expand on this. You keep coming back here and saying, oh, no, I need to
+// give up on a step if there is an error. I'm not returning from this because
+// there is an error and all the callbacks are not returning. I need to return
+// immediately if there is an error, and then have a lot more code to deal with
+// the stragglers that return.
+//
+// Go back to your code. Try to explain to me why one error first callback
+// function returning an error is preventing another, completely different
+// callback function from returning an error. Pretend the are calls to open two
+// separate files and tell me why the orderly error reporting of the inability
+// to open one file should prevent the completion of the opening of another.
+// You're probably doing something complicated, a callback is deferred, and
+// neglecting to notify the deferred callback of an error.
+//
+// In short, this code is fine. If you were not using Cadence either you would
+// not have noticed the problem, or else you've have some sort of straggler
+// issue causing your code to continue after you've responded to an error.
+
 Cadence.prototype.resolveCallback = function (result, error, vargs) {
     if (error == null) {
         result.vargs = vargs
