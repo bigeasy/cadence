@@ -1,4 +1,4 @@
-require('proof')(4, prove)
+require('proof')(6, prove)
 
 function prove (assert) {
     var cadence = require('../..')
@@ -29,5 +29,16 @@ function prove (assert) {
     })(function (error) {
         assert(error.message, 'one', 'first finalizer error')
         assert(cleanup, 2, 'both finalizers called')
+    })
+
+    var cleanup = 0
+    cadence(function (async) {
+        async(function () {
+            return 1
+        }, [function (one) {
+            assert(one, 1, 'finalizer at end called')
+        }])
+    })(function (error, one) {
+        assert(one, 1, 'finalizer at end finished')
     })
 }
