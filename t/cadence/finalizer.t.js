@@ -35,10 +35,8 @@ function prove (assert) {
     cadence(function (async) {
         async([function () {
             cleanup++
-            throw new Error('finalizer')
         }], function () {
             throw new Error('body')
-            return 1
         })
     })(function (error) {
         assert(error.message, 'body', 'body error perpetuated')
