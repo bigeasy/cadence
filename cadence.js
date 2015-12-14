@@ -2,7 +2,7 @@ var stack = [], push = [].push, loopy = {}
 
 function Cadence (parent, finalizers, self, steps, vargs, callback) {
     this.parent = parent
-    this.finalizers = finalizers
+    this.finalizers = []
     this.self = self
     this.steps = steps
     this.callback = callback
@@ -174,11 +174,12 @@ function invoke (cadence) {
 
         if (fn == null) {
             if (cadence.finalizers.length) {
-                var finalizer = cadence.finalizers.shift()
+                var finalizer = cadence.finalizers.pop(), error = cadence.errors[0]
                 fn = function () {
                     async(function () {
                         return finalizer.vargs
                     }, finalizer.steps[0], function () {
+                        if (error) throw error
                         return vargs
                     })
                 }

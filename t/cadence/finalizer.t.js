@@ -27,7 +27,7 @@ function prove (assert) {
             return 1
         })
     })(function (error) {
-        assert(error.message, 'two', 'second finalizer error')
+        assert(error.message, 'one', 'first finalizer error')
         assert(cleanup, 2, 'both finalizers called')
     })
 }
