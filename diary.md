@@ -3556,3 +3556,9 @@ so each step in the proof test becomes part of my documentation.
 
  * The function body is a cadence with a single step.
  * The `async` function is only valid when used within a `step`.
+
+### Cadence Concepts
+
+ * Asynchronous stack.
+ * Utilities that call error-first callbacks versus utilities that call a
+ callback.
