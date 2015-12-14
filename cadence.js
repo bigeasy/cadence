@@ -1,4 +1,4 @@
-var stack = [], push = [].push, token = {}
+var stack = [], push = [].push, loopy = {}
 
 function Cadence (parent, finalizers, self, steps, vargs, callback) {
     this.parent = parent
@@ -101,8 +101,8 @@ Cadence.prototype.startLoop = function (vargs) {
     this.vargs = vargs
 
     return {
-        continue: { loopy: token, repeat: true, loop: true, cadence: this },
-        break: { loopy: token, repeat: false, loop: false, cadence: this }
+        continue: { loopy: loopy, repeat: true, loop: true, cadence: this },
+        break: { loopy: loopy, repeat: false, loop: false, cadence: this }
     }
 }
 
@@ -120,8 +120,8 @@ function async () {
     }
 }
 
-async.continue = { loopy: token, repeat: true, loop: false }
-async.break = { loopy: token, repeat: false, loop: false }
+async.continue = { loopy: loopy, repeat: true, loop: false }
+async.break = { loopy: loopy, repeat: false, loop: false }
 
 function call (fn, self, vargs) {
     try {
@@ -148,7 +148,7 @@ function invoke (cadence) {
         } else {
             if (cadence.results.length == 0) {
                 vargs = cadence.vargs
-                if (vargs[0] && vargs[0].loopy === token) {
+                if (vargs[0] && vargs[0].loopy === loopy) {
                     var label = vargs.shift()
                     var destination = label.cadence || cadence.cadence
                     var iterator = cadence
