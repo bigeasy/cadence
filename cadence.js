@@ -174,12 +174,15 @@ function invoke (cadence) {
 
         if (fn == null) {
             if (cadence.finalizers.length) {
-                var finalizer = cadence.finalizers.pop(), error = cadence.errors[0]
+                var finalizer = cadence.finalizers.pop(), errors = cadence.errors
                 fn = function () {
                     async(function () {
                         return finalizer.vargs
-                    }, finalizer.steps[0], function () {
-                        if (error) throw error
+                    }, [finalizer.steps[0], function (error) {
+                        if (errors.length) throw errors[0]
+                        throw error
+                    }], function () {
+                        if (errors.length) throw errors[0]
                         return vargs
                     })
                 }
