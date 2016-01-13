@@ -404,4 +404,15 @@ async.splat = variadic(function(steps) {
   this.apply(null, steps);
 }, async);
 
+async.hash = function(steps) {
+  async.forEach(function(key, index, memo) {
+    async(function() {
+      async(steps[key]);
+    }, function(res) {
+      memo[key] = res;
+      return [memo];
+    });
+  })(Object.keys(steps), {});
+};
+
 module.exports = cadence
