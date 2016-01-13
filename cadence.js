@@ -232,6 +232,11 @@ function invoke (cadence) {
             }
         }
 
+        if (fn === async.splat) {
+          cadence.vargs = [vargs]
+          continue
+        }
+
         stack.push(cadence)
 
         var ret = call(fn, cadence.self, vargs)
@@ -393,5 +398,10 @@ async.map = variadic(function (steps) {
         return loop = this.apply(null, steps).apply(null, vargs)
     }, this)
 }, async)
+
+async.splat = variadic(function(steps) {
+  steps.push([]);
+  this.apply(null, steps);
+}, async);
 
 module.exports = cadence
