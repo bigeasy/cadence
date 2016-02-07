@@ -12,6 +12,8 @@ ES6+ features. Cadence is classic Javascript. Cadence is tiny. Cadence is fast.
 
 ### Cadence In a Nutshell
 
+[![Join the chat at https://gitter.im/bigeasy/cadence](https://badges.gitter.im/bigeasy/cadence.svg)](https://gitter.im/bigeasy/cadence?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Cadence runs a series of functions asynchronously, using the results of one
 function as the arguments for the next. (This was inspired by Tim Caswell's
 [step](https://github.com/creationix/step) module.)
