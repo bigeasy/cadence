@@ -1,28 +1,24 @@
-Cadence is a control-flow library for error-first callback style of asynchronous
+Cadence is a control-flow library for error-first callback-style asynchronous
 programming. Cadence is my solution to the problem of the [Pyramid of
 Doom](http://tritarget.org/blog/2012/11/28/the-pyramid-of-doom-a-javascript-style-trap/).
 
-Cadence is one step after another, with robust **try/catch** error handling for
-asynchronous errors, **finalizers** for clean up, **nested** asynchronous
-**loops** with **break and continue**, and **tail-recursion elimination** to
-you'll never blow your stack looping.
+Cadence's flow is simple: is one step after another, with robust **try/catch**
+error handling for asynchronous errors, **finalizers** for clean up, **nested**
+asynchronous **loops** with **break and continue**, and **tail-recursion
+elimination** so you'll never blow your stack looping.
 
-Cadence does all this in **pure-Javascript** with **no transpilers** and without
-ES6+ features. Cadence is classic Javascript. Cadence is tiny. Cadence is fast.
-
+Cadence does all this in **pure-Javascript**, with **no transpilers** and without
+ES6+ features. Cadence is tiny, fast, classic Javascript.
 ### Cadence In a Nutshell
 
 Cadence runs a series of functions asynchronously, using the results of one
 function as the arguments for the next. (This was inspired by Tim Caswell's
 [step](https://github.com/creationix/step) module.)
 
-We call the series of functions a **cadence**. We call an individual function in
-a cadence a **step**.
+Each function in a series is a **step**. We call the series a **cadence**.
 
-We create **cadences** using the universal builder method `async`. We also use
-`async` to create **callbacks** inside the **steps**. The `async` function is a
-universal builder because we use it to create both **cadences** and
-**calbacks**.
+The magic behind Cadence is `async`, a universal method to create
+**cadences**. In each **step**, we call `async` to build a **callback**.
 
 ```javascript
 // `cat`: write a file to a stream.
@@ -45,11 +41,11 @@ cat(__filename, process.stdout, function (error) {
 })
 ```
 
-Errors get propagated up and out of the function to the caller. The next
+Errors get propagated up and out of the cadence to the caller. The next
 **step** does not receive an error argument and does not have to check the error
 argument.
 
-This menas that your code does not need to be littered with `if (error)
+This means that your code does not need to be littered with `if (error)
 callback(error)` branches that are difficult to reach in your tests. This is a
 major benefit of Cadence. Your asynchronous code is reduced to the happy path.
 
@@ -86,6 +82,10 @@ the function is the result of **cadence** defined in the function. The last
 **step** is either results of any **callbacks** or nested **cadences**, or else
 a value returned using `return`.
 
+Above we create a Cadence function whose last step `returns` a value to the
+user's callback. The last `return` within the **cadence** becomes the result of
+our function.
+
 *TK: Stopped here. Keep rewriting.*
 
 ### Major Benefit: Try/Catch and Finalize
@@ -121,11 +121,9 @@ deleteIf('junk.txt', function (error, deleted) {
 })
 ```
 
-In the above we use a catch block to catch an `ENOENT` error and return `false`,
-otherwise return `true`. If an error other than `ENOENT` is raised, the the
-error will be passed as the first argument. The try/catch block is the try
-**step** and the catch **step** paired together in an array. You can see how we
-can return `async.break` from any **step** to leave the **cadence** early.
+As above, `try` and `catch` blocks are their own steps, paired together in an
+array. Uncaught errors are passed as the first argument.
+Note we can use `async.break` to exit any **cadence** early.
 
 Until you use it, it is hard desrcibe how much easier it is to program
 asynchronous Node.js when you have this asynchronous stack. You're no longer
@@ -133,11 +131,39 @@ dealing with mystery errors merging from a univeral error handler, your error
 handing can have context; you know the nature of the error, because you know the
 function you called that raised the error.
 
+Finalizers are dead-simple. Let's use a **cadence** to open
+a database, and close it in our finalizer:
+
+```javascript
+var cadence = require('cadence'), mysql = require('mysql')
+
+var operation = cadence(function (async, options, work) {
+    var ms = mysql.createConnection(options)
+    var queue = [ { items: [ 'stuff', 'foo', 'bar' ] } ]
+
+    async(function () {
+
+        ms.connect()
+
+    }, [function () { //pass final function in an array
+
+        ms.end()
+
+    }], function () {
+
+        //do some work with this connection
+
+        work(ms, queue, async())
+    })
+})
+```
+
+
 ### What Cadence Can Do for You
 
 *Ed: Older benefit list, all still true, but needs tidy.*
 
-Cadence is pure-JavaScript library control-flow library with no transpilers. The
+Cadence is a pure-JavaScript control-flow library with no transpilers. The
 Cadence kernel is designed to JIT compile and get out of the way.
 
 Cadence can express all manner of asynchronous operations, including:
@@ -215,7 +241,7 @@ To learn more about Cadence, let's look closer at the `find` function.
 ### Function Body
 
 We create the `find` function by invoking `cadence` with a single argument which
-is the function body for `find`.  The `cadence` function will build a function
+is the function body for `find`. Cadence will build a function
 that, when invoked, will call the function body.
 
 ```javascript
