@@ -1,33 +1,35 @@
 {
-    "name":               "cadence",
+    "name":                 "cadence",
+    "version":              "1.0.0",
     "description":
 
       "A Swiss Army asynchronous control flow function for highly-parallel control flows.",
 
-    "author":             "Alan Gutierrez <alan@prettyrobots.com>",
-    "version":            "1.0.0",
     "keywords":
     [
-                          "async", "asynchronous", "control", "flow", "loop",
-                          "micro-js", "step", "callback"
+                            "async", "asynchronous", "control", "flow", "loop",
+                            "micro-js", "step", "callback"
     ],
-    "license":            "MIT",
-    "homepage":           "http://bigeasy.github.com/cadence",
+    "author":               "Alan Gutierrez <alan@prettyrobots.com>",
+    "homepage":             "http://bigeasy.github.com/cadence",
+    "bugs":                 "http://bigeasy.github.com/cadence",
+    "license":              "MIT",
     "repository":
     {
-                          "url": "git://github.com/bigeasy/cadence.git",
-                          "type": "git"
+                            "url": "git://github.com/bigeasy/cadence.git",
+                            "type": "git"
     },
-    "main":               "cadence.js",
     "dependencies":
-    {},
+    {
+    },
     "devDependencies":
     {
-                          "proof": "1.x",
-                          "uglify-js": "~1.3"
+                            "proof": "1.x",
+                            "uglify-js": "~1.3"
     },
+    "main":                 "cadence",
     "scripts":
     {
-                          "test": "proof platform win32 && proof test */*.t.js || t/test"
+                            "test": "proof platform win32 && proof test */*.t.js || t/test"
     }
 }
