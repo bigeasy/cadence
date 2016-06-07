@@ -1,7 +1,7 @@
 require('proof')(2, prove)
 
 function prove (assert, callback) {
-    var cadence = require('../..')
+    var cadence = require('..')
     cadence(function (async) {
         async(function () {
             setImmediate(async(), null, 1)

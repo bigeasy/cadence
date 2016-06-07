@@ -1,7 +1,7 @@
 require('proof')(8, prove)
 
 function prove (assert) {
-    var cadence = require('../..')
+    var cadence = require('..')
 
     var count = 0, object = []
     cadence(function (async) {

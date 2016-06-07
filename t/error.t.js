@@ -1,7 +1,7 @@
 require('proof')(12, prove)
 
 function prove (assert) {
-    var cadence = require('../..')
+    var cadence = require('..')
 
     cadence(function () {
         throw new Error('bogus')

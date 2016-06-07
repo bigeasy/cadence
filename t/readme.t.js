@@ -1,4 +1,4 @@
-require('proof')(2, require('../..')(prove))
+require('proof')(2, require('..')(prove))
 
 // Beware: The test below is not Proof as I'd use it in any other program. Here
 // I'm using Proof to test examples of Cadence that are meant to be stand alone
@@ -7,7 +7,7 @@ require('proof')(2, require('../..')(prove))
 // strange stuff. Have a look at any other Proof test for a better notion of how
 // to use Proof.
 function prove (async, assert) {
-    var cadence = require('../..')
+    var cadence = require('..')
 
     function echo (value, callback) {
         setImmediate(callback, null, value)

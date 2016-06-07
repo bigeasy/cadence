@@ -1,7 +1,7 @@
 require('proof')(9, prove)
 
 function prove (assert) {
-    var cadence = require('../..')
+    var cadence = require('..')
     var two = cadence(function (async, one) {
         return [ one ]
     })
