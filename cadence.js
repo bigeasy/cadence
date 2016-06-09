@@ -37,10 +37,10 @@ function Cadence (parent, finalizers, self, steps, vargs, callback) {
 // issue causing your code to continue after you've responded to an error.
 
 Cadence.prototype.resolveCallback = function (result, error, vargs) {
-    if (error == null) {
-        result.vargs = vargs
-    } else {
+    if (!! error) {
         this.errors.push(error)
+    } else {
+        result.vargs = vargs
     }
     if (++this.called === this.results.length) {
         if (this.waiting) {
