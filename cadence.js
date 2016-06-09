@@ -271,85 +271,28 @@ function cadence () {
     for (var i = 0; i < I; i++) {
         steps.push(arguments[i])
     }
-    var f
+
     // Preserving arity costs next to nothing; the call to `execute` in
     // these functions will be inlined. The airty function itself will never
     // be inlined because it is in a different context than that of our
     // dear user, but it will be compiled.
-    switch (steps[0].length) {
-    case 0:
-        f = function () {
-            var I = arguments.length
-            var vargs = new Array(I + 1)
-            vargs[0] = async
-            for (var i = 0; i < I; i++) {
-                vargs[i + 1] = arguments[i]
-            }
-            execute(this, steps, vargs)
-        }
-        break
-    case 1:
-        f = function (one) {
-            var I = arguments.length
-            var vargs = new Array(I + 1)
-            vargs[0] = async
-            for (var i = 0; i < I; i++) {
-                vargs[i + 1] = arguments[i]
-            }
-            execute(this, steps, vargs)
-        }
-        break
-    case 2:
-        f = function (one, two) {
-            var I = arguments.length
-            var vargs = new Array(I + 1)
-            vargs[0] = async
-            for (var i = 0; i < I; i++) {
-                vargs[i + 1] = arguments[i]
-            }
-            execute(this, steps, vargs)
-        }
-        break
-    case 3:
-        f = function (one, two, three) {
-            var I = arguments.length
-            var vargs = new Array(I + 1)
-            vargs[0] = async
-            for (var i = 0; i < I; i++) {
-                vargs[i + 1] = arguments[i]
-            }
-            execute(this, steps, vargs)
-        }
-        break
-    case 4:
-        f = function (one, two, three, four) {
-            var I = arguments.length
-            var vargs = new Array(I + 1)
-            vargs[0] = async
-            for (var i = 0; i < I; i++) {
-                vargs[i + 1] = arguments[i]
-            }
-            execute(this, steps, vargs)
-        }
-        break
-    default:
-        // Avert your eyes if you're squeamish.
-        var args = []
-        for (var i = 0, I = steps[0].length; i < I; i++) {
-            args[i] = '_' + i
-        }
-        f = (new Function('execute', 'steps', 'async', '                    \n\
-            return function (' + args.join(',') + ') {                      \n\
-                var I = arguments.length                                    \n\
-                var vargs = new Array(I + 1)                                \n\
-                vargs[0] = async                                            \n\
-                for (var i = 0; i < I; i++) {                               \n\
-                    vargs[i + 1] = arguments[i]                             \n\
-                }                                                           \n\
-                execute(this, steps, vargs)                                 \n\
-            }                                                               \n\
-       '))(execute, steps, async)
+
+    // Avert your eyes if you're squeamish.
+    var args = []
+    for (var i = 0, I = steps[0].length; i < I; i++) {
+        args[i] = '_' + i
     }
+    var f = (new Function('execute', 'steps', 'async', '                \n\
+        return function (' + args.join(',') + ') {                      \n\
+            var I = arguments.length                                    \n\
+            var vargs = new Array(I + 1)                                \n\
+            vargs[0] = async                                            \n\
+            for (var i = 0; i < I; i++) {                               \n\
+                vargs[i + 1] = arguments[i]                             \n\
+            }                                                           \n\
+            execute(this, steps, vargs)                                 \n\
+        }                                                               \n\
+   '))(execute, steps, async)
 
     f.toString = function () { return steps[0].toString() }
 
