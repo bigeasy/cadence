@@ -220,7 +220,7 @@ function invoke (cadence) {
                 var filter = fn
                 cadence.catcher = function (error) {
                     if (filter[1].test(error.code || error.message)) {
-                        return filter[2](error)
+                        return filter[2].call(this, error)
                     } else {
                         throw error
                     }
