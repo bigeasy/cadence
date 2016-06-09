@@ -1,4 +1,4 @@
-require('proof')(12, prove)
+require('proof')(13, prove)
 
 function prove (assert) {
     var cadence = require('..')
@@ -71,6 +71,16 @@ function prove (assert) {
         }])
     })(function (error, message) {
         assert(message, 'caught', 'catch specification hit')
+    })
+
+    cadence(function (async) {
+        async([function () {
+            throw new Error('caught')
+        }, /^message:caught$/, function (error) {
+            return [ error.message ]
+        }])
+    })(function (error, message) {
+        assert(message, 'caught', 'catch specification by property hit')
     })
 
     try {

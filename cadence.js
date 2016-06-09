@@ -218,8 +218,14 @@ function invoke (cadence) {
                 fn = fn[0]
             } else if (fn.length === 3) {
                 var filter = fn
+                var $ = /^\/\^([$\w][$\w\d]*):/.exec(filter[1].toString()),
+                    prefix = '', property = 'message'
+                if ($) {
+                    prefix = $[1] + ':'
+                    property = $[1]
+                }
                 cadence.catcher = function (error) {
-                    if (filter[1].test(error.code || error.message)) {
+                    if (filter[1].test(prefix + error[property])) {
                         return filter[2].call(this, error)
                     } else {
                         throw error
