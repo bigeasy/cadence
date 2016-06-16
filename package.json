@@ -24,8 +24,8 @@
     },
     "devDependencies":
     {
-                            "proof": "1.x",
-                            "uglify-js": "~1.3"
+                            "proof":                        "1.x",
+                            "uglify-js":                    "~1.3"
     },
     "main":                 "cadence",
     "scripts":
