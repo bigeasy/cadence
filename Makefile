@@ -47,8 +47,11 @@ all: $(sources)
 node_modules/.bin/serve:
 	npm install serve
 
+node_modules/.bin/lessc:
+	npm install less
+
 node_modules/.bin/edify:
-	npm install edify edify.markdown edify.highlight
+	npm install less edify edify.markdown edify.highlight
 
 watch: all
 	fswatch fswatch --exclude '.' --include '\.html$$' --include '\.less$$' pages css | while read line; \
@@ -57,7 +60,7 @@ watch: all
 		osascript -e "$$CHROME_REFRESH"; \
 	done;
 
-css/%.css: css/%.less
+css/%.css: css/%.less node_modules/.bin/lessc
 	node_modules/.bin/lessc $< > $@ || rm -f $@
 
 %.html: pages/%.html node_modules/.bin/edify
