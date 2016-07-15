@@ -35,6 +35,21 @@ function Cadence (parent, finalizers, self, steps, vargs, callback) {
 // In short, this code is fine. If you were not using Cadence either you would
 // not have noticed the problem, or else you've have some sort of straggler
 // issue causing your code to continue after you've responded to an error.
+//
+// TODO Update. Yes, good point. This is rare in production code, but I do
+// encounter it a lot in testing where I'm testing race conditions in concurrent
+// code, the kind of code that Cadence has made it easy for me to write.
+//
+// Because this is rare in production, it's not all that difficult to accept
+// that Cadence should return on the first error, then silently swallow all
+// subsequent errors. That seems ugly, but not advancing is also ugly, and in
+// both cases the ugliness is avoided by writing code that runs serially.
+// (Parallel code using the Node.js event loop is a boondoggle.)
+//
+// The logic isn't that much more difficult.
+//
+// It does present challenges when you consider what it means to run finalizers
+// early.
 
 Cadence.prototype.resolveCallback = function (result, error, vargs) {
     if (error == null) {
