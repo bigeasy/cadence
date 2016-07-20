@@ -79,11 +79,12 @@ img {
     }
     ul {
         font-size: 1.45em;
+        line-height: 1.5em;
         font-weight: 100;
         margin: 1em 0;
         padding-left: 2em;
         li {
-            margin: 0.25em 0;
+            margin: 1em 0;
         }
     }
     h2 {
@@ -97,13 +98,17 @@ img {
         margin: 2em 0 1em 0;
         font-size: 1.5em;
     }
-    p code {
+    li code, p code {
         font-family: 'Courier New';
         font-size: 1.05em;
+        letter-spacing: -1px;
         background: white;
         padding: 0 0.25em;
-        letter-spacing: -1px;
         border: 1px dotted #ccc;
+    }
+    pre {
+        border: 1px dotted #ccc;
+        padding: 0.5em 1em;
     }
 }
 
@@ -134,7 +139,7 @@ img {
         margin: 2em 0;
         padding: 1em;
         font-weight: normal;
-        font-size: 1.05em;
+        font-size: 1.25em;
         font-family: 'Courier New', 'Monaco', 'Oxygen Mono', 'Crystal', 'Cutive Mono', 'Oxygen Mono', monospace;
     }
 }
