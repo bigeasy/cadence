@@ -1,4 +1,4 @@
-require('proof')(12, prove)
+require('proof/redux')(12, prove)
 
 function prove (assert) {
     var cadence = require('..')

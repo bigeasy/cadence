@@ -1,4 +1,4 @@
-require('proof')(2, require('..')(prove))
+require('proof/redux')(2, require('..')(prove))
 
 // Beware: The test below is not Proof as I'd use it in any other program. Here
 // I'm using Proof to test examples of Cadence that are meant to be stand alone
@@ -12,8 +12,6 @@ function prove (async, assert) {
     function echo (value, callback) {
         setImmediate(callback, null, value)
     }
-
-    var deepEqual = assert.deepEqual
 
     async(function () {
         var next = async()
@@ -64,7 +62,7 @@ function prove (async, assert) {
 
         multiply([[ 1, 2, 3 ], [ 4, 5, 6 ], [ 7, 8, 9 ]], function (error, matrix) {
             if (error) throw error
-            deepEqual(matrix, [[ 5, 10, 15 ], [ 20, 25, 30 ], [ 35, 40, 45 ]])
+            assert(matrix, [[ 5, 10, 15 ], [ 20, 25, 30 ], [ 35, 40, 45 ]])
             next()
         })
     }, function () {
@@ -80,7 +78,7 @@ function prove (async, assert) {
 
         multiply([[ 1, 2, 3 ], [ 4, 5, 6 ], [ 7, 8, 9 ]], function (error, matrix) {
             if (error) throw error
-            deepEqual(matrix, [[ 5, 10, 15 ], [ 20, 25, 30 ], [ 35, 40, 45 ]])
+            assert(matrix, [[ 5, 10, 15 ], [ 20, 25, 30 ], [ 35, 40, 45 ]])
             next()
         })
     })
