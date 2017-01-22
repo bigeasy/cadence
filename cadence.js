@@ -55,7 +55,9 @@ Cadence.prototype.resolveCallback = function (result, error, vargs) {
     if (error == null) {
         result.vargs = vargs
     } else {
+        // Return immediately with the error, ignore all other responses.
         this.errors.push(error)
+        this.called = this.results.length - 1
     }
     if (++this.called === this.results.length) {
         if (this.waiting) {
@@ -255,6 +257,7 @@ function invoke (cadence) {
         stack.pop()
 
         if (ret.length === 2) {
+            // All other responses are ignored becasue we marked this sync.
             cadence.errors.push(ret[1])
             cadence.vargs = vargs
             cadence.sync = true
