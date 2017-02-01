@@ -1,18 +1,3 @@
-<!DOCTYPE html>
-<html>
-<meta charset="utf-8">
-<title>Cadence Pages Design Diary</title>
-<link href="https://fonts.googleapis.com/css?family=Alex+Brush|Oxygen+Mono|Offside|Raleway:400,700" rel="stylesheet" type="text/css">
-<link href="https://fonts.googleapis.com/css?family=Sorts Mill Goudy">
-<link rel="stylesheet" type="text/css" href="css/syntax.css">
-<link rel="stylesheet" type="text/css" href="css/cadence.css">
-<body><div class="container">
-
-<div class="unit welcome">
-<h1>Cadence Design Diary</h1>
-</div>
-
-<div class="unit description markdown">
 Notes on the design, starting with some fonts to consider. The font Didot goes
 well with the artwork. Trying to find a font on Google Fonts that appears
 similar, so today, I'm learing something about fonts and font families.
@@ -41,7 +26,3 @@ very unstructured and poorly considered.
 Also, it looks poorly considered when you're not expressing yourself in modules.
 When you're defining a function than loading it. It does not make Cadence look
 compact, instead it makes Cadence look self-important.
-</div>
-
-</div></body>
-</html>
