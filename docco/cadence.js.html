@@ -34,10 +34,6 @@
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Cadence</span> (<span class="hljs-params">parent, finalizers, self, steps, vargs, callback</span>) </span>{
     <span class="hljs-keyword">this</span>.parent = paren
-    <span class="hljs-keyword">this</span>.next = parent.nex
-    <span class="hljs-keyword">this</span>.previous = paren
-    <span class="hljs-keyword">this</span>.next.previous = <span class="hljs-keyword">this</span>
-    <span class="hljs-keyword">this</span>.previous.next = <span class="hljs-keyword">this</span>
     <span class="hljs-keyword">this</span>.finalizers = []
     <span class="hljs-keyword">this</span>.self = self
     <span class="hljs-keyword">this</span>.steps = steps
