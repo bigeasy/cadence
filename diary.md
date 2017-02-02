@@ -5,13 +5,22 @@ creative work. His thesis is that if you give your time and attention to any
 endeavour, you are rewarded with insights into your endeavour. Give it your time
 and attention and it will give you direction. Take the direction.
 
-There is a corollary, that when you're compelled to give your time and attention
-to an aspect of your endeavour that is not at the heart of your endeavour, those
-insights still come, although you don't want to hear from them, since these
-insights merely distract you from where you ought to be focused. But these
-insights start to nag you, they hound you with direction, they bombard you with
-clarity, until you finally succumb to the nagging, and the hounding, and
-bombardment, and set out to codify your insights in code.
+There is a corollary. When you're compelled to give your time and attention to
+some aspect of your work that is the heart of your endeavour, the insights still
+come, but they are not about the heart of your endeavour. They are about what
+ever sort of drudgery is taking up your time.
+
+You don't want to hear from them, since these insights merely distract you from
+the where your attention ought to be focused, but they will make themselves
+heard. They will nag at you. They will hound you with direction. They will
+bombard you with clarity. They will persist until you finally succumb to the
+nagging, and the hounding, and bombardment, and set out to lay down your
+insights in code.
+
+And there will be yet another build system, test framework, markup-language or
+in this case, a control-flow library.
+
+<hr>
 
 This is why there are so many unit test frameworks. Not because we really need
 another one, but because it's something you spend so much time with, you want to
