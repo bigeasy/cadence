@@ -151,6 +151,9 @@ function invoke (cadence) {
     var vargs, fn
     for (;;) {
         if (cadence.errors.length) {
+            // Break on error cadence is frustrated further by catch blocks that
+            // would restore forward motion. I suppose you'd only short-curcuit
+            // cadences subordinate to this cadence.
             if (cadence.catcher) {
                 var catcher = cadence.catcher, errors = cadence.errors
                 fn = function () {
