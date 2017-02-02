@@ -205,7 +205,24 @@ Cadence.prototype.startLoop = <span class="hljs-function"><span class="hljs-keyw
     <span class="hljs-keyword">var</span> vargs, fn
     <span class="hljs-keyword">for</span> (;;) {
         <span class="hljs-keyword">if</span> (cadence.errors.length) {
-            <span class="hljs-keyword">if</span> (cadence.catcher) {
+</pre></div></div>
+
+        </li>
+
+
+        <li id="section-4">
+            <div class="annotation">
+
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>Break on error cadence is frustrated further by catch blocks tha
+would restore forward motion. I suppose you’d only short-curcui
+cadences subordinate to this cadence.</p>
+
+            </div>
+
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">if</span> (cadence.catcher) {
                 <span class="hljs-keyword">var</span> catcher = cadence.catcher, errors = cadence.errors
                 fn = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
                     <span class="hljs-keyword">return</span> catcher.call(<span class="hljs-keyword">this</span>, errors[<span class="hljs-number">0</span>], errors)
@@ -309,11 +326,11 @@ Cadence.prototype.startLoop = <span class="hljs-function"><span class="hljs-keyw
         </li>
 
 
-        <li id="section-4">
+        <li id="section-5">
             <div class="annotation">
 
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-4">&#182;</a>
+                <a class="pilcrow" href="#section-5">&#182;</a>
               </div>
               <p>^^^^</p>
 
@@ -360,11 +377,11 @@ Cadence.prototype.startLoop = <span class="hljs-function"><span class="hljs-keyw
         </li>
 
 
-        <li id="section-5">
+        <li id="section-6">
             <div class="annotation">
 
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-5">&#182;</a>
+                <a class="pilcrow" href="#section-6">&#182;</a>
               </div>
               <p>Preserving arity costs next to nothing; the call to <code>execute</code> in
 these functions will be inlined. The airty function itself will never
@@ -435,11 +452,11 @@ dear user, but it will be compiled.</p>
         </li>
 
 
-        <li id="section-6">
+        <li id="section-7">
             <div class="annotation">
 
               <div class="pilwrap ">
-                <a class="pilcrow" href="#section-6">&#182;</a>
+                <a class="pilcrow" href="#section-7">&#182;</a>
               </div>
               <p>Avert your eyes if you’re squeamish.</p>
 
