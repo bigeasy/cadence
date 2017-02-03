@@ -3558,13 +3558,27 @@ so each step in the proof test becomes part of my documentation.
  quite fast, but it is not itself optimized. I'm going to focus optimization
  energy on it. Cadence functions are generally meant to be build and named, and
  not anonymous.
- * Finalizers once ran at the end of the cadence. This is no more. At times it
- seems like a cool feature to reintroduce.
 
 ### The Rules of Cadence
 
  * The function body is a cadence with a single step.
  * The `async` function is only valid when used within a `step`.
+
+### Exiting Early
+
+Want to exit on the first error, so that programs don't hang and exceptions get
+reported, but this only happens when I'm doing something particularly wicked in
+a unit test. I'm afraid that if I left early I might leak cadences quietly.
+
+Might be worth noting that Cadence can swallow an error. Is there a way to
+timeout callbacks? Are there decorated flavors of Cadence?
+
+Or is there an immediate return version of Cadence that is somehow pluggable?
+
+Maybe we callback, but then pause and wait for all the callbacks to really
+finish?
+
+Or maybe we just go ahead and embrace `nextTick`.
 
 ### Cadence Concepts
 
