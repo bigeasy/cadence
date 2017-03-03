@@ -33,7 +33,7 @@
             <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> stack = [], push = [].push, loopy = {}
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Cadence</span> (<span class="hljs-params">parent, finalizers, self, steps, vargs, callback</span>) </span>{
-    <span class="hljs-keyword">this</span>.parent = paren
+    <span class="hljs-keyword">this</span>.parent = parent
     <span class="hljs-keyword">this</span>.finalizers = []
     <span class="hljs-keyword">this</span>.self = self
     <span class="hljs-keyword">this</span>.steps = steps
@@ -48,9 +48,7 @@
     <span class="hljs-keyword">this</span>.sync = <span class="hljs-literal">true</span>
     <span class="hljs-keyword">this</span>.waiting = <span class="hljs-literal">false</span>
     <span class="hljs-keyword">this</span>.vargs = vargs
-}
-
-</pre></div></div>
+}</pre></div></div>
 
         </li>
 
@@ -67,7 +65,7 @@ there is an error and all the callbacks are not returning. I need to return
 immediately if there is an error, and then have a lot more code to deal with
 the stragglers that return.</p>
 <p>Go back to your code. Try to explain to me why one error first callback
-function returning an error is preventing another, completely differen
+function returning an error is preventing another, completely different
 callback function from returning an error. Pretend the are calls to open two
 separate files and tell me why the orderly error reporting of the inability
 to open one file should prevent the completion of the opening of another.
@@ -77,9 +75,9 @@ neglecting to notify the deferred callback of an error.</p>
 not have noticed the problem, or else you’ve have some sort of straggler
 issue causing your code to continue after you’ve responded to an error.</p>
 <p>TODO Update. Yes, good point. This is rare in production code, but I do
-encounter it a lot in testing where I’m testing race conditions in concurren
+encounter it a lot in testing where I’m testing race conditions in concurrent
 code, the kind of code that Cadence has made it easy for me to write.</p>
-<p>Because this is rare in production, it’s not all that difficult to accep
+<p>Because this is rare in production, it’s not all that difficult to accept
 that Cadence should return on the first error, then silently swallow all
 subsequent errors. That seems ugly, but not advancing is also ugly, and in
 both cases the ugliness is avoided by writing code that runs serially.
@@ -123,9 +121,7 @@ Cadence.prototype.createCallback = <span class="hljs-function"><span class="hljs
         }
         self.resolveCallback(result, error, vargs)
 
-        <span class="hljs-keyword">return</span>
-
-</pre></div></div>
+        <span class="hljs-keyword">return</span></pre></div></div>
 
         </li>
 
@@ -204,8 +200,7 @@ Cadence.prototype.startLoop = <span class="hljs-function"><span class="hljs-keyw
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">invoke</span> (<span class="hljs-params">cadence</span>) </span>{
     <span class="hljs-keyword">var</span> vargs, fn
     <span class="hljs-keyword">for</span> (;;) {
-        <span class="hljs-keyword">if</span> (cadence.errors.length) {
-</pre></div></div>
+        <span class="hljs-keyword">if</span> (cadence.errors.length) {</pre></div></div>
 
         </li>
 
@@ -216,8 +211,8 @@ Cadence.prototype.startLoop = <span class="hljs-function"><span class="hljs-keyw
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-4">&#182;</a>
               </div>
-              <p>Break on error cadence is frustrated further by catch blocks tha
-would restore forward motion. I suppose you’d only short-curcui
+              <p>Break on error cadence is frustrated further by catch blocks that
+would restore forward motion. I suppose you’d only short-curcuit
 cadences subordinate to this cadence.</p>
 
             </div>
@@ -241,7 +236,7 @@ cadences subordinate to this cadence.</p>
                     <span class="hljs-keyword">while</span> (destination !== iterator) {
                         iterator.loop = <span class="hljs-literal">false</span>
                         iterator.index = iterator.steps.length
-                        iterator = iterator.paren
+                        iterator = iterator.parent
                     }
                     iterator.index = label.repeat ? <span class="hljs-number">0</span> : iterator.steps.length
                     iterator.loop = label.loop
@@ -320,8 +315,7 @@ cadences subordinate to this cadence.</p>
 
         stack.push(cadence)
 
-        <span class="hljs-keyword">var</span> ret = call(fn, cadence.self, vargs)
-</pre></div></div>
+        <span class="hljs-keyword">var</span> ret = call(fn, cadence.self, vargs)</pre></div></div>
 
         </li>
 
@@ -371,8 +365,7 @@ cadences subordinate to this cadence.</p>
     <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; I; i++) {
         steps.push(<span class="hljs-built_in">arguments</span>[i])
     }
-    <span class="hljs-keyword">var</span> f
-</pre></div></div>
+    <span class="hljs-keyword">var</span> f</pre></div></div>
 
         </li>
 
@@ -446,8 +439,7 @@ dear user, but it will be compiled.</p>
             execute(<span class="hljs-keyword">this</span>, steps, vargs)
         }
         <span class="hljs-keyword">break</span>
-    <span class="hljs-keyword">default</span>:
-</pre></div></div>
+    <span class="hljs-keyword">default</span>:</pre></div></div>
 
         </li>
 
@@ -466,16 +458,16 @@ dear user, but it will be compiled.</p>
         <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, I = steps[<span class="hljs-number">0</span>].length; i &lt; I; i++) {
             args[i] = <span class="hljs-string">'_'</span> + i
         }
-        f = (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Function</span>(<span class="hljs-string">'execute'</span>, <span class="hljs-string">'steps'</span>, <span class="hljs-string">'async'</span>, <span class="hljs-string">'                    \n
-            return function ('</span> + args.join(<span class="hljs-string">','</span>) + <span class="hljs-string">') {                      \n
-                var I = arguments.length                                    \n
-                var vargs = new Array(I + 1)                                \n
-                vargs[0] = async                                            \n
-                for (var i = 0; i &lt; I; i++) {                               \n
-                    vargs[i + 1] = arguments[i]                             \n
-                }                                                           \n
-                execute(this, steps, vargs)                                 \n
-            }                                                               \n
+        f = (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Function</span>(<span class="hljs-string">'execute'</span>, <span class="hljs-string">'steps'</span>, <span class="hljs-string">'async'</span>, <span class="hljs-string">'                    \n\
+            return function ('</span> + args.join(<span class="hljs-string">','</span>) + <span class="hljs-string">') {                      \n\
+                var I = arguments.length                                    \n\
+                var vargs = new Array(I + 1)                                \n\
+                vargs[0] = async                                            \n\
+                for (var i = 0; i &lt; I; i++) {                               \n\
+                    vargs[i + 1] = arguments[i]                             \n\
+                }                                                           \n\
+                execute(this, steps, vargs)                                 \n\
+            }                                                               \n\
        '</span>))(execute, steps, <span class="hljs-keyword">async</span>)
     }
 
@@ -522,9 +514,7 @@ dear user, but it will be compiled.</p>
     }, <span class="hljs-keyword">this</span>)
 }, <span class="hljs-keyword">async</span>)
 
-<span class="hljs-built_in">module</span>.exports = cadence
-
-</pre></div></div>
+<span class="hljs-built_in">module</span>.exports = cadence</pre></div></div>
 
         </li>
 
