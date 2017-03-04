@@ -116,8 +116,8 @@ Cadence.prototype.startLoop = function (vargs) {
     this.vargs = vargs
 
     return {
-        continue: { loopy: loopy, repeat: true, loop: true, cadence: this },
-        break: { loopy: loopy, repeat: false, loop: false, cadence: this }
+        continue: { _: loopy, repeat: true, loop: true, cadence: this },
+        break: { _: loopy, repeat: false, loop: false, cadence: this }
     }
 }
 
@@ -135,8 +135,8 @@ function async () {
     }
 }
 
-async.continue = { loopy: loopy, repeat: true, loop: false }
-async.break = { loopy: loopy, repeat: false, loop: false }
+async.continue = { _: loopy, repeat: true, loop: false }
+async.break = { _: loopy, repeat: false, loop: false }
 
 function call (fn, self, vargs) {
     try {
@@ -166,7 +166,7 @@ function invoke (cadence) {
         } else {
             if (cadence.results.length == 0) {
                 vargs = cadence.vargs
-                if (vargs[0] && vargs[0].loopy === loopy) {
+                if (vargs[0] && vargs[0]._ === loopy) {
                     var label = vargs.shift()
                     var destination = label.cadence || cadence.cadence
                     var iterator = cadence
