@@ -100,27 +100,7 @@ Cadence.prototype.createCadence = function (vargs) {
 
     this.cadences.push(cadence)
 
-    return looper
-
-    function looper () {
-        var I = arguments.length
-        var vargs = new Array(I)
-        for (var i = 0; i < I; i++) {
-            vargs[i] = arguments[i]
-        }
-        return cadence.startLoop(vargs)
-    }
-}
-
-Cadence.prototype.startLoop = function (vargs) {
-    this.loop = true
-    this.vargs = vargs
-    this.outer = this
-
-    return {
-        continue: { jump: JUMP, index: 0, break: false, cadence: this },
-        break: { jump: JUMP, index: Infinity, break: true, cadence: this }
-    }
+    return function () { throw new Error('defunct') }
 }
 
 function async () {
@@ -408,6 +388,28 @@ function variadic (f, self) {
     }
 }
 
+// TODO Untested.
+async.loop = variadic(function (steps) {
+    var cadence = stack[stack.length - 1]
+
+    var callback = cadence.createCallback()
+
+    var subCadence = new Cadence(cadence, cadence.finalizers, cadence.self,
+        steps, [], callback, cadence.outer)
+
+    cadence.cadences.push(subCadence)
+
+    subCadence.loop = true
+    subCadence.outer = subCadence
+    var controller = variadic(function (vargs) {
+        this.vargs = vargs
+        return { continue: controller.continue, break: controller.break }
+    }, subCadence)
+    controller.continue = { jump: JUMP, index: 0, break: false, cadence: subCadence }
+    controller.break = { jump: JUMP, index: Infinity, break: true, cadence: subCadence }
+    return controller
+}, async)
+
 async.forEach = variadic(function (steps) {
     return variadic(function (vargs) {
         var loop, array = vargs.shift(), index = -1
@@ -416,7 +418,7 @@ async.forEach = variadic(function (steps) {
             if (index === array.length) return [ loop.break ].concat(vargs)
             return [ array[index], index ].concat(vargs)
         }))
-        return loop = this.apply(null, steps).apply(null, vargs)
+        return loop = this.loop.apply(this, steps).apply(null, vargs)
     }, this)
 }, async)
 
@@ -431,7 +433,7 @@ async.map = variadic(function (steps) {
         steps.push(variadic(function (vargs) {
             gather.push.apply(gather, vargs)
         }))
-        return loop = this.apply(null, steps).apply(null, vargs)
+        return loop = this.loop.apply(this, steps).apply(null, vargs)
     }, this)
 }, async)
 

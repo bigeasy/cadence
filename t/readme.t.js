@@ -42,19 +42,19 @@ function prove (async, assert) {
         var multiply = cadence(function (async, matrix) {
             async(function () {
                 var i = 0, j = 0
-                async(function () {
+                async.loop(function () {
                     if (i == matrix.length) return [ async.break ]
-                    async(function () {
+                    async.loop(function () {
                         if (j == matrix[i].length) return [ async.break ]
                         echo(matrix[i][j] * 5, async())
                     }, function (value) {
                         matrix[i][j] = value
                         j++
-                    })()
+                    })
                 }, function () {
                     j = 0
                     i++
-                })()
+                })
             }, function () {
                 return [ matrix ]
             })
