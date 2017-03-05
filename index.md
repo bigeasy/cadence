@@ -8,6 +8,8 @@ Cadence is one step after another, with robust try/catch error handling,
 finalizers, nested asynchronous loops with break and contine, and tail-recursion
 elimination to you'll never blow your stack looping.
 
+Link to [diary](./diary.html).
+
 Here's a function that will delete a file if it exists.
 
 ```javascript
