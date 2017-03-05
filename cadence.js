@@ -108,6 +108,31 @@ Cadence.prototype.createCadence = function (vargs) {
         for (var i = 0; i < I; i++) {
             vargs[i] = arguments[i]
         }
+        if (Array.isArray(vargs[0])) {
+            var index = -1
+            var array = vargs.shift()
+            var loop
+            var end
+            cadence.steps.unshift(function (vargs) {
+                index++
+                if (index === array.length) return end(vargs)
+                return [ array[index], index ].concat(vargs)
+            })
+            if (Array.isArray(vargs[vargs.length - 1])) {
+                vargs.pop()
+                var gather = []
+                cadence.steps.push([], function (vargs) {
+                    gather.push.apply(gather, vargs)
+                    return [ vargs ]
+                })
+                end = function () { return [ loop.break, gather ] }
+            } else {
+                end = function (vargs) { return [ loop.break ].concat(vargs) }
+            }
+            return loop = cadence.startLoop(vargs)
+        } else {
+            vargs.shift()
+        }
         return cadence.startLoop(vargs)
     }
 }
@@ -397,42 +422,8 @@ function cadence () {
     return f
 }
 
-function variadic (f, self) {
-    return function () {
-        var I = arguments.length
-        var vargs = new Array
-        for (var i = 0; i < I; i++) {
-            vargs.push(arguments[i])
-        }
-        return f.call(self, vargs)
-    }
-}
+async.forEach = function () { throw new Error('defunct') }
 
-async.forEach = variadic(function (steps) {
-    return variadic(function (vargs) {
-        var loop, array = vargs.shift(), index = -1
-        steps.unshift(variadic(function (vargs) {
-            index++
-            if (index === array.length) return [ loop.break ].concat(vargs)
-            return [ array[index], index ].concat(vargs)
-        }))
-        return loop = this.apply(null, steps).apply(null, vargs)
-    }, this)
-}, async)
-
-async.map = variadic(function (steps) {
-    return variadic(function (vargs) {
-        var loop, array = vargs.shift(), index = -1, gather = []
-        steps.unshift(variadic(function (vargs) {
-            index++
-            if (index === array.length) return [ loop.break, gather ]
-            return [ array[index], index ].concat(vargs)
-        }))
-        steps.push(variadic(function (vargs) {
-            gather.push.apply(gather, vargs)
-        }))
-        return loop = this.apply(null, steps).apply(null, vargs)
-    }, this)
-}, async)
+async.map = function () { throw new Error('defunct') }
 
 module.exports = cadence

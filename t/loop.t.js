@@ -1,4 +1,4 @@
-require('proof/redux')(8, prove)
+require('proof/redux')(9, prove)
 
 function prove (assert) {
     var cadence = require('..')
@@ -33,6 +33,15 @@ function prove (assert) {
     })
 
     cadence(function (async) {
+        var i = 0
+        async(function () {
+            if (++i == 2) return [ async.break, i ]
+        })()
+    })(function (error, result) {
+        assert(result, 2, 'returned no label')
+    })
+
+    cadence(function (async) {
         async(function () {
             var i = 0, outer = async(function () {
                 var j = 0, inner = async(function () {
@@ -52,7 +61,7 @@ function prove (assert) {
         var loop = async(function (i) {
             if (i == 2) return [ loop.break, i ]
             else return i + 1
-        })(0)
+        })(null, 0)
     })(function (error, i) {
         assert(i, 2, 'loop arguments')
     })
@@ -63,7 +72,7 @@ function prove (assert) {
             else return [ i ]
         }, function (i) {
             return [ loop.break, i ]
-        })(0)
+        })(null, 0)
     })(function (error, i) {
         assert(i, 1, 'continued')
     })
@@ -76,7 +85,7 @@ function prove (assert) {
             })
         }, function (i) {
             return [ async.break, i ]
-        })(0)
+        })(null, 0)
     })(function (error, i) {
         assert(i, 1, 'continued no label')
     })
@@ -85,7 +94,7 @@ function prove (assert) {
         var loop = async(function (i) {
             if (i == 0) return [ loop.continue, i + 1 ]
             else return [ loop.break, i + 1 ]
-        })(0)
+        })(null, 0)
     })(function (error, i) {
         assert(i, 2, 'continue then break')
     })
