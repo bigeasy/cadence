@@ -1,4 +1,4 @@
-require('proof/redux')(6, prove)
+require('proof/redux')(8, prove)
 
 function prove (assert) {
     var cadence = require('..')
@@ -19,6 +19,17 @@ function prove (assert) {
         })()
     })(function (error, result) {
         assert(result, 2, 'returned')
+    })
+
+    var f = cadence(function (async) {
+        var i = 0
+        async(function () {
+            async(function () {
+                if (++i == 2) return [ async.break, i ]
+            })
+        })()
+    })(function (error, result) {
+        assert(result, 2, 'returned no label')
     })
 
     cadence(function (async) {
@@ -55,6 +66,19 @@ function prove (assert) {
         })(0)
     })(function (error, i) {
         assert(i, 1, 'continued')
+    })
+
+    cadence(function (async) {
+        async(function (i) {
+            async(function () {
+                if (i % 2 == 0) return [ async.continue, i + 1 ]
+                else return [ i ]
+            })
+        }, function (i) {
+            return [ async.break, i ]
+        })(0)
+    })(function (error, i) {
+        assert(i, 1, 'continued no label')
     })
 
     cadence(function (async) {
