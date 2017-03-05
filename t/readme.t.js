@@ -69,8 +69,8 @@ function prove (async, assert) {
         var next = async()
 
         var multiply = cadence(function (async, matrix) {
-            async.map(function (array) {
-                async.map(function (value) {
+            async(function (array) {
+                async(function (value) {
                     echo(value * 5, async())
                 })(array)
             })(matrix)
