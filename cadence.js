@@ -1,13 +1,14 @@
 var stack = [], push = [].push, JUMP = {}
 
-function Cadence (parent, finalizers, self, steps, vargs, callback) {
+function Cadence (parent, finalizers, self, steps, vargs, callback, outer) {
     this.parent = parent
     this.finalizers = []
     this.self = self
     this.steps = steps
     this.callback = callback
     this.loop = false
-    this.cadence = this
+    this.cadence = outer || this
+    this.outer = outer
     this.cadences = []
     this.results = []
     this.errors = []
@@ -95,7 +96,7 @@ Cadence.prototype.createCallback = function () {
 Cadence.prototype.createCadence = function (vargs) {
     var callback = this.createCallback()
 
-    var cadence = new Cadence(this, this.finalizers, this.self, vargs, [], callback)
+    var cadence = new Cadence(this, this.finalizers, this.self, vargs, [], callback, this.outer)
 
     this.cadences.push(cadence)
 
@@ -114,6 +115,7 @@ Cadence.prototype.createCadence = function (vargs) {
 Cadence.prototype.startLoop = function (vargs) {
     this.loop = true
     this.vargs = vargs
+    this.outer = this
 
     return {
         continue: { jump: JUMP, index: 0, break: false, cadence: this },
