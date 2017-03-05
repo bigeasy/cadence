@@ -30,7 +30,7 @@
 
             </div>
 
-            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> stack = [], push = [].push, loopy = {}
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> stack = [], push = [].push, jump = {}
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">Cadence</span> (<span class="hljs-params">parent, finalizers, self, steps, vargs, callback</span>) </span>{
     <span class="hljs-keyword">this</span>.parent = parent
@@ -157,6 +157,29 @@ Cadence.prototype.createCadence = <span class="hljs-function"><span class="hljs-
         <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; I; i++) {
             vargs[i] = <span class="hljs-built_in">arguments</span>[i]
         }
+        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Array</span>.isArray(vargs[<span class="hljs-number">0</span>])) {
+            <span class="hljs-keyword">var</span> index = <span class="hljs-number">0</span>
+            <span class="hljs-keyword">var</span> array = vargs.shift()
+            <span class="hljs-keyword">var</span> loop
+            <span class="hljs-keyword">var</span> end
+            cadence.steps.unshift(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">vargs</span>) </span>{
+                index++
+                <span class="hljs-keyword">if</span> (index === array.length) <span class="hljs-keyword">return</span> end(vargs)
+                <span class="hljs-keyword">return</span> [ array[index], index ].concat(vargs)
+            })
+            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">Array</span>.isArray(vargs[vargs.length - <span class="hljs-number">1</span>])) {
+                vargs.pop()
+                <span class="hljs-keyword">var</span> gather = []
+                steps.push([], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">vargs</span>) </span>{
+                    gather.push.apply(gather, vargs)
+                    <span class="hljs-keyword">return</span> [ vargs ]
+                })
+                end = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{ <span class="hljs-keyword">return</span> [ loop.break, gather ] }
+            } <span class="hljs-keyword">else</span> {
+                end = <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">vargs</span>) </span>{ <span class="hljs-keyword">return</span> [ loop.break ].concat(vargs) }
+            }
+            <span class="hljs-keyword">return</span> loop = cadence.startLoop(vargs)
+        }
         <span class="hljs-keyword">return</span> cadence.startLoop(vargs)
     }
 }
@@ -166,8 +189,8 @@ Cadence.prototype.startLoop = <span class="hljs-function"><span class="hljs-keyw
     <span class="hljs-keyword">this</span>.vargs = vargs
 
     <span class="hljs-keyword">return</span> {
-        <span class="hljs-attr">continue</span>: { <span class="hljs-attr">loopy</span>: loopy, <span class="hljs-attr">repeat</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">loop</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">cadence</span>: <span class="hljs-keyword">this</span> },
-        <span class="hljs-attr">break</span>: { <span class="hljs-attr">loopy</span>: loopy, <span class="hljs-attr">repeat</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">loop</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">cadence</span>: <span class="hljs-keyword">this</span> }
+        <span class="hljs-attr">continue</span>: { <span class="hljs-attr">jump</span>: jump, <span class="hljs-attr">repeat</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">loop</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">cadence</span>: <span class="hljs-keyword">this</span> },
+        <span class="hljs-attr">break</span>: { <span class="hljs-attr">jump</span>: jump, <span class="hljs-attr">repeat</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">loop</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">cadence</span>: <span class="hljs-keyword">this</span> }
     }
 }
 
@@ -185,8 +208,8 @@ Cadence.prototype.startLoop = <span class="hljs-function"><span class="hljs-keyw
     }
 }
 
-<span class="hljs-keyword">async</span>.continue = { <span class="hljs-attr">loopy</span>: loopy, <span class="hljs-attr">repeat</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">loop</span>: <span class="hljs-literal">false</span> }
-<span class="hljs-keyword">async</span>.break = { <span class="hljs-attr">loopy</span>: loopy, <span class="hljs-attr">repeat</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">loop</span>: <span class="hljs-literal">false</span> }
+<span class="hljs-keyword">async</span>.continue = { <span class="hljs-attr">jump</span>: jump, <span class="hljs-attr">repeat</span>: <span class="hljs-literal">true</span>, <span class="hljs-attr">loop</span>: <span class="hljs-literal">false</span> }
+<span class="hljs-keyword">async</span>.break = { <span class="hljs-attr">jump</span>: jump, <span class="hljs-attr">repeat</span>: <span class="hljs-literal">false</span>, <span class="hljs-attr">loop</span>: <span class="hljs-literal">false</span> }
 
 <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">call</span> (<span class="hljs-params">fn, self, vargs</span>) </span>{
     <span class="hljs-keyword">try</span> {
@@ -229,7 +252,7 @@ cadences subordinate to this cadence.</p>
         } <span class="hljs-keyword">else</span> {
             <span class="hljs-keyword">if</span> (cadence.results.length == <span class="hljs-number">0</span>) {
                 vargs = cadence.vargs
-                <span class="hljs-keyword">if</span> (vargs[<span class="hljs-number">0</span>] &amp;&amp; vargs[<span class="hljs-number">0</span>].loopy === loopy) {
+                <span class="hljs-keyword">if</span> (vargs[<span class="hljs-number">0</span>] &amp;&amp; vargs[<span class="hljs-number">0</span>].jump === jump) {
                     <span class="hljs-keyword">var</span> label = vargs.shift()
                     <span class="hljs-keyword">var</span> destination = label.cadence || cadence.cadence
                     <span class="hljs-keyword">var</span> iterator = cadence
@@ -488,6 +511,7 @@ dear user, but it will be compiled.</p>
 }
 
 <span class="hljs-keyword">async</span>.forEach = variadic(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">steps</span>) </span>{
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>
     <span class="hljs-keyword">return</span> variadic(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">vargs</span>) </span>{
         <span class="hljs-keyword">var</span> loop, array = vargs.shift(), index = <span class="hljs-number">-1</span>
         steps.unshift(variadic(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">vargs</span>) </span>{
@@ -500,6 +524,7 @@ dear user, but it will be compiled.</p>
 }, <span class="hljs-keyword">async</span>)
 
 <span class="hljs-keyword">async</span>.map = variadic(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">steps</span>) </span>{
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>
     <span class="hljs-keyword">return</span> variadic(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">vargs</span>) </span>{
         <span class="hljs-keyword">var</span> loop, array = vargs.shift(), index = <span class="hljs-number">-1</span>, gather = []
         steps.unshift(variadic(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">vargs</span>) </span>{
