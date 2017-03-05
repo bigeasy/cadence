@@ -3,7 +3,7 @@ require('proof/redux')(8, prove)
 function prove (assert) {
     var cadence = require('..')
 
-    var f = cadence(function (async) {
+    cadence(function (async) {
         var i = 0
         async(function () {
             if (++i == 2) return [ async.break, i ]
@@ -13,7 +13,7 @@ function prove (assert) {
         assert(result, 2, 'async break and continue')
     })
 
-    var f = cadence(function (async) {
+    cadence(function (async) {
         var i = 0, loop = async(function () {
             if (++i == 2) return [ loop.break, i ]
         })()
@@ -21,7 +21,7 @@ function prove (assert) {
         assert(result, 2, 'returned')
     })
 
-    var f = cadence(function (async) {
+    cadence(function (async) {
         var i = 0
         async(function () {
             async(function () {
