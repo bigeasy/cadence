@@ -1,4 +1,4 @@
-var stack = [], push = [].push, jump = {}
+var stack = [], push = [].push, JUMP = {}
 
 function Cadence (parent, finalizers, self, steps, vargs, callback) {
     this.parent = parent
@@ -116,8 +116,8 @@ Cadence.prototype.startLoop = function (vargs) {
     this.vargs = vargs
 
     return {
-        continue: { jump: jump, repeat: true, loop: true, cadence: this },
-        break: { jump: jump, repeat: false, loop: false, cadence: this }
+        continue: { jump: JUMP, index: 0, break: false, cadence: this },
+        break: { jump: JUMP, index: Infinity, break: true, cadence: this }
     }
 }
 
@@ -135,8 +135,8 @@ function async () {
     }
 }
 
-async.continue = { jump: jump, repeat: true, loop: false }
-async.break = { jump: jump, repeat: false, loop: false }
+async.continue = { jump: JUMP, index: 0, break: false }
+async.break = { jump: JUMP, index: Infinity, break: true }
 
 function call (fn, self, vargs) {
     try {
@@ -152,7 +152,7 @@ function invoke (cadence) {
     for (;;) {
         if (cadence.errors.length) {
             // Break on error cadence is frustrated further by catch blocks that
-            // would restore forward motion. I suppose you'd only short-curcuit
+            // would restore forward motion. I suppose you'd only short-circuit
             // cadences subordinate to this cadence.
             if (cadence.catcher) {
                 var catcher = cadence.catcher, errors = cadence.errors
@@ -165,20 +165,31 @@ function invoke (cadence) {
             }
         } else {
             if (cadence.results.length == 0) {
+                // We had no async callbacks, so use the return value.
                 vargs = cadence.vargs
-                if (vargs[0] && vargs[0].jump === jump) {
-                    var label = vargs.shift()
-                    var destination = label.cadence || cadence.cadence
+                // Check for a loop controller in the return values.
+                if (vargs[0] && vargs[0].jump === JUMP) {
+                    var jump = vargs.shift()
+                    // Walk up to the jumping cadence setting all the
+                    // sub-cadences along the way to their last step. We
+                    // continue with the current cadence, not the destination.
+                    // We don't skip finalizers. When we continue, if the
+                    // current cadence is not the jumping cadence, we're going
+                    // to run the exit procedures for each sub-cadence.
+                    var destination = jump.cadence || cadence.cadence
                     var iterator = cadence
                     while (destination !== iterator) {
                         iterator.loop = false
                         iterator.index = iterator.steps.length
                         iterator = iterator.parent
                     }
-                    iterator.index = label.repeat ? 0 : iterator.steps.length
-                    iterator.loop = label.loop
+                    // Set the index and stop looping if this is a `break`.
+                    iterator.index = Math.min(jump.index, iterator.steps.length)
+                    iterator.loop = iterator.loop && ! jump.break
                 }
             } else {
+                // Combine the results of all the callbacks into an single array
+                // of arguments that will be used to invoke the next step.
                 cadence.vargs = vargs = []
                 for (var i = 0, I = cadence.results.length; i < I; i++) {
                     var vargs_ = cadence.results[i].vargs
@@ -187,11 +198,15 @@ function invoke (cadence) {
                     }
                 }
             }
+            // On to the next step.
             fn = cadence.steps[cadence.index++]
         }
 
         if (fn == null) {
             if (cadence.finalizers.length) {
+                // We're going to continue to loop until all the finalizers have
+                // executed. The step index is going to go beyond length of the
+                // step array, but that's okay.
                 var finalizer = cadence.finalizers.pop(), errors = cadence.errors
                 fn = function () {
                     async(function () {
@@ -205,12 +220,18 @@ function invoke (cadence) {
                     })
                 }
             } else if (cadence.loop) {
+                // Go back to the first step.
                 fn = cadence.steps[0]
                 cadence.index = 1
             } else if (cadence.errors.length) {
+                // Return the first error we received.
                 (cadence.callback).apply(null, [ cadence.errors[0] ])
                 break
             } else {
+                // TODO No longer feel compelled keep this shim for some stupid
+                // library that was using `arguments.length` to determine if it
+                // has been called back as an error first callback or an event
+                // emitter.
                 if (vargs.length !== 0) {
                     vargs.unshift(null)
                 }
