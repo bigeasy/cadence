@@ -79,9 +79,135 @@ sum([ 1, 2, 3 ], [], function (error, sum) {
 })
 ```
 
-### Removal of labels.
+### Optional Labels
 
+For both the implicit and explicit directions, I'd like to make loop labels
+optional. Currently they're necessary.
 
+```javascript
+var sum = cadence(function (async, values) {
+    var sum = 0, index = 0
+    var loop = async(function () {
+        if (index == values.length) {
+            return [ loop.break, sum ]
+        }
+        sum += values[index]
+    })()
+})
+
+sum([ 1, 2, 3 ], [], function (error, sum) {
+    if (error) throw error
+    assert.equal(sum, 6, 'summed')
+})
+```
+
+`async.break` and `async.continue` would break from the current loop.
+
+```javascript
+var sum = cadence(function (async, values) {
+    var sum = 0, index = 0
+    async(function () {
+        if (index == values.length) {
+            return [ async.break, sum ]
+        }
+        sum += values[index]
+    })()
+})
+
+sum([ 1, 2, 3 ], [], function (error, sum) {
+    if (error) throw error
+    assert.equal(sum, 6, 'summed')
+})
+```
+
+### Explicit
+
+Now that I've laid out implicit, explicit is the same but with names to
+distinguish `loop`, `forEach` and `map`.
+
+For each is pretty much the same.
+
+```javascript
+var sum = cadence(function (async, values) {
+    async.forEach(function (value, index, sum) {
+        return sum + value
+    })(values, 0)
+})
+
+sum([ 1, 2, 3 ], function (error, sum) {
+    if (error) throw error
+    assert(sum, 6, 'summed')
+})
+```
+
+Mapping is called by name, no special array sigil.
+
+```javascript
+var multiply = cadence(function (async, factor, values) {
+    async.map(function () {
+        return value * factor
+    })(values)
+})
+
+multiply(2, [ 1, 2, 3 ], function (error, mapped) {
+    if (error) throw error
+    assert.deepEqual(mapped, [ 2, 4, 6 ], 'summed')
+})
+```
+
+Invoking a loop with parameters means calling loop and invoking a primer.
+
+```javascript
+var silly = cadence(function (async, count) {
+    async.loop(function (count) {
+        if (--count == 0) return [ async.break ]
+        else return [ count ]
+    })(count)
+})
+
+silly(function (error) { if (error) throw error })
+```
+
+No ambiguities between `forEach` and `map` to resolve.
+
+Labels are still available. Also, note that you don't have to invoke the loop
+primer if you're not priming.
+
+```javascript
+var sum = cadence(function (async, values) {
+    var sum = 0, index = 0
+    var loop = async.loop(function () {
+        if (index == values.length) {
+            return [ loop.break, sum ]
+        }
+        sum += values[index]
+    })
+})
+
+sum([ 1, 2, 3 ], [], function (error, sum) {
+    if (error) throw error
+    assert.equal(sum, 6, 'summed')
+})
+```
+
+Labels are still optional.
+
+```javascript
+var sum = cadence(function (async, values) {
+    var sum = 0, index = 0
+    async.loop(function () {
+        if (index == values.length) {
+            return [ async.break, sum ]
+        }
+        sum += values[index]
+    })
+})
+
+sum([ 1, 2, 3 ], [], function (error, sum) {
+    if (error) throw error
+    assert.equal(sum, 6, 'summed')
+})
+```
 
 ## Sat Mar  4 19:00:46 CST 2017 ~ loops, concerns, decisions
 

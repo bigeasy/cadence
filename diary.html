@@ -13,7 +13,7 @@
       <div class="entry">
         <h2>Sat Mar 04 2017 19:20:25 GMT-0600 (CST)</h2>
         <div class="markdown"><p>Cadence 3.0 loops.</p>
-<p>Either explicit with <code>async.loop</code>.</p>
+<p>Esither explicit with <code>async.loop</code>.</p>
 <p>Otherwise, implicit.</p>
 <h3 id="implicit">Implicit</h3>
 <p>For each would once again be invoking the starter with an array as the first
@@ -74,7 +74,111 @@ sum([ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <s
     assert(<span class="hljs-built_in">isNaN</span>(sum), <span class="hljs-string">&apos;did not map&apos;</span>)
 })
 </code></pre>
-<h3 id="removal-of-labels-">Removal of labels.</h3>
+<h3 id="optional-labels">Optional Labels</h3>
+<p>For both the implicit and explicit directions, I&apos;d like to make loop labels
+optional. Currently they&apos;re necessary.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> sum = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, values</span>) </span>{
+    <span class="hljs-keyword">var</span> sum = <span class="hljs-number">0</span>, index = <span class="hljs-number">0</span>
+    <span class="hljs-keyword">var</span> loop = <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+        <span class="hljs-keyword">if</span> (index == values.length) {
+            <span class="hljs-keyword">return</span> [ loop.break, sum ]
+        }
+        sum += values[index]
+    })()
+})
+
+sum([ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span> ], [], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, sum</span>) </span>{
+    <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">throw</span> error
+    assert.equal(sum, <span class="hljs-number">6</span>, <span class="hljs-string">&apos;summed&apos;</span>)
+})
+</code></pre>
+<p><code>async.break</code> and <code>async.continue</code> would break from the current loop.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> sum = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, values</span>) </span>{
+    <span class="hljs-keyword">var</span> sum = <span class="hljs-number">0</span>, index = <span class="hljs-number">0</span>
+    <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+        <span class="hljs-keyword">if</span> (index == values.length) {
+            <span class="hljs-keyword">return</span> [ <span class="hljs-keyword">async</span>.break, sum ]
+        }
+        sum += values[index]
+    })()
+})
+
+sum([ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span> ], [], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, sum</span>) </span>{
+    <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">throw</span> error
+    assert.equal(sum, <span class="hljs-number">6</span>, <span class="hljs-string">&apos;summed&apos;</span>)
+})
+</code></pre>
+<h3 id="explicit">Explicit</h3>
+<p>Now that I&apos;ve laid out implicit, explicit is the same but with names to
+distinguish <code>loop</code>, <code>forEach</code> and <code>map</code>.</p>
+<p>For each is pretty much the same.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> sum = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, values</span>) </span>{
+    <span class="hljs-keyword">async</span>.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">value, index, sum</span>) </span>{
+        <span class="hljs-keyword">return</span> sum + value
+    })(values, <span class="hljs-number">0</span>)
+})
+
+sum([ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span> ], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, sum</span>) </span>{
+    <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">throw</span> error
+    assert(sum, <span class="hljs-number">6</span>, <span class="hljs-string">&apos;summed&apos;</span>)
+})
+</code></pre>
+<p>Mapping is called by name, no special array sigil.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> multiply = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, factor, values</span>) </span>{
+    <span class="hljs-keyword">async</span>.map(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+        <span class="hljs-keyword">return</span> value * factor
+    })(values)
+})
+
+multiply(<span class="hljs-number">2</span>, [ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span> ], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, mapped</span>) </span>{
+    <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">throw</span> error
+    assert.deepEqual(mapped, [ <span class="hljs-number">2</span>, <span class="hljs-number">4</span>, <span class="hljs-number">6</span> ], <span class="hljs-string">&apos;summed&apos;</span>)
+})
+</code></pre>
+<p>Invoking a loop with parameters means calling loop and invoking a primer.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> silly = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, count</span>) </span>{
+    <span class="hljs-keyword">async</span>.loop(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">count</span>) </span>{
+        <span class="hljs-keyword">if</span> (--count == <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span> [ <span class="hljs-keyword">async</span>.break ]
+        <span class="hljs-keyword">else</span> <span class="hljs-keyword">return</span> [ count ]
+    })(count)
+})
+
+silly(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error</span>) </span>{ <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">throw</span> error })
+</code></pre>
+<p>No ambiguities between <code>forEach</code> and <code>map</code> to resolve.</p>
+<p>Labels are still available. Also, note that you don&apos;t have to invoke the loop
+primer if you&apos;re not priming.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> sum = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, values</span>) </span>{
+    <span class="hljs-keyword">var</span> sum = <span class="hljs-number">0</span>, index = <span class="hljs-number">0</span>
+    <span class="hljs-keyword">var</span> loop = <span class="hljs-keyword">async</span>.loop(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+        <span class="hljs-keyword">if</span> (index == values.length) {
+            <span class="hljs-keyword">return</span> [ loop.break, sum ]
+        }
+        sum += values[index]
+    })
+})
+
+sum([ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span> ], [], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, sum</span>) </span>{
+    <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">throw</span> error
+    assert.equal(sum, <span class="hljs-number">6</span>, <span class="hljs-string">&apos;summed&apos;</span>)
+})
+</code></pre>
+<p>Labels are still optional.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> sum = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, values</span>) </span>{
+    <span class="hljs-keyword">var</span> sum = <span class="hljs-number">0</span>, index = <span class="hljs-number">0</span>
+    <span class="hljs-keyword">async</span>.loop(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+        <span class="hljs-keyword">if</span> (index == values.length) {
+            <span class="hljs-keyword">return</span> [ <span class="hljs-keyword">async</span>.break, sum ]
+        }
+        sum += values[index]
+    })
+})
+
+sum([ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span> ], [], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, sum</span>) </span>{
+    <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">throw</span> error
+    assert.equal(sum, <span class="hljs-number">6</span>, <span class="hljs-string">&apos;summed&apos;</span>)
+})
+</code></pre>
 </div>
       </div>
       <div class="entry">
