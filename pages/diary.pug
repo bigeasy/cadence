@@ -10,6 +10,7 @@ body
     div(class="unit description")
       each entry in argv[0]
         div.entry
-          h2= new Date(+entry.date)
+          h2
+            a(name=entry.date)= new Date(+entry.date)
           div(class="markdown")= entry.body
 // vim: set ts=2 sw=2 nowrap:
