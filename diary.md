@@ -58,8 +58,17 @@ silly(function (error) { if (error) throw error })
 The documentation starts by describing for each and map, then walks back the
 array looped over by for each.
 
-Finally, there is an ambiguity with map that has always been there, but if we're
-going to pass in `null` to defeat for each, we can pass in `null` to defeat map.
+Now we have an amibuity when we want to pass parameters to a for each when the
+last parameter could potentially be an array value. In early days of Cadence
+before named `forEach` and `map` this ambiguity seemed irreconcilable. It is one
+of the reasons why I opted for named `forEach` and `map`. They way I see code
+today, however, ambiguity resolution is as simple as instructing our dear user
+to pass a `null` literal as a last parameter to defeat mapping.
+
+TK This is an example of defeating map and getting garbage out of a function
+that uses map. What we really want is a for each function that makes good use of
+an array, maybe we loop over an array building an object using another array as
+an indexOf lookup of valid members.
 
 ```javascript
 var sum = cadence(function (async, values, start) {
@@ -78,6 +87,39 @@ sum([ 1, 2, 3 ], [], function (error, sum) {
     assert(isNaN(sum), 'did not map')
 })
 ```
+
+TK Better example. Try to find better values. Ugh. Why would you pass the array
+in though? Makes the point that this is an ambiguity that is never encounted.
+
+```javascript
+var byDepartment = cadence(function (async, employees, departments) {
+    var grouped = {}
+    async(function (value, index, departments) {
+        if (~departments.indexOf(employee.department)) {
+            var department = grouped[employee.department]
+            if (department == null) {
+                department = grouped[employee.department] = []
+            }
+            department.push(employee)
+        }
+    })(employees, departments, null)
+})
+
+byDepartment(employees, [ 'shipping', 'accounting' ], function (error, sum) {
+    if (error) throw error
+    assert(employees['shipping'].length > 0, 'have some shipping staff')
+    assert(employees['accounting'].length > 0, 'have some accounting staff')
+})
+
+byDepartment(employees, [], function (error, sum) {
+    if (error) throw error
+    assert.equal(employees.length, 0, 'no staff')
+})
+```
+
+TK Having written that it could be as simple as: `filter(array, array,
+callback)`, oh, duh, 'union' and 'difference'. Hmm... And if the reduced result
+is the reduced array, the difference array. Okay, come back to this.
 
 ### Optional Labels
 

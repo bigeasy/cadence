@@ -56,8 +56,16 @@ silly(<span class="hljs-function"><span class="hljs-keyword">function</span> (<s
 </code></pre>
 <p>The documentation starts by describing for each and map, then walks back the
 array looped over by for each.</p>
-<p>Finally, there is an ambiguity with map that has always been there, but if we&apos;re
-going to pass in <code>null</code> to defeat for each, we can pass in <code>null</code> to defeat map.</p>
+<p>Now we have an amibuity when we want to pass parameters to a for each when the
+last parameter could potentially be an array value. In early days of Cadence
+before named <code>forEach</code> and <code>map</code> this ambiguity seemed irreconcilable. It is one
+of the reasons why I opted for named <code>forEach</code> and <code>map</code>. They way I see code
+today, however, ambiguity resolution is as simple as instructing our dear user
+to pass a <code>null</code> literal as a last parameter to defeat mapping.</p>
+<p>TK This is an example of defeating map and getting garbage out of a function
+that uses map. What we really want is a for each function that makes good use of
+an array, maybe we loop over an array building an object using another array as
+an indexOf lookup of valid members.</p>
 <pre><code class="lang-javascript"><span class="hljs-keyword">var</span> sum = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, values, start</span>) </span>{
     <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">value, index, sum</span>) </span>{
         <span class="hljs-keyword">return</span> sum + value
@@ -74,6 +82,35 @@ sum([ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <s
     assert(<span class="hljs-built_in">isNaN</span>(sum), <span class="hljs-string">&apos;did not map&apos;</span>)
 })
 </code></pre>
+<p>TK Better example. Try to find better values. Ugh. Why would you pass the array
+in though? Makes the point that this is an ambiguity that is never encounted.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> byDepartment = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, employees, departments</span>) </span>{
+    <span class="hljs-keyword">var</span> grouped = {}
+    <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">value, index, departments</span>) </span>{
+        <span class="hljs-keyword">if</span> (~departments.indexOf(employee.department)) {
+            <span class="hljs-keyword">var</span> department = grouped[employee.department]
+            <span class="hljs-keyword">if</span> (department == <span class="hljs-literal">null</span>) {
+                department = grouped[employee.department] = []
+            }
+            department.push(employee)
+        }
+    })(employees, departments, <span class="hljs-literal">null</span>)
+})
+
+byDepartment(employees, [ <span class="hljs-string">&apos;shipping&apos;</span>, <span class="hljs-string">&apos;accounting&apos;</span> ], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, sum</span>) </span>{
+    <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">throw</span> error
+    assert(employees[<span class="hljs-string">&apos;shipping&apos;</span>].length &gt; <span class="hljs-number">0</span>, <span class="hljs-string">&apos;have some shipping staff&apos;</span>)
+    assert(employees[<span class="hljs-string">&apos;accounting&apos;</span>].length &gt; <span class="hljs-number">0</span>, <span class="hljs-string">&apos;have some accounting staff&apos;</span>)
+})
+
+byDepartment(employees, [], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, sum</span>) </span>{
+    <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">throw</span> error
+    assert.equal(employees.length, <span class="hljs-number">0</span>, <span class="hljs-string">&apos;no staff&apos;</span>)
+})
+</code></pre>
+<p>TK Having written that it could be as simple as: <code>filter(array, array,
+callback)</code>, oh, duh, &apos;union&apos; and &apos;difference&apos;. Hmm... And if the reduced result
+is the reduced array, the difference array. Okay, come back to this.</p>
 <h3 id="optional-labels">Optional Labels</h3>
 <p>For both the implicit and explicit directions, I&apos;d like to make loop labels
 optional. Currently they&apos;re necessary.</p>
