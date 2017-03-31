@@ -1,4 +1,4 @@
-require('proof/redux')(2, require('..')(prove))
+require('proof')(2, require('..')(prove))
 
 // Beware: The test below is not Proof as I'd use it in any other program. Here
 // I'm using Proof to test examples of Cadence that are meant to be stand alone
