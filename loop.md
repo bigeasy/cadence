@@ -14,7 +14,7 @@ cadence(function (async) {
 ```
 
 The `async.break` now breaks from a loop, but it also creates an error
-condition where there may not be a loop to break from. Maybe instead of raisign
+condition where there may not be a loop to break from. Maybe instead of raising
 an exception, it is well enough to do nothing. Maybe it falls back to a cadence
 exit.
 
