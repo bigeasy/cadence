@@ -478,7 +478,7 @@ var stepper = cadence(function (async) {
 
     }, function (value) { // <- the next step will not be called because of the error.
 
-        brokenEcho(value, async())
+        echo(value, async())
 
     })
 })
@@ -516,7 +516,7 @@ stepper(function (error, value) {
 })
 ```
 
-### Function Body Arguments
+### Function Parameters
 
 The first argument to the function body is always the `async` function. The rest
 of the arguments are the parameters passed to the `cadence` generated function.
@@ -524,7 +524,7 @@ of the arguments are the parameters passed to the `cadence` generated function.
 ```javascript
 var arguable = cadence(function (async, value) {
                                      // ^^^^^ from the caller.
-    async(value, async())
+    echo(value, async())
 
 })
 
