@@ -15,4 +15,4 @@ branches:
 
 before_install:
   - npm install
-  - npm install istanbul coveralls uglifyjs@1.3.x
+  - npm install istanbul coveralls uglify-js@1.3.x
