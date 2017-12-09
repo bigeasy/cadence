@@ -7,16 +7,8 @@ printf "%-24s %11s %11s %11s %11s\n" File Raw Min Zip Min/Zip
 for file in $@; do
   b_0=`cat $file | wc -c`
   b_1=`cat $file | $UGLIFY_JS | wc -c`
-  alt=`cat $file | $UGLIFY_JS --lift-vars | wc -c`
-  if [ $alt -lt ${b_1} ]; then
-    b_1=$alt
-  fi
   b_2=`cat $file | gzip -c  | wc -c`
   b_3=`cat $file | $UGLIFY_JS | gzip -c | wc -c`
-  alt=`cat $file | $UGLIFY_JS --lift-vars | gzip -c | wc -c`
-  if [ $alt -lt ${b_3} ]; then
-    b_3=$alt
-  fi
   for field in 0 1 2 3; do
     eval val=\$b_$field
     val=`awk -v val="$val" 'BEGIN { printf "%.2f", val / 1024 }'`
