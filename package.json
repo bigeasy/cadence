@@ -16,7 +16,7 @@
     "license":              "MIT",
     "repository":
     {
-                            "url": "git://github.com/bigeasy/cadence.git",
+                            "url": "bigeasy/cadence",
                             "type": "git"
     },
     "dependencies":
