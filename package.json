@@ -10,7 +10,11 @@
                             "cadence", "async", "asynchronous", "control", "flow", "loop",
                             "micro-js", "step", "callback"
     ],
-    "author":               "Alan Gutierrez <alan@prettyrobots.com>",
+    "author":
+    {
+                            "name":                     "Alan Gutierrez",
+                            "email":                    "alan@prettyrobots.com"
+    },
     "homepage":             "http://bigeasy.github.com/cadence",
     "bugs":                 "http://bigeasy.github.com/cadence/issues",
     "license":              "MIT",
