@@ -1,14 +1,13 @@
 #!/bin/sh
 
 dir=`cd ${0%/*} && pwd`
-UGLIFY_JS="${dir%/t}/node_modules/.bin/uglifyjs"
 
 printf "%-24s %11s %11s %11s %11s\n" File Raw Min Zip Min/Zip
 for file in $@; do
   b_0=`cat $file | wc -c`
-  b_1=`cat $file | $UGLIFY_JS | wc -c`
+  b_1=`cat $file | uglifyjs | wc -c`
   b_2=`cat $file | gzip -c  | wc -c`
-  b_3=`cat $file | $UGLIFY_JS | gzip -c | wc -c`
+  b_3=`cat $file | uglifyjs | gzip -c | wc -c`
   for field in 0 1 2 3; do
     eval val=\$b_$field
     val=`awk -v val="$val" 'BEGIN { printf "%.2f", val / 1024 }'`
