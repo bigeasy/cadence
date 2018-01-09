@@ -14,4 +14,4 @@ branches:
 
 install:
   - yarn install --no-lockfile
-  - yarn global add istanbul coveralls
+  - yarn global add istanbul coveralls uglify-js
