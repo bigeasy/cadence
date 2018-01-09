@@ -12,6 +12,6 @@ branches:
     - master
     - travis-ci
 
-before_install:
-  - npm install
-  - npm install -g istanbul coveralls uglify-js
+install:
+  - yarn install --no-lockfile
+  - yarn global add istanbul coveralls
