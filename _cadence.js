@@ -1,13 +1,14 @@
-var stack = [], push = [].push, token = {}
+var stack = [], push = [].push, JUMP = {}
 
-function Cadence (parent, finalizers, self, steps, vargs, callback) {
+function Cadence (parent, finalizers, self, steps, vargs, callback, outer) {
     this.parent = parent
-    this.finalizers = finalizers
+    this.finalizers = []
     this.self = self
     this.steps = steps
     this.callback = callback
     this.loop = false
-    this.cadence = this
+    this.cadence = outer || this
+    this.outer = outer
     this.cadences = []
     this.results = []
     this.errors = []
@@ -17,6 +18,39 @@ function Cadence (parent, finalizers, self, steps, vargs, callback) {
     this.waiting = false
     this.vargs = vargs
 }
+
+// TODO Expand on this. You keep coming back here and saying, oh, no, I need to
+// give up on a step if there is an error. I'm not returning from this because
+// there is an error and all the callbacks are not returning. I need to return
+// immediately if there is an error, and then have a lot more code to deal with
+// the stragglers that return.
+//
+// Go back to your code. Try to explain to me why one error first callback
+// function returning an error is preventing another, completely different
+// callback function from returning an error. Pretend the are calls to open two
+// separate files and tell me why the orderly error reporting of the inability
+// to open one file should prevent the completion of the opening of another.
+// You're probably doing something complicated, a callback is deferred, and
+// neglecting to notify the deferred callback of an error.
+//
+// In short, this code is fine. If you were not using Cadence either you would
+// not have noticed the problem, or else you've have some sort of straggler
+// issue causing your code to continue after you've responded to an error.
+//
+// TODO Update. Yes, good point. This is rare in production code, but I do
+// encounter it a lot in testing where I'm testing race conditions in concurrent
+// code, the kind of code that Cadence has made it easy for me to write.
+//
+// Because this is rare in production, it's not all that difficult to accept
+// that Cadence should return on the first error, then silently swallow all
+// subsequent errors. That seems ugly, but not advancing is also ugly, and in
+// both cases the ugliness is avoided by writing code that runs serially.
+// (Parallel code using the Node.js event loop is a boondoggle.)
+//
+// The logic isn't that much more difficult.
+//
+// It does present challenges when you consider what it means to run finalizers
+// early.
 
 Cadence.prototype.resolveCallback = function (result, error, vargs) {
     if (error == null) {
@@ -62,7 +96,7 @@ Cadence.prototype.createCallback = function () {
 Cadence.prototype.createCadence = function (vargs) {
     var callback = this.createCallback()
 
-    var cadence = new Cadence(this, this.finalizers, this.self, vargs, [], callback)
+    var cadence = new Cadence(this, this.finalizers, this.self, vargs, [], callback, this.outer)
 
     this.cadences.push(cadence)
 
@@ -81,10 +115,11 @@ Cadence.prototype.createCadence = function (vargs) {
 Cadence.prototype.startLoop = function (vargs) {
     this.loop = true
     this.vargs = vargs
+    this.outer = this
 
     return {
-        continue: { loopy: token, repeat: true, loop: true, cadence: this },
-        break: { loopy: token, repeat: false, loop: false, cadence: this }
+        continue: { jump: JUMP, index: 0, break: false, cadence: this },
+        break: { jump: JUMP, index: Infinity, break: true, cadence: this }
     }
 }
 
@@ -102,8 +137,8 @@ function async () {
     }
 }
 
-async.continue = { loopy: token, repeat: true, loop: false }
-async.break = { loopy: token, repeat: false, loop: false }
+async.continue = { jump: JUMP, index: 0, break: false }
+async.break = { jump: JUMP, index: Infinity, break: true }
 
 function call (fn, self, vargs) {
     try {
@@ -115,12 +150,12 @@ function call (fn, self, vargs) {
 }
 
 function invoke (cadence) {
+    var vargs, fn
     for (;;) {
-        var vargs, steps = cadence.steps, fn
-
-        async.self = cadence.self
-
         if (cadence.errors.length) {
+            // Break on error cadence is frustrated further by catch blocks that
+            // would restore forward motion. I suppose you'd only short-circuit
+            // cadences subordinate to this cadence.
             if (cadence.catcher) {
                 var catcher = cadence.catcher, errors = cadence.errors
                 fn = function () {
@@ -132,20 +167,31 @@ function invoke (cadence) {
             }
         } else {
             if (cadence.results.length == 0) {
+                // We had no async callbacks, so use the return value.
                 vargs = cadence.vargs
-                if (vargs[0] && vargs[0].loopy === token) {
-                    var label = vargs.shift()
-                    var destination = label.cadence || cadence.cadence
+                // Check for a loop controller in the return values.
+                if (vargs[0] && vargs[0].jump === JUMP) {
+                    var jump = vargs.shift()
+                    // Walk up to the jumping cadence setting all the
+                    // sub-cadences along the way to their last step. We
+                    // continue with the current cadence, not the destination.
+                    // We don't skip finalizers. When we continue, if the
+                    // current cadence is not the jumping cadence, we're going
+                    // to run the exit procedures for each sub-cadence.
+                    var destination = jump.cadence || cadence.cadence
                     var iterator = cadence
                     while (destination !== iterator) {
                         iterator.loop = false
                         iterator.index = iterator.steps.length
                         iterator = iterator.parent
                     }
-                    iterator.index = label.repeat ? 0 : iterator.steps.length
-                    iterator.loop = label.loop
+                    // Set the index and stop looping if this is a `break`.
+                    iterator.index = Math.min(jump.index, iterator.steps.length)
+                    iterator.loop = iterator.loop && ! jump.break
                 }
             } else {
+                // Combine the results of all the callbacks into an single array
+                // of arguments that will be used to invoke the next step.
                 cadence.vargs = vargs = []
                 for (var i = 0, I = cadence.results.length; i < I; i++) {
                     var vargs_ = cadence.results[i].vargs
@@ -154,26 +200,40 @@ function invoke (cadence) {
                     }
                 }
             }
-            fn = steps[cadence.index++]
+            // On to the next step.
+            fn = cadence.steps[cadence.index++]
         }
 
         if (fn == null) {
             if (cadence.finalizers.length) {
-                var finalizer = cadence.finalizers.shift()
+                // We're going to continue to loop until all the finalizers have
+                // executed. The step index is going to go beyond length of the
+                // step array, but that's okay.
+                var finalizer = cadence.finalizers.pop(), errors = cadence.errors
                 fn = function () {
                     async(function () {
                         return finalizer.vargs
-                    }, finalizer.steps[0], function () {
+                    }, [finalizer.steps[0], function (error) {
+                        if (errors.length) throw errors[0]
+                        throw error
+                    }], function () {
+                        if (errors.length) throw errors[0]
                         return vargs
                     })
                 }
             } else if (cadence.loop) {
-                fn = steps[0]
+                // Go back to the first step.
+                fn = cadence.steps[0]
                 cadence.index = 1
             } else if (cadence.errors.length) {
+                // Return the first error we received.
                 (cadence.callback).apply(null, [ cadence.errors[0] ])
                 break
             } else {
+                // TODO No longer feel compelled keep this shim for some stupid
+                // library that was using `arguments.length` to determine if it
+                // has been called back as an error first callback or an event
+                // emitter.
                 if (vargs.length !== 0) {
                     vargs.unshift(null)
                 }
@@ -201,7 +261,7 @@ function invoke (cadence) {
                 var filter = fn
                 cadence.catcher = function (error) {
                     if (filter[1].test(error.code || error.message)) {
-                        return filter[2](error)
+                        return filter[2].call(this, error)
                     } else {
                         throw error
                     }
@@ -333,8 +393,6 @@ function cadence () {
     }
 
     f.toString = function () { return steps[0].toString() }
-
-    f.isCadence = true
 
     return f
 }
