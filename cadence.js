@@ -300,8 +300,7 @@ function invoke (cadence) {
     }
 }
 
-function execute (self, steps, vargs) {
-    var callback = vargs.pop()
+function execute (self, steps, vargs, callback) {
     var cadence = new Cadence(null, [], self, steps, vargs, callback)
     invoke(cadence)
 }
@@ -320,57 +319,57 @@ function cadence () {
     switch (steps[0].length) {
     case 0:
         f = function () {
-            var I = arguments.length
+            var I = arguments.length - 1
             var vargs = new Array(I + 1)
             vargs[0] = async
             for (var i = 0; i < I; i++) {
                 vargs[i + 1] = arguments[i]
             }
-            execute(this, steps, vargs)
+            execute(this, steps, vargs, arguments[i])
         }
         break
     case 1:
         f = function (one) {
-            var I = arguments.length
+            var I = arguments.length - 1
             var vargs = new Array(I + 1)
             vargs[0] = async
             for (var i = 0; i < I; i++) {
                 vargs[i + 1] = arguments[i]
             }
-            execute(this, steps, vargs)
+            execute(this, steps, vargs, arguments[i])
         }
         break
     case 2:
         f = function (one, two) {
-            var I = arguments.length
+            var I = arguments.length - 1
             var vargs = new Array(I + 1)
             vargs[0] = async
             for (var i = 0; i < I; i++) {
                 vargs[i + 1] = arguments[i]
             }
-            execute(this, steps, vargs)
+            execute(this, steps, vargs, arguments[i])
         }
         break
     case 3:
         f = function (one, two, three) {
-            var I = arguments.length
+            var I = arguments.length - 1
             var vargs = new Array(I + 1)
             vargs[0] = async
             for (var i = 0; i < I; i++) {
                 vargs[i + 1] = arguments[i]
             }
-            execute(this, steps, vargs)
+            execute(this, steps, vargs, arguments[i])
         }
         break
     case 4:
         f = function (one, two, three, four) {
-            var I = arguments.length
+            var I = arguments.length - 1
             var vargs = new Array(I + 1)
             vargs[0] = async
             for (var i = 0; i < I; i++) {
                 vargs[i + 1] = arguments[i]
             }
-            execute(this, steps, vargs)
+            execute(this, steps, vargs, arguments[i])
         }
         break
     default:
@@ -381,13 +380,13 @@ function cadence () {
         }
         f = (new Function('execute', 'steps', 'async', '                    \n\
             return function (' + args.join(',') + ') {                      \n\
-                var I = arguments.length                                    \n\
+                var I = arguments.length - 1                                \n\
                 var vargs = new Array(I + 1)                                \n\
                 vargs[0] = async                                            \n\
                 for (var i = 0; i < I; i++) {                               \n\
                     vargs[i + 1] = arguments[i]                             \n\
                 }                                                           \n\
-                execute(this, steps, vargs)                                 \n\
+                execute(this, steps, vargs, arguments[i])                   \n\
             }                                                               \n\
        '))(execute, steps, async)
     }
