@@ -22,6 +22,9 @@ function sliced () {
     varged(slice.call(arguments))
 }
 
+function concated () {
+}
+
 function inlinable () {
     var vargs = new Array
     for (var i = 0, I = arguments.length; i < I; i++) {
