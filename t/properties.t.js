@@ -1,7 +1,21 @@
-require('proof')(9, prove)
+require('proof')(13, prove)
 
 function prove (assert) {
     var cadence = require('..')
+    var zero = cadence(function () {
+        return [ arguments[1] ]
+    })
+    zero(1, function (error, one) {
+        assert([ one ], [ 1 ], 'zero single argument')
+    })
+    assert(zero.length, 0, 'zero arity')
+    var one = cadence(function (async) {
+        return [ arguments[1] ]
+    })
+    one(1, function (error, one) {
+        assert([ one ], [ 1 ], 'one single argument')
+    })
+    assert(one.length, 1, 'one arity')
     var two = cadence(function (async, one) {
         return [ one ]
     })
