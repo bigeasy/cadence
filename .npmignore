@@ -1,0 +1,9 @@
+/.*
+/*.md
+/_cadence.js
+/coverage
+/node_modules
+/t
+/benchmark
+/docs
+/notes
