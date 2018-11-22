@@ -20,13 +20,13 @@ function fn_ () {
 
 for (var i = 1; i <= 4; i++)  {
     suite.add({
-        name: '_cadence async ' + i,
-        fn: fn_
+        name: ' cadence async ' + i,
+        fn: fn
     })
 
     suite.add({
-        name: ' cadence async ' + i,
-        fn: fn
+        name: '_cadence async ' + i,
+        fn: fn_
     })
 }
 
