@@ -1,7 +1,28 @@
-require('proof')(12, prove)
+require('proof')(14, prove)
 
 function prove (assert) {
     var cadence = require('..')
+
+    // Don't ever actually do this. Continuing at the base will cause the root
+    // cadence to run but with the arguments given to continue.
+    cadence(function (async) {
+        if (async == null) {
+            return [ 1 ]
+        }
+        async(function () {
+            return [ async.continue ]
+        })
+    })(0, function (error, result) {
+        assert(result, 1, 'continue at root')
+    })
+
+    cadence(function (async) {
+        async(function () {
+            return [ async.break, 1 ]
+        })
+    })(0, function (error, result) {
+        assert(result, 1, 'break at root')
+    })
 
     cadence(function (async) {
         var i = 0
@@ -104,13 +125,12 @@ function prove (assert) {
                 return [ async.break, 0 ]
             }])     // <- this is what is different from above, I expect loop to
                     // async.break from the inner-most.
-        }, function () {
-            // TODO You should reach here.
-            throw new Error('I want this to happen but it is not happening')
+        }, function (value) {
+            return [ async.break, value + 1 ]
         })
     })(function (error, i) {
         assert(error == null, 'no error')
-        assert(i, 0, 'break no label')
+        assert(i, 1, 'break inner no label')
     })
 
     cadence(function (async) {

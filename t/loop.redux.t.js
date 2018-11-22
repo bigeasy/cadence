@@ -5,7 +5,7 @@ function prove (okay) {
 
     cadence(function (async) {
         var i = 0
-        async(function () {
+        async.loop([], function () {
             if (++i == 2) return [ async.break, i ]
             else return [ async.continue ]
         })
