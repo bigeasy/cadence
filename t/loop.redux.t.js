@@ -15,7 +15,7 @@ function prove (okay) {
 
     cadence(function (async) {
         var i = 0
-        async.loop(function () {
+        async.loop([], function () {
             if (++i == 2) return [ async.break, i ]
         })
     })(function (error, result) {
@@ -24,7 +24,7 @@ function prove (okay) {
 
     cadence(function (async) {
         var i = 0
-        var loop = async.loop(function () {
+        var loop = async.loop([], function () {
             if (++i == 2) return [ loop.break, i ]
         })
     })(function (error, result) {
@@ -42,7 +42,7 @@ function prove (okay) {
 
     cadence(function (async) {
         var i = 0
-        async.loop(function () {
+        async.loop([], function () {
             async(function () {
                 if (++i == 2) return [ async.break, i ]
             })
@@ -53,7 +53,7 @@ function prove (okay) {
 
     cadence(function (async) {
         var i = 0
-        var loop = async.loop(function () {
+        var loop = async.loop([], function () {
             async(function () {
                 if (++i == 2) return [ loop.break, i ]
             })

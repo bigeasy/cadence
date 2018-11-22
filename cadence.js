@@ -367,7 +367,7 @@ function variadic (f, self) {
 
 async.loop = variadic(function (steps) {
     var cadence = stack[stack.length - 1]
-    var vargs = Array.isArray(steps[0]) ? steps.shift() : []
+    var vargs = steps.shift()
     var callback = cadence.createCallback()
     var looper = new Cadence(cadence, cadence.finalizers, cadence.self, steps, [], callback, cadence.outer)
     looper.loop = true

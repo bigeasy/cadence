@@ -23,8 +23,8 @@ function prove (assert) {
 
     cadence(function (async) {
         var i = 0
-        async.loop(function () {
-            async([], function () {
+        async.loop([], function () {
+            async(function () {
                 if (++i == 2) return [ async.break, i ]
             })
         })
