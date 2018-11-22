@@ -86,36 +86,6 @@ Cadence.prototype.createCallback = function () {
     }
 }
 
-Cadence.prototype.createCadence = function (vargs) {
-    var callback = this.createCallback()
-
-    var cadence = new Cadence(this, this.finalizers, this.self, vargs, [], callback, this.outer)
-
-    this.cadences.push(cadence)
-
-    return looper
-
-    function looper () {
-        var I = arguments.length
-        var vargs = new Array(I)
-        for (var i = 0; i < I; i++) {
-            vargs[i] = arguments[i]
-        }
-        return cadence.startLoop(vargs)
-    }
-}
-
-Cadence.prototype.startLoop = function (vargs) {
-    this.loop = true
-    this.vargs = vargs
-    this.outer = this
-
-    return {
-        continue: { jump: JUMP, index: 0, break: false, cadence: this },
-        break: { jump: JUMP, index: Infinity, break: true, cadence: this }
-    }
-}
-
 function async () {
     var cadence = stack[stack.length - 1]
     var I = arguments.length
@@ -124,7 +94,7 @@ function async () {
         for (var i = 0; i < I; i++) {
             vargs[i] = arguments[i]
         }
-        return cadence.createCadence(vargs)
+        cadence.cadences.push(new Cadence(cadence, cadence.finalizers, cadence.self, vargs, [], cadence.createCallback(), cadence.outer))
     } else {
         return cadence.createCallback()
     }
