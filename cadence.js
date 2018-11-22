@@ -114,7 +114,7 @@ function call (fn, self, vargs) {
 Cadence.prototype.invoke = function () {
     var vargs, fn
     for (;;) {
-        if (this.errors.length) {
+        if (this.errors.length) { // Critical path.
             // Break on error cadence is frustrated further by catch blocks that
             // would restore forward motion. I suppose you'd only short-circuit
             // cadences subordinate to this cadence.
@@ -128,7 +128,7 @@ Cadence.prototype.invoke = function () {
                 this.loop = false
             }
         } else {
-            if (this.results.length == 0) {
+            if (this.results.length == 0) { // Critical path.
                 // We had no async callbacks, so use the return value.
                 vargs = this.vargs
                 // Check for a loop controller in the return values.
@@ -166,7 +166,7 @@ Cadence.prototype.invoke = function () {
             fn = this.steps[this.index++]
         }
 
-        if (fn == null) {
+        if (fn == null) { // Critical path.
             if (this.finalizers.length) {
                 // We're going to continue to loop until all the finalizers have
                 // executed. The step index is going to go beyond length of the
@@ -208,7 +208,7 @@ Cadence.prototype.invoke = function () {
         this.waiting = false
         this.catcher = null
 
-        if (Array.isArray(fn)) {
+        if (Array.isArray(fn)) { // Critical path.
             if (fn.length === 1) {
                 this.finalizers.push({ steps: fn, vargs: vargs })
                 continue
@@ -243,6 +243,13 @@ Cadence.prototype.invoke = function () {
             this.vargs = vargs
             this.sync = true
         } else {
+            // The only one that could be removed if we where to invoke cadences
+            // directly and immediately when created. It would change loop
+            // labeling so that the loop label was always passed in as a final
+            // argument to the variadic arguments. This would in cause a gotcha
+            // where the user needs to make sure that each loop gets the same
+            // arguments, ah, and that's surprising because often times we're
+            // not thinking about the return at the end.
             for (var i = 0, I = this.cadences.length; i < I; i++) {
                 this.cadences[i].invoke()
             }
