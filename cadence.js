@@ -407,6 +407,21 @@ function variadic (f, self) {
     }
 }
 
+async.loop = variadic(function (steps) {
+    var cadence = stack[stack.length - 1]
+    var vargs = Array.isArray(steps[0]) ? steps.shift() : []
+    var callback = cadence.createCallback()
+    var looper = new Cadence(this, this.finalizers, this.self, steps, [], callback, this.outer)
+    looper.loop = true
+    looper.vargs = vargs
+    looper.outer = looper
+    cadence.cadences.push(looper)
+    return {
+        continue: { jump: JUMP, index: 0, break: false, cadence: looper },
+        break: { jump: JUMP, index: Infinity, break: true, cadence: looper }
+    }
+})
+
 async.forEach = variadic(function (steps) {
     return variadic(function (vargs) {
         var loop, array = vargs.shift(), index = -1
