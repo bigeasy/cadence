@@ -378,7 +378,7 @@ async.loop = variadic(function (steps) {
         continue: { jump: JUMP, index: 0, break: false, cadence: looper },
         break: { jump: JUMP, index: Infinity, break: true, cadence: looper }
     }
-})
+}, async)
 
 async.forEach = variadic(function (steps) {
     var loop, vargs = steps.shift(), array = vargs.shift(), index = -1
