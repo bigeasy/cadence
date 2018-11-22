@@ -1,4 +1,4 @@
-require('proof')(6, prove)
+require('proof')(7, prove)
 
 function prove (okay) {
     var cadence = require('..')
@@ -62,42 +62,23 @@ function prove (okay) {
         okay(result, 2, 'nested labeled break')
     })
 
-    return
-
-    cadence(function (async) {
-        var i = 0, loop = async.loop(function () {
-            if (++i == 2) return [ loop.break, i ]
-        })
-    })(function (error, result) {
-        okay(result, 2, 'returned')
-    })
-
-    cadence(function (async) {
-        var i = 0
-        async(function () {
-            async(function () {
-                if (++i == 2) return [ async.break, i ]
-            })
-        })()
-    })(function (error, result) {
-        assert(result, 2, 'returned no label')
-    })
-
     cadence(function (async) {
         async(function () {
-            var i = 0, outer = async(function () {
-                var j = 0, inner = async(function () {
+            var i = 0, outer = async.loop([], function () {
+                var j = 0, inner = async.loop([], function () {
                     if (i == 2) return [ outer.break, i, j ]
                     if (j++ == 2) return [ inner.break ]
-                })()
+                })
                 i++
-            })()
+            })
         }, function (i, j) {
             return [ i, j ]
         })
     })(function (error, i, j) {
-        assert([ i, j ], [ 2, 0 ], 'break outer')
+        okay([ i, j ], [ 2, 0 ], 'break outer')
     })
+
+    return
 
     cadence(function (async) {
         var loop = async(function (i) {
