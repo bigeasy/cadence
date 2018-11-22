@@ -4,7 +4,7 @@ var Benchmark = require('benchmark')
 
 var suite = new Benchmark.Suite('async')
 
-function body (async) { async()(null, 1) }
+function body (async) { async()(null, 1, 2, 3, 4, 5) }
 
 var m = cadence(body)
 

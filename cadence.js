@@ -192,8 +192,8 @@ function invoke (cadence) {
             } else {
                 // Combine the results of all the callbacks into an single array
                 // of arguments that will be used to invoke the next step.
-                cadence.vargs = vargs = []
-                for (var i = 0, I = cadence.results.length; i < I; i++) {
+                cadence.vargs = vargs = cadence.results[0].vargs
+                for (var i = 1, I = cadence.results.length; i < I; i++) {
                     var vargs_ = cadence.results[i].vargs
                     for (var j = 0, J = vargs_.length; j < J; j++) {
                         vargs.push(vargs_[j])
