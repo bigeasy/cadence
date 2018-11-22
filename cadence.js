@@ -1,6 +1,6 @@
 var stack = [], push = [].push, JUMP = {}
 
-function Cadence (parent, finalizers, self, steps, vargs, callback, outer) {
+function Cadence (parent, self, steps, vargs, callback, outer) {
     this.parent = parent
     this.finalizers = []
     this.self = self
@@ -94,7 +94,7 @@ function async () {
         for (var i = 0; i < I; i++) {
             vargs[i] = arguments[i]
         }
-        cadence.cadences.push(new Cadence(cadence, cadence.finalizers, cadence.self, vargs, [], cadence.createCallback(), cadence.outer))
+        cadence.cadences.push(new Cadence(cadence, cadence.self, vargs, [], cadence.createCallback(), cadence.outer))
     } else {
         return cadence.createCallback()
     }
@@ -260,7 +260,7 @@ Cadence.prototype.invoke = function () {
 }
 
 function execute (self, steps, vargs, callback) {
-    new Cadence(null, [], self, steps, vargs, callback).invoke()
+    new Cadence(null, self, steps, vargs, callback).invoke()
 }
 
 function cadence () {
@@ -369,7 +369,7 @@ async.loop = variadic(function (steps) {
     var cadence = stack[stack.length - 1]
     var vargs = steps.shift()
     var callback = cadence.createCallback()
-    var looper = new Cadence(cadence, cadence.finalizers, cadence.self, steps, [], callback, cadence.outer)
+    var looper = new Cadence(cadence, cadence.self, steps, [], callback, cadence.outer)
     looper.loop = true
     looper.vargs = vargs
     looper.outer = looper
