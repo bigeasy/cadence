@@ -1,6 +1,6 @@
 require('proof')(2, prove)
 
-function prove (assert) {
+function prove (okay) {
     var cadence = require('..')
 
     cadence(function (async) {
@@ -9,7 +9,7 @@ function prove (assert) {
         })
     })(function (error, sum) {
         if (error) throw error
-        assert(sum, 10, 'reduce')
+        okay(sum, 10, 'reduce')
     })
 
     cadence(function (async) {
@@ -18,6 +18,6 @@ function prove (assert) {
         })
     })(function (error, map) {
         if (error) throw error
-        assert(map, [ 1, 3, 5, 7 ], 'map')
+        okay(map, [ 1, 3, 5, 7 ], 'map')
     })
 }

@@ -1,12 +1,12 @@
 require('proof')(12, prove)
 
-function prove (assert) {
+function prove (okay) {
     var cadence = require('..')
 
     cadence(function () {
         throw new Error('bogus')
     })(function (error) {
-        assert(error.message, 'bogus', 'thrown exception')
+        okay(error.message, 'bogus', 'thrown exception')
     })
 
     var object = { a: 1 }
@@ -16,22 +16,22 @@ function prove (assert) {
         }, [function () {
             throw new Error('bogus')
         }, function (error) {
-            assert(object === this, 'this')
-            assert(error.message, 'bogus', 'caught')
+            okay(object === this, 'this')
+            okay(error.message, 'bogus', 'caught')
         }])
     }).call(object, function (error, result) {
-        assert(result, 1, 'propagate vargs')
+        okay(result, 1, 'propagate vargs')
     })
 
     cadence(function (async) {
         async([function () {
             throw new Error('bogus')
         }, function (error) {
-            assert(error.message, 'bogus', 'caught')
+            okay(error.message, 'bogus', 'caught')
             return 1
         }])
     })(function (error, result) {
-        assert(result, 1, 'changed return value')
+        okay(result, 1, 'changed return value')
     })
 
     cadence(function (async) {
@@ -42,7 +42,7 @@ function prove (assert) {
             throw errors[1]
         }])
     })(function (error) {
-        assert(error.message, 'two', 'propagated second error')
+        okay(error.message, 'two', 'propagated second error')
     })
 
     cadence(function (async) {
@@ -51,7 +51,7 @@ function prove (assert) {
             throw new Error('raised')
         })
     })(function (error) {
-        assert(error.message, 'raised', 'do not wait on callbacks after exception')
+        okay(error.message, 'raised', 'do not wait on callbacks after exception')
     })
 
     cadence(function (async) {
@@ -60,7 +60,7 @@ function prove (assert) {
         }, /^x$/, function (error) {
         }])
     })(function (error) {
-        assert(error.message, 'uncaught', 'catch specification missed')
+        okay(error.message, 'uncaught', 'catch specification missed')
     })
 
     cadence(function (async) {
@@ -70,7 +70,7 @@ function prove (assert) {
             return [ error.message ]
         }])
     })(function (error, message) {
-        assert(message, 'caught', 'catch specification hit')
+        okay(message, 'caught', 'catch specification hit')
     })
 
     try {
@@ -79,7 +79,7 @@ function prove (assert) {
             throw new Error('thrown')
         })
     } catch (e) {
-        assert(e.message, 'thrown', 'panic')
+        okay(e.message, 'thrown', 'panic')
     }
 
     cadence(function (async) {
@@ -91,6 +91,6 @@ function prove (assert) {
             return [ 2 ]
         })
     })(function (error, result) {
-        assert(result, 1, 'break from within catch')
+        okay(result, 1, 'break from within catch')
     })
 }

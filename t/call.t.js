@@ -1,10 +1,10 @@
 require('proof')(1, prove)
 
-function prove (assert) {
+function prove (okay) {
     var cadence = require('..')
 
     cadence(function () { return 1 })(function (error, one) {
         if (error) throw error
-        assert(one, 1, 'minimal')
+        okay(one, 1, 'minimal')
     })
 }

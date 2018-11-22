@@ -1,13 +1,13 @@
 require('proof')(8, prove)
 
-function prove (assert) {
+function prove (okay) {
     var cadence = require('..')
 
     var count = 0, object = []
     cadence(function (async) {
         async([function () {
-            assert(object === this, 'this')
-            assert(count, 1, 'incremented')
+            okay(object === this, 'this')
+            okay(count, 1, 'incremented')
         }], function () {
             count++
         })
@@ -27,8 +27,8 @@ function prove (assert) {
             return 1
         })
     })(function (error) {
-        assert(error.message, 'two', 'second finalizer error')
-        assert(cleanup, 2, 'both finalizers called')
+        okay(error.message, 'two', 'second finalizer error')
+        okay(cleanup, 2, 'both finalizers called')
     })
 
     var cleanup = 0
@@ -39,8 +39,8 @@ function prove (assert) {
             throw new Error('body')
         })
     })(function (error) {
-        assert(error.message, 'body', 'body error perpetuated')
-        assert(cleanup, 1, 'on error finalizer called')
+        okay(error.message, 'body', 'body error perpetuated')
+        okay(cleanup, 1, 'on error finalizer called')
     })
 
     var cleanup = 0
@@ -48,9 +48,9 @@ function prove (assert) {
         async(function () {
             return 1
         }, [function (one) {
-            assert(one, 1, 'finalizer at end called')
+            okay(one, 1, 'finalizer at end called')
         }])
     })(function (error, one) {
-        assert(one, 1, 'finalizer at end finished')
+        okay(one, 1, 'finalizer at end finished')
     })
 }

@@ -1,6 +1,6 @@
 require('proof')(2, prove)
 
-function prove (assert) {
+function prove (okay) {
     var cadence = require('..')
 
     cadence(function (async) {
@@ -10,7 +10,7 @@ function prove (assert) {
         first(null, 1, 2)
     })(function (error, one, two, three) {
         if (error) throw error
-        assert([ one, two, three ], [ 1, 2, 3 ], 'parallel')
+        okay([ one, two, three ], [ 1, 2, 3 ], 'parallel')
     })
 
     cadence(function (async) {
@@ -20,6 +20,6 @@ function prove (assert) {
         first(null, 1, 2)
     }, [])(function (error, array) {
         if (error) throw error
-        assert(array, [ 1, 2, 3 ], 'parallel gather')
+        okay(array, [ 1, 2, 3 ], 'parallel gather')
     })
 }

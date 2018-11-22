@@ -6,7 +6,7 @@ require('proof')(2, require('..')(prove))
 // invocations to Cadence, holding onto generated callbacks, and doing a lot of
 // strange stuff. Have a look at any other Proof test for a better notion of how
 // to use Proof.
-function prove (async, assert) {
+function prove (async, okay) {
     var cadence = require('..')
 
     function echo (value, callback) {
@@ -62,7 +62,7 @@ function prove (async, assert) {
 
         multiply([[ 1, 2, 3 ], [ 4, 5, 6 ], [ 7, 8, 9 ]], function (error, matrix) {
             if (error) throw error
-            assert(matrix, [[ 5, 10, 15 ], [ 20, 25, 30 ], [ 35, 40, 45 ]])
+            okay(matrix, [[ 5, 10, 15 ], [ 20, 25, 30 ], [ 35, 40, 45 ]])
             next()
         })
     }, function () {
@@ -78,7 +78,7 @@ function prove (async, assert) {
 
         multiply([[ 1, 2, 3 ], [ 4, 5, 6 ], [ 7, 8, 9 ]], function (error, matrix) {
             if (error) throw error
-            assert(matrix, [[ 5, 10, 15 ], [ 20, 25, 30 ], [ 35, 40, 45 ]])
+            okay(matrix, [[ 5, 10, 15 ], [ 20, 25, 30 ], [ 35, 40, 45 ]])
             next()
         })
     })

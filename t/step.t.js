@@ -1,6 +1,6 @@
 require('proof')(2, prove)
 
-function prove (assert) {
+function prove (okay) {
     var cadence = require('..')
 
     var f = cadence(function (async) {
@@ -9,7 +9,7 @@ function prove (assert) {
 
     }, function (number) {
 
-        assert(number, 1, 'step')
+        okay(number, 1, 'step')
 
     })
 
@@ -20,7 +20,7 @@ function prove (assert) {
     cadence(function () {
         return []
     })(function () {
-        assert(arguments.length, 0, 'zero arity does not prepend error')
+        okay(arguments.length, 0, 'zero arity does not prepend error')
     })
 }
 

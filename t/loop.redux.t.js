@@ -86,7 +86,7 @@ function prove (okay) {
             else return i + 1
         })(0)
     })(function (error, i) {
-        assert(i, 2, 'loop arguments')
+        okay(i, 2, 'loop arguments')
     })
 
     cadence(function (async) {
@@ -97,7 +97,7 @@ function prove (okay) {
             return [ loop.break, i ]
         })(0)
     })(function (error, i) {
-        assert(i, 1, 'continued')
+        okay(i, 1, 'continued')
     })
 
     cadence(function (async) {
@@ -110,7 +110,7 @@ function prove (okay) {
             return [ async.break, i ]
         })(0)
     })(function (error, i) {
-        assert(i, 1, 'continued no label')
+        okay(i, 1, 'continued no label')
     })
 
     cadence(function (async) {
@@ -119,7 +119,7 @@ function prove (okay) {
             else return [ loop.break, i + 1 ]
         })(0)
     })(function (error, i) {
-        assert(i, 2, 'continue then break')
+        okay(i, 2, 'continue then break')
     })
 }
 
