@@ -230,10 +230,6 @@ function invoke (cadence) {
                 (cadence.callback).apply(null, [ cadence.errors[0] ])
                 break
             } else {
-                // TODO No longer feel compelled keep this shim for some stupid
-                // library that was using `arguments.length` to determine if it
-                // has been called back as an error first callback or an event
-                // emitter.
                 if (vargs.length !== 0) {
                     vargs.unshift(null)
                 }
