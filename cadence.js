@@ -60,7 +60,7 @@ Cadence.prototype.resolveCallback = function (result, error, vargs) {
     }
     if (++this.called === this.results.length) {
         if (this.waiting) {
-            invoke(this)
+            this.invoke()
         } else {
             this.sync = true
         }
@@ -142,26 +142,26 @@ function call (fn, self, vargs) {
     return [ ret ]
 }
 
-function invoke (cadence) {
+Cadence.prototype.invoke = function () {
     var vargs, fn
     for (;;) {
-        if (cadence.errors.length) {
+        if (this.errors.length) {
             // Break on error cadence is frustrated further by catch blocks that
             // would restore forward motion. I suppose you'd only short-circuit
             // cadences subordinate to this cadence.
-            if (cadence.catcher) {
-                var catcher = cadence.catcher, errors = cadence.errors
+            if (this.catcher) {
+                var catcher = this.catcher, errors = this.errors
                 fn = function () {
                     return catcher.call(this, errors[0], errors)
                 }
             } else {
                 fn = null
-                cadence.loop = false
+                this.loop = false
             }
         } else {
-            if (cadence.results.length == 0) {
+            if (this.results.length == 0) {
                 // We had no async callbacks, so use the return value.
-                vargs = cadence.vargs
+                vargs = this.vargs
                 // Check for a loop controller in the return values.
                 if (vargs[0] && vargs[0].jump === JUMP) {
                     var jump = vargs.shift()
@@ -171,8 +171,8 @@ function invoke (cadence) {
                     // We don't skip finalizers. When we continue, if the
                     // current cadence is not the jumping cadence, we're going
                     // to run the exit procedures for each sub-cadence.
-                    var destination = jump.cadence || cadence.cadence
-                    var iterator = cadence
+                    var destination = jump.cadence || this.cadence
+                    var iterator = this
                     while (destination !== iterator) {
                         iterator.loop = false
                         iterator.index = iterator.steps.length
@@ -185,24 +185,24 @@ function invoke (cadence) {
             } else {
                 // Combine the results of all the callbacks into an single array
                 // of arguments that will be used to invoke the next step.
-                cadence.vargs = vargs = cadence.results[0].vargs
-                for (var i = 1, I = cadence.results.length; i < I; i++) {
-                    var vargs_ = cadence.results[i].vargs
+                this.vargs = vargs = this.results[0].vargs
+                for (var i = 1, I = this.results.length; i < I; i++) {
+                    var vargs_ = this.results[i].vargs
                     for (var j = 0, J = vargs_.length; j < J; j++) {
                         vargs.push(vargs_[j])
                     }
                 }
             }
             // On to the next step.
-            fn = cadence.steps[cadence.index++]
+            fn = this.steps[this.index++]
         }
 
         if (fn == null) {
-            if (cadence.finalizers.length) {
+            if (this.finalizers.length) {
                 // We're going to continue to loop until all the finalizers have
                 // executed. The step index is going to go beyond length of the
                 // step array, but that's okay.
-                var finalizer = cadence.finalizers.pop(), errors = cadence.errors
+                var finalizer = this.finalizers.pop(), errors = this.errors
                 fn = function () {
                     async(function () {
                         return finalizer.vargs
@@ -214,41 +214,41 @@ function invoke (cadence) {
                         return vargs
                     })
                 }
-            } else if (cadence.loop) {
+            } else if (this.loop) {
                 // Go back to the first step.
-                fn = cadence.steps[0]
-                cadence.index = 1
-            } else if (cadence.errors.length) {
+                fn = this.steps[0]
+                this.index = 1
+            } else if (this.errors.length) {
                 // Return the first error we received.
-                (cadence.callback).apply(null, [ cadence.errors[0] ])
+                (this.callback).apply(null, [ this.errors[0] ])
                 break
             } else {
                 if (vargs.length !== 0) {
                     vargs.unshift(null)
                 }
-                (cadence.callback).apply(null, vargs)
+                (this.callback).apply(null, vargs)
                 break
             }
         }
 
-        cadence.called = 0
-        cadence.cadences = []
-        cadence.results = []
-        cadence.errors = []
-        cadence.sync = true
-        cadence.waiting = false
-        cadence.catcher = null
+        this.called = 0
+        this.cadences = []
+        this.results = []
+        this.errors = []
+        this.sync = true
+        this.waiting = false
+        this.catcher = null
 
         if (Array.isArray(fn)) {
             if (fn.length === 1) {
-                cadence.finalizers.push({ steps: fn, vargs: vargs })
+                this.finalizers.push({ steps: fn, vargs: vargs })
                 continue
             } else if (fn.length === 2) {
-                cadence.catcher = fn[1]
+                this.catcher = fn[1]
                 fn = fn[0]
             } else if (fn.length === 3) {
                 var filter = fn
-                cadence.catcher = function (error) {
+                this.catcher = function (error) {
                     if (filter[1].test(error.code || error.message)) {
                         return filter[2].call(this, error)
                     } else {
@@ -257,41 +257,40 @@ function invoke (cadence) {
                 }
                 fn = fn[0]
             } else {
-                cadence.vargs = [ vargs ]
+                this.vargs = [ vargs ]
                 continue
             }
         }
 
-        stack.push(cadence)
+        stack.push(this)
 
-        var ret = call(fn, cadence.self, vargs)
+        var ret = call(fn, this.self, vargs)
                // ^^^^
 
         stack.pop()
 
         if (ret.length === 2) {
-            cadence.errors.push(ret[1])
-            cadence.vargs = vargs
-            cadence.sync = true
+            this.errors.push(ret[1])
+            this.vargs = vargs
+            this.sync = true
         } else {
-            for (var i = 0, I = cadence.cadences.length; i < I; i++) {
-                invoke(cadence.cadences[i])
+            for (var i = 0, I = this.cadences.length; i < I; i++) {
+                this.cadences[i].invoke()
             }
             if (ret[0] !== void(0)) {
-                cadence.vargs = Array.isArray(ret[0]) ? ret[0] : [ ret[0] ]
+                this.vargs = Array.isArray(ret[0]) ? ret[0] : [ ret[0] ]
             }
         }
 
-        if (!cadence.sync) {
-            cadence.waiting = true
+        if (!this.sync) {
+            this.waiting = true
             break
         }
     }
 }
 
 function execute (self, steps, vargs, callback) {
-    var cadence = new Cadence(null, [], self, steps, vargs, callback)
-    invoke(cadence)
+    new Cadence(null, [], self, steps, vargs, callback).invoke()
 }
 
 function cadence () {

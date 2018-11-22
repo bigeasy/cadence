@@ -83,13 +83,6 @@ Cadence.prototype.createCallback = function () {
             vargs[i - 1] = arguments[i]
         }
         self.resolveCallback(result, error, vargs)
-
-        return
-
-        // This try/catch will prevent V8 from marking this function of
-        // optimization because it will only ever run once.
-        /* istanbul ignore next */
-        try {} catch(e) {}
     }
 }
 
