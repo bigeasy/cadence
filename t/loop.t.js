@@ -1,4 +1,4 @@
-require('proof')(8, prove)
+require('proof')(12, prove)
 
 function prove (assert) {
     var cadence = require('..')
@@ -79,6 +79,38 @@ function prove (assert) {
         })(0)
     })(function (error, i) {
         assert(i, 1, 'continued no label')
+    })
+
+    cadence(function (async) {
+        async(function () {
+            async([function () {
+                throw new Error
+            }, function (error) {
+                return [ async.break, 0 ]
+            }])
+        }, function () {
+            throw new Error('should not happen')
+        })()
+    })(function (error, i) {
+        assert(error == null, 'no error')
+        assert(i, 0, 'break no label')
+    })
+
+    cadence(function (async) {
+        async(function () {
+            async([function () {
+                throw new Error
+            }, function (error) {
+                return [ async.break, 0 ]
+            }])()   // <- this is what is different from above, I expect loop to
+                    // async.break from the inner-most.
+        }, function () {
+            // TODO You should reach here.
+            throw new Error('I want this to happen but it is not happening')
+        })()
+    })(function (error, i) {
+        assert(error == null, 'no error')
+        assert(i, 0, 'break no label')
     })
 
     cadence(function (async) {
