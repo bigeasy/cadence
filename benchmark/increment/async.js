@@ -2,7 +2,7 @@ var cadence = require('../../cadence')
 var cadence_ = require('../../_cadence')
 var Benchmark = require('benchmark')
 
-var suite = new Benchmark.Suite('async', { /*minSamples: 100*/ })
+var suite = new Benchmark.Suite('async')
 
 function body (async) { async()(null, 1) }
 
@@ -35,7 +35,7 @@ suite.on('cycle', function(event) {
 })
 
 suite.on('complete', function() {
-    console.log('Fastest is ' + this.filter('fastest').pluck('name'));
+    console.log('Fastest is ' + this.filter('fastest').map('name'));
 })
 
 suite.run()

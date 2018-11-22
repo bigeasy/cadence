@@ -230,10 +230,6 @@ function invoke (cadence) {
                 (cadence.callback).apply(null, [ cadence.errors[0] ])
                 break
             } else {
-                // TODO No longer feel compelled keep this shim for some stupid
-                // library that was using `arguments.length` to determine if it
-                // has been called back as an error first callback or an event
-                // emitter.
                 if (vargs.length !== 0) {
                     vargs.unshift(null)
                 }
@@ -300,8 +296,7 @@ function invoke (cadence) {
     }
 }
 
-function execute (self, steps, vargs) {
-    var callback = vargs.pop()
+function execute (self, steps, vargs, callback) {
     var cadence = new Cadence(null, [], self, steps, vargs, callback)
     invoke(cadence)
 }
@@ -320,57 +315,57 @@ function cadence () {
     switch (steps[0].length) {
     case 0:
         f = function () {
-            var I = arguments.length
+            var I = arguments.length - 1
             var vargs = new Array(I + 1)
             vargs[0] = async
             for (var i = 0; i < I; i++) {
                 vargs[i + 1] = arguments[i]
             }
-            execute(this, steps, vargs)
+            execute(this, steps, vargs, arguments[i])
         }
         break
     case 1:
         f = function (one) {
-            var I = arguments.length
+            var I = arguments.length - 1
             var vargs = new Array(I + 1)
             vargs[0] = async
             for (var i = 0; i < I; i++) {
                 vargs[i + 1] = arguments[i]
             }
-            execute(this, steps, vargs)
+            execute(this, steps, vargs, arguments[i])
         }
         break
     case 2:
         f = function (one, two) {
-            var I = arguments.length
+            var I = arguments.length - 1
             var vargs = new Array(I + 1)
             vargs[0] = async
             for (var i = 0; i < I; i++) {
                 vargs[i + 1] = arguments[i]
             }
-            execute(this, steps, vargs)
+            execute(this, steps, vargs, arguments[i])
         }
         break
     case 3:
         f = function (one, two, three) {
-            var I = arguments.length
+            var I = arguments.length - 1
             var vargs = new Array(I + 1)
             vargs[0] = async
             for (var i = 0; i < I; i++) {
                 vargs[i + 1] = arguments[i]
             }
-            execute(this, steps, vargs)
+            execute(this, steps, vargs, arguments[i])
         }
         break
     case 4:
         f = function (one, two, three, four) {
-            var I = arguments.length
+            var I = arguments.length - 1
             var vargs = new Array(I + 1)
             vargs[0] = async
             for (var i = 0; i < I; i++) {
                 vargs[i + 1] = arguments[i]
             }
-            execute(this, steps, vargs)
+            execute(this, steps, vargs, arguments[i])
         }
         break
     default:
@@ -381,13 +376,13 @@ function cadence () {
         }
         f = (new Function('execute', 'steps', 'async', '                    \n\
             return function (' + args.join(',') + ') {                      \n\
-                var I = arguments.length                                    \n\
+                var I = arguments.length - 1                                \n\
                 var vargs = new Array(I + 1)                                \n\
                 vargs[0] = async                                            \n\
                 for (var i = 0; i < I; i++) {                               \n\
                     vargs[i + 1] = arguments[i]                             \n\
                 }                                                           \n\
-                execute(this, steps, vargs)                                 \n\
+                execute(this, steps, vargs, arguments[i])                   \n\
             }                                                               \n\
        '))(execute, steps, async)
     }
@@ -407,6 +402,21 @@ function variadic (f, self) {
         return f.call(self, vargs)
     }
 }
+
+async.loop = variadic(function (steps) {
+    var cadence = stack[stack.length - 1]
+    var vargs = Array.isArray(steps[0]) ? steps.shift() : []
+    var callback = cadence.createCallback()
+    var looper = new Cadence(this, this.finalizers, this.self, steps, [], callback, this.outer)
+    looper.loop = true
+    looper.vargs = vargs
+    looper.outer = looper
+    cadence.cadences.push(looper)
+    return {
+        continue: { jump: JUMP, index: 0, break: false, cadence: looper },
+        break: { jump: JUMP, index: Infinity, break: true, cadence: looper }
+    }
+})
 
 async.forEach = variadic(function (steps) {
     return variadic(function (vargs) {

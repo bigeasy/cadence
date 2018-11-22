@@ -2,7 +2,7 @@ var cadence = require('../../cadence')
 var _cadence = require('../../_cadence')
 var Benchmark = require('benchmark')
 
-var suite = new Benchmark.Suite('loop', { minSamples: 100 })
+var suite = new Benchmark.Suite('loop')
 
 var COUNT = 1024
 
@@ -44,7 +44,7 @@ suite.on('cycle', function(event) {
 })
 
 suite.on('complete', function() {
-    console.log('Fastest is ' + this.filter('fastest').pluck('name'));
+    console.log('Fastest is ' + this.filter('fastest').map('name'));
 })
 
 suite.run()
