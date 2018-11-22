@@ -69,11 +69,11 @@ function prove (async, assert) {
         var next = async()
 
         var multiply = cadence(function (async, matrix) {
-            async.map(function (array) {
-                async.map(function (value) {
+            async.map([ matrix ], function (array) {
+                async.map([ array ], function (value) {
                     echo(value * 5, async())
-                })(array)
-            })(matrix)
+                })
+            })
         })
 
         multiply([[ 1, 2, 3 ], [ 4, 5, 6 ], [ 7, 8, 9 ]], function (error, matrix) {
