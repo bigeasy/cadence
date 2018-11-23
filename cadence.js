@@ -156,6 +156,7 @@ Cadence.prototype.invoke = function () {
                 // Combine the results of all the callbacks into an single array
                 // of arguments that will be used to invoke the next step.
                 this.vargs = vargs = this.results.shift().vargs
+                // Neither `vargs.push.apply(vargs, vargs_)` nor `vargs_.shift()` is faster.
                 while (this.results.length != 0) {
                     var vargs_ = this.results.shift().vargs
                     for (var j = 0, J = vargs_.length; j < J; j++) {
