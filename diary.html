@@ -11,7 +11,147 @@
   <div class="container">
     <div class="unit description">
       <div class="entry">
-        <h2><a name="1488676825000">Sat Mar 04 2017 19:20:25 GMT-0600 (CST)</a></h2>
+        <h2><a name="1542872899000">Thu Nov 22 2018 01:48:19 GMT-0600 (Central Standard Time)</a></h2>
+        <div class="markdown"><p>We revisit Cadence 3.0 loop primers. Must about the cost of labels. Consider the
+difference between breaking from loops and breaking from cadences.</p>
+<h3 id="explicit-loop-primers">Explicit Loop Primers</h3>
+<p>In our last experiment with explicit loops we preserved the use of a function
+returned from the cadence creation function call as the optional primer for the
+loop.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> silly = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, count</span>) </span>{
+    <span class="hljs-keyword">async</span>.loop(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">count</span>) </span>{
+        <span class="hljs-keyword">if</span> (--count == <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span> [ <span class="hljs-keyword">async</span>.break ]
+        <span class="hljs-keyword">else</span> <span class="hljs-keyword">return</span> [ count ]
+    })(count)
+})
+
+silly(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error</span>) </span>{ <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">throw</span> error })
+</code></pre>
+<p>Because the loop primer is optional, the returned function is not always
+necessary. The fact that the primer is placed at the end of the declaration
+makes it somewhat difficult to read. Wouldn&apos;t it make more sense to display the
+start of the loop with the primer arguments right next to the first step
+function signature?</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> silly = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, count</span>) </span>{
+    <span class="hljs-keyword">async</span>.loop([ <span class="hljs-number">0</span> ], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">count</span>) </span>{
+        <span class="hljs-keyword">if</span> (--count == <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span> [ <span class="hljs-keyword">async</span>.break ]
+        <span class="hljs-keyword">else</span> <span class="hljs-keyword">return</span> [ count ]
+    })
+})
+
+silly(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error</span>) </span>{ <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">throw</span> error })
+</code></pre>
+<p>With the primary right next to the first step, you might immediately see the
+argument passed from one iteration of the loop to the next with its initial
+value, then read through a lot of code knowing that it is going to end with the
+next loop value, but on your very first read of the code you&apos;ll have an example
+argument value in the form of the primer value.</p>
+<p>We obviously create some ambiguity when we do not provide a primer but our first
+step is a finalizer or a try/catch. We might either require the primer, or else
+we have to document the ambiguity and hope that our dear user does not find it
+to be too magical.</p>
+<p>For the sake of consistency, which I&apos;m sure our dear user will prize, we should
+make <code>async.map</code> and <code>async.forEach</code> accept the array they operate on as the
+first argument of an arguments array.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> sum = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, values</span>) </span>{
+    <span class="hljs-keyword">async</span>.forEach([ values, <span class="hljs-number">0</span> ], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">value, index, sum</span>) </span>{
+        <span class="hljs-keyword">return</span> sum + value
+    })
+})
+
+sum([ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span> ], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error, sum</span>) </span>{
+    <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">throw</span> error
+    assert(sum, <span class="hljs-number">6</span>, <span class="hljs-string">&apos;summed&apos;</span>)
+})
+</code></pre>
+<p>Such a departure form the seemingly anonymous parenthesis at the end of our
+cadences, and with all the muddle of creating an array as an to each loop solely
+for the purpose of grouping those variadic arguments. A little jangly
+aesthetically, but no performance cost, since with the primer function we&apos;d have
+to convert the <code>arguments</code> of the primer function to a proper <code>Array</code> so it
+could be stored until we&apos;re ready to start the loop by calling the first step
+with the <code>Array</code> using <code>Function.apply</code>.</p>
+<h3 id="breaking-from-cadences">Breaking from Cadences</h3>
+<p>I&apos;d imagined that I&apos;d had some way to distinquish between breaking from a
+the immeidate cadence and breaking from a loop. In practice, it always does what
+I expect it to do, but it appears that this might be a matter of luck.</p>
+<p>It appears that with <code>async.break</code> we do break out of the outer-most loop, not
+the inner-most and not the immediate cadence. With our new looping logic,
+<code>async.break</code> will always break out of the the inner most loop. To break out of
+an outer loop you would use a loop label.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> grep = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async, dirs, re</span>) </span>{
+    <span class="hljs-keyword">var</span> search = <span class="hljs-keyword">async</span>.loop([], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+        <span class="hljs-keyword">if</span> (dirs.length == <span class="hljs-number">0</span>) {
+            <span class="hljs-keyword">return</span> [ <span class="hljs-keyword">async</span>.break, <span class="hljs-literal">null</span> ] <span class="hljs-comment">// breaks from `search`</span>
+        }
+        <span class="hljs-keyword">var</span> dir = dirs.shift()
+        <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+            fs.readdir(dirs.shift(), <span class="hljs-keyword">async</span>())
+        }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">files</span>) </span>{
+            <span class="hljs-keyword">async</span>.loop([], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+                <span class="hljs-keyword">if</span> (files.length == <span class="hljs-number">0</span>) {
+                    <span class="hljs-keyword">return</span> [ <span class="hljs-keyword">async</span>.break ] <span class="hljs-comment">// breaks from file loop</span>
+                }
+                fs.stat(files[<span class="hljs-number">0</span>], <span class="hljs-keyword">async</span>())
+            }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">stat</span>) </span>{
+                <span class="hljs-keyword">var</span> file = path.resolve(files.shift(), dir)
+                <span class="hljs-keyword">if</span> (stat.isDirectory) {
+                    dirs.push(file)
+                } <span class="hljs-keyword">else</span> {
+                    <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+                        fs.readFile(file, <span class="hljs-string">&apos;utf8&apos;</span>, <span class="hljs-keyword">async</span>())
+                    }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">body</span>) </span>{
+                        <span class="hljs-keyword">if</span> (re.test(body)) {
+                            <span class="hljs-keyword">return</span> [ search.break, file ] <span class="hljs-comment">// breaks from `search`</span>
+                        }
+                    })
+                }
+            })
+        })
+    })
+})
+
+grep(__dirname, /<span class="hljs-function"><span class="hljs-keyword">function</span>/, <span class="hljs-title">function</span> (<span class="hljs-params">error, file</span>) </span>{
+    <span class="hljs-keyword">if</span> (error) <span class="hljs-keyword">throw</span> error
+    <span class="hljs-built_in">console</span>.log(file)
+})
+</code></pre>
+<p>The above example is a function that searches through files and returns the
+first file that matches the regular expression, thus breaking from the inner
+loop of files.</p>
+<h3 id="breaking-form-the-immediate-cadnece">Breaking form the Immediate Cadnece</h3>
+<p>My idea for breaking from a cadence as opposed to a loop is to use
+<code>async.return</code>, but I&apos;m starting to wonder if this is every really necessary. If
+I did need to break I could use the new <code>async.block</code> concept described below,
+but don&apos;t I usually want to continue a loop?</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">var</span> f = cadence(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">async</span>) </span>{
+    <span class="hljs-keyword">async</span>(<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+        <span class="hljs-keyword">async</span>([<span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+            fs.readFile(<span class="hljs-string">&apos;config.json&apos;</span>, <span class="hljs-string">&apos;utf8&apos;</span>, <span class="hljs-keyword">async</span>())
+        }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error</span>) </span>{
+            <span class="hljs-keyword">return</span> [ <span class="hljs-keyword">async</span>.return, {} ]
+        }], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">body</span>) </span>{
+            <span class="hljs-keyword">return</span> <span class="hljs-built_in">JSON</span>.parse(body)
+        })
+    }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">config</span>) </span>{
+        config.size || (config.size = <span class="hljs-number">256</span>)
+        <span class="hljs-keyword">return</span> config
+    })
+})
+</code></pre>
+<p>In the above example <code>async.break</code> would cause the function to return early. You
+could return <code>{}</code> from the catch block and have it parsed, which is something
+I&apos;ve done in the past, but the above seems to be a real life example, valid and
+useful.</p>
+<h3 id="cost-of-labels">Cost of Labels</h3>
+<p>There are times when you want a label but no loop. We&apos;ll look for this in our
+existing code after the refactor. It is not common. It might be because there is
+no good way to break form the immediate cadence when there&apos;s an exception, but
+that might not be too common either.</p>
+</div>
+      </div>
+      <div class="entry">
+        <h2><a name="1488676825000">Sat Mar 04 2017 19:20:25 GMT-0600 (Central Standard Time)</a></h2>
         <div class="markdown"><p>Cadence 3.0 loops.</p>
 <p>Either explicit with <code>async.loop</code>.</p>
 <p>Otherwise, implicit.</p>
@@ -219,7 +359,7 @@ sum([ <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <s
 </div>
       </div>
       <div class="entry">
-        <h2><a name="1488675646000">Sat Mar 04 2017 19:00:46 GMT-0600 (CST)</a></h2>
+        <h2><a name="1488675646000">Sat Mar 04 2017 19:00:46 GMT-0600 (Central Standard Time)</a></h2>
         <div class="markdown"><p>Considering some changes for a Cadence 3.0 with the notion of of going one
 direction or another with loops.</p>
 <p>The direction I set out to go was to replace the loop starter function with with
@@ -236,7 +376,7 @@ every cadence declaration. That would save a great many moments, I&apos;m sure.<
 </div>
       </div>
       <div class="entry">
-        <h2><a name="1488603435000">Fri Mar 03 2017 22:57:15 GMT-0600 (CST)</a></h2>
+        <h2><a name="1488603435000">Fri Mar 03 2017 22:57:15 GMT-0600 (Central Standard Time)</a></h2>
         <div class="markdown"><p>Loops could use break and continue and default to looping and breaking from the
 Cadence so that there is no error. Then we can have <code>async.loop</code>. We can
 simplify the default label by assigning it to the <code>Cadence</code> object, which we are

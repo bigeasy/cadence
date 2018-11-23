@@ -1,3 +1,168 @@
+## Thu Nov 22 01:48:19 CST 2018
+
+We revisit Cadence 3.0 loop primers. Must about the cost of labels. Consider the
+difference between breaking from loops and breaking from cadences.
+
+### Explicit Loop Primers
+
+In our last experiment with explicit loops we preserved the use of a function
+returned from the cadence creation function call as the optional primer for the
+loop.
+
+```javascript
+var silly = cadence(function (async, count) {
+    async.loop(function (count) {
+        if (--count == 0) return [ async.break ]
+        else return [ count ]
+    })(count)
+})
+
+silly(function (error) { if (error) throw error })
+```
+
+Because the loop primer is optional, the returned function is not always
+necessary. The fact that the primer is placed at the end of the declaration
+makes it somewhat difficult to read. Wouldn't it make more sense to display the
+start of the loop with the primer arguments right next to the first step
+function signature?
+
+```javascript
+var silly = cadence(function (async, count) {
+    async.loop([ 0 ], function (count) {
+        if (--count == 0) return [ async.break ]
+        else return [ count ]
+    })
+})
+
+silly(function (error) { if (error) throw error })
+```
+
+With the primary right next to the first step, you might immediately see the
+argument passed from one iteration of the loop to the next with its initial
+value, then read through a lot of code knowing that it is going to end with the
+next loop value, but on your very first read of the code you'll have an example
+argument value in the form of the primer value.
+
+We obviously create some ambiguity when we do not provide a primer but our first
+step is a finalizer or a try/catch. We might either require the primer, or else
+we have to document the ambiguity and hope that our dear user does not find it
+to be too magical.
+
+For the sake of consistency, which I'm sure our dear user will prize, we should
+make `async.map` and `async.forEach` accept the array they operate on as the
+first argument of an arguments array.
+
+```javascript
+var sum = cadence(function (async, values) {
+    async.forEach([ values, 0 ], function (value, index, sum) {
+        return sum + value
+    })
+})
+
+sum([ 1, 2, 3 ], function (error, sum) {
+    if (error) throw error
+    assert(sum, 6, 'summed')
+})
+```
+
+Such a departure form the seemingly anonymous parenthesis at the end of our
+cadences, and with all the muddle of creating an array as an to each loop solely
+for the purpose of grouping those variadic arguments. A little jangly
+aesthetically, but no performance cost, since with the primer function we'd have
+to convert the `arguments` of the primer function to a proper `Array` so it
+could be stored until we're ready to start the loop by calling the first step
+with the `Array` using `Function.apply`.
+
+### Breaking from Cadences
+
+I'd imagined that I'd had some way to distinquish between breaking from a
+the immeidate cadence and breaking from a loop. In practice, it always does what
+I expect it to do, but it appears that this might be a matter of luck.
+
+It appears that with `async.break` we do break out of the outer-most loop, not
+the inner-most and not the immediate cadence. With our new looping logic,
+`async.break` will always break out of the the inner most loop. To break out of
+an outer loop you would use a loop label.
+
+```javascript
+var grep = cadence(function (async, dirs, re) {
+    var search = async.loop([], function () {
+        if (dirs.length == 0) {
+            return [ async.break, null ] // breaks from `search`
+        }
+        var dir = dirs.shift()
+        async(function () {
+            fs.readdir(dirs.shift(), async())
+        }, function (files) {
+            async.loop([], function () {
+                if (files.length == 0) {
+                    return [ async.break ] // breaks from file loop
+                }
+                fs.stat(files[0], async())
+            }, function (stat) {
+                var file = path.resolve(files.shift(), dir)
+                if (stat.isDirectory) {
+                    dirs.push(file)
+                } else {
+                    async(function () {
+                        fs.readFile(file, 'utf8', async())
+                    }, function (body) {
+                        if (re.test(body)) {
+                            return [ search.break, file ] // breaks from `search`
+                        }
+                    })
+                }
+            })
+        })
+    })
+})
+
+grep(\_\_dirname, /function/, function (error, file) {
+    if (error) throw error
+    console.log(file)
+})
+```
+
+The above example is a function that searches through files and returns the
+first file that matches the regular expression, thus breaking from the inner
+loop of files.
+
+### Breaking form the Immediate Cadnece
+
+My idea for breaking from a cadence as opposed to a loop is to use
+`async.return`, but I'm starting to wonder if this is every really necessary. If
+I did need to break I could use the new `async.block` concept described below,
+but don't I usually want to continue a loop?
+
+```javascript
+var f = cadence(function (async) {
+    async(function () {
+        async([function () {
+            fs.readFile('config.json', 'utf8', async())
+        }, function (error) {
+            return [ async.return, {} ]
+        }], function (body) {
+            return JSON.parse(body)
+        })
+    }, function (config) {
+        config.size || (config.size = 256)
+        return config
+    })
+})
+```
+
+In the above example `async.break` would cause the function to return early. You
+could return `{}` from the catch block and have it parsed, which is something
+I've done in the past, but the above seems to be a real life example, valid and
+useful.
+
+### Cost of Labels
+
+There are times when you want a label but no loop. We'll look for this in our
+existing code after the refactor. It is not common. It might be because there is
+no good way to break form the immediate cadence when there's an exception, but
+that might not be too common either.
+
 ## Sat Mar  4 19:20:25 CST 2017 ~ loops
 
 Cadence 3.0 loops.
