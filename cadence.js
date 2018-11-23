@@ -115,6 +115,7 @@ Cadence.prototype.invoke = function () {
     var vargs, fn
     for (;;) {
         if (this.errors.length) { // Critical path.
+            this.results.length = 0
             // Break on error cadence is frustrated further by catch blocks that
             // would restore forward motion. I suppose you'd only short-circuit
             // cadences subordinate to this cadence.
@@ -154,9 +155,9 @@ Cadence.prototype.invoke = function () {
             } else {
                 // Combine the results of all the callbacks into an single array
                 // of arguments that will be used to invoke the next step.
-                this.vargs = vargs = this.results[0].vargs
-                for (var i = 1, I = this.results.length; i < I; i++) {
-                    var vargs_ = this.results[i].vargs
+                this.vargs = vargs = this.results.shift().vargs
+                while (this.results.length != 0) {
+                    var vargs_ = this.results.shift().vargs
                     for (var j = 0, J = vargs_.length; j < J; j++) {
                         vargs.push(vargs_[j])
                     }
@@ -201,7 +202,6 @@ Cadence.prototype.invoke = function () {
         }
 
         this.called = 0
-        this.results = []
         this.errors = []
         this.sync = true
         this.waiting = false
