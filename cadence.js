@@ -120,7 +120,7 @@ Cadence.prototype.invoke = function () {
             // would restore forward motion. I suppose you'd only short-circuit
             // cadences subordinate to this cadence.
             if (this.catcher) {
-                var catcher = this.catcher, errors = this.errors
+                var catcher = this.catcher, errors = this.errors.splice(0)
                 fn = function () {
                     return catcher.call(this, errors[0], errors)
                 }
@@ -172,7 +172,7 @@ Cadence.prototype.invoke = function () {
                 // We're going to continue to loop until all the finalizers have
                 // executed. The step index is going to go beyond length of the
                 // step array, but that's okay.
-                var finalizer = this.finalizers.pop(), errors = this.errors
+                var finalizer = this.finalizers.pop(), errors = this.errors.splice(0)
                 fn = function () {
                     async(function () {
                         return finalizer.vargs
@@ -202,7 +202,6 @@ Cadence.prototype.invoke = function () {
         }
 
         this.called = 0
-        this.errors = []
         this.sync = true
         this.waiting = false
         this.catcher = null
