@@ -201,7 +201,6 @@ Cadence.prototype.invoke = function () {
         }
 
         this.called = 0
-        this.cadences = []
         this.results = []
         this.errors = []
         this.sync = true
@@ -250,8 +249,8 @@ Cadence.prototype.invoke = function () {
             // where the user needs to make sure that each loop gets the same
             // arguments, ah, and that's surprising because often times we're
             // not thinking about the return at the end.
-            for (var i = 0, I = this.cadences.length; i < I; i++) {
-                this.cadences[i].invoke()
+            while (this.cadences.length != 0) {
+                this.cadences.shift().invoke()
             }
             if (ret[0] !== void(0)) {
                 this.vargs = Array.isArray(ret[0]) ? ret[0] : [ ret[0] ]
