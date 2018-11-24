@@ -282,6 +282,15 @@ async.loop = variadic(function (steps) {
     }
 }, async)
 
+async.block = variadic(function (steps) {
+    var loop
+    steps.unshift([])
+    steps.push(variadic(function (vargs) {
+        return [ loop.break ].concat(vargs)
+    }))
+    return loop = async.loop.apply(async, steps)
+}, async)
+
 async.forEach = variadic(function (steps) {
     var loop, vargs = steps.shift(), array = vargs.shift(), index = -1
     steps.unshift(vargs, variadic(function (vargs) {

@@ -1,4 +1,4 @@
-require('proof')(15, prove)
+require('proof')(18, prove)
 
 function prove (okay) {
     var cadence = require('..')
@@ -160,6 +160,39 @@ function prove (okay) {
     })(function (error) {
         if (error) throw error
     })
+
+    cadence(function (async) {
+        async(function () {
+            async.block(function () {
+                return 1
+            })
+        }, function (value) {
+            okay(value, 1, 'block end')
+            async.block(function () {
+                async(function () {
+                    return [ async.break, 2 ]
+                })
+            }, function () {
+                throw new Error
+            })
+        }, function (value) {
+            okay(value, 2, 'block async break')
+            var block = async.block(function () {
+                async.loop([], function () {
+                    return [ block.break, 3 ]
+                }, function () {
+                    throw new Error
+                })
+            }, function () {
+                throw new Error
+            })
+        }, function (value) {
+            okay(value, 3, 'block label break')
+        })
+    })(function (error) {
+        if (error) throw error
+    })
+
 }
 
 function item (number, callback) { callback(null, number) }
