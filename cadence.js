@@ -111,18 +111,20 @@ function invoke (cadence) {
                 // Check for a loop controller in the return values.
                 if (vargs[0] && vargs[0].jump === JUMP) {
                     var jump = vargs.shift()
+                    var iterator = cadence
                     // Walk up to the jumping cadence setting all the
                     // sub-cadences along the way to their last step. We
                     // continue with the current cadence, not the destination.
                     // We don't skip finalizers. When we continue, if the
                     // current cadence is not the jumping cadence, we're going
                     // to run the exit procedures for each sub-cadence.
-                    var destination = jump.cadence || cadence.cadence
-                    var iterator = cadence
-                    while (destination !== iterator) {
-                        iterator.loop = false
-                        iterator.index = iterator.steps.length
-                        iterator = iterator.parent
+                    if (!jump.immediate) {
+                        var destination = jump.cadence || cadence.cadence
+                        while (destination !== iterator) {
+                            iterator.loop = false
+                            iterator.index = iterator.steps.length
+                            iterator = iterator.parent
+                        }
                     }
                     // Set the index and stop looping if this is a `break`.
                     iterator.index = Math.min(jump.index, iterator.steps.length)
@@ -254,8 +256,9 @@ function async () {
     }
 }
 
-async.continue = { jump: JUMP, index: 0, break: false }
-async.break = { jump: JUMP, index: Infinity, break: true }
+async.continue = { jump: JUMP, index: 0, break: false, immediate: false }
+async.break = { jump: JUMP, index: Infinity, break: true, immediate: false }
+async.return = { jump: JUMP, index: Infinity, break: true, immediate: true }
 
 function variadic (f, self) {
     return function () {
@@ -274,8 +277,8 @@ async.loop = variadic(function (steps) {
     var looper = new Cadence(cadence, cadence.self, steps, vargs, createCallback(cadence), true, null)
     cadence.cadences.push(looper)
     return {
-        continue: { jump: JUMP, index: 0, break: false, cadence: looper },
-        break: { jump: JUMP, index: Infinity, break: true, cadence: looper }
+        continue: { jump: JUMP, index: 0, break: false, cadence: looper, immediate: false },
+        break: { jump: JUMP, index: Infinity, break: true, cadence: looper, immediate: false }
     }
 }, async)
 

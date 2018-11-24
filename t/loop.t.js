@@ -1,4 +1,4 @@
-require('proof')(14, prove)
+require('proof')(15, prove)
 
 function prove (okay) {
     var cadence = require('..')
@@ -140,6 +140,25 @@ function prove (okay) {
         })
     })(function (error, i) {
         okay(i, 2, 'continue then break')
+    })
+
+    cadence(function (async) {
+        async.loop([ 0 ], function (value) {
+            if (value == 1) {
+                return [ async.break ]
+            }
+            async(function () {
+                async(function () {
+                    return [ async.return, 1 ]
+                }, function () {
+                    throw new Error
+                })
+            }, function (value) {
+                okay(value, 1, 'returned')
+            })
+        })
+    })(function (error) {
+        if (error) throw error
     })
 }
 
