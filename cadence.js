@@ -90,7 +90,7 @@ function async () {
         for (var i = 0; i < I; i++) {
             vargs[i] = arguments[i]
         }
-        cadence.cadences.push(new Cadence(cadence, cadence.self, vargs, [], createCallback(cadence), false, cadence.cadence))
+        invoke(new Cadence(cadence, cadence.self, vargs, [], createCallback(cadence), false, cadence.cadence))
     } else {
         return createCallback(cadence)
     }
