@@ -264,10 +264,6 @@ Cadence.prototype.invoke = function () {
     }
 }
 
-function execute (self, steps, vargs, callback) {
-    new Cadence(null, self, steps, vargs, callback).invoke()
-}
-
 function cadence () {
     var I = arguments.length
     var steps = new Array
@@ -288,7 +284,7 @@ function cadence () {
             for (var i = 0; i < I; i++) {
                 vargs[i + 1] = arguments[i]
             }
-            execute(this, steps, vargs, arguments[i])
+            new Cadence(null, this, steps, vargs, arguments[i]).invoke()
         }
         break
     case 1:
@@ -299,7 +295,7 @@ function cadence () {
             for (var i = 0; i < I; i++) {
                 vargs[i + 1] = arguments[i]
             }
-            execute(this, steps, vargs, arguments[i])
+            new Cadence(null, this, steps, vargs, arguments[i]).invoke()
         }
         break
     case 2:
@@ -310,7 +306,7 @@ function cadence () {
             for (var i = 0; i < I; i++) {
                 vargs[i + 1] = arguments[i]
             }
-            execute(this, steps, vargs, arguments[i])
+            new Cadence(null, this, steps, vargs, arguments[i]).invoke()
         }
         break
     case 3:
@@ -321,7 +317,7 @@ function cadence () {
             for (var i = 0; i < I; i++) {
                 vargs[i + 1] = arguments[i]
             }
-            execute(this, steps, vargs, arguments[i])
+            new Cadence(null, this, steps, vargs, arguments[i]).invoke()
         }
         break
     case 4:
@@ -332,7 +328,7 @@ function cadence () {
             for (var i = 0; i < I; i++) {
                 vargs[i + 1] = arguments[i]
             }
-            execute(this, steps, vargs, arguments[i])
+            new Cadence(null, this, steps, vargs, arguments[i]).invoke()
         }
         break
     default:
@@ -341,7 +337,7 @@ function cadence () {
         for (var i = 0, I = steps[0].length; i < I; i++) {
             args[i] = '_' + i
         }
-        f = (new Function('execute', 'steps', 'async', '                    \n\
+        f = (new Function('Cadence', 'steps', 'async', '                    \n\
             return function (' + args.join(',') + ') {                      \n\
                 var I = arguments.length - 1                                \n\
                 var vargs = new Array(I + 1)                                \n\
@@ -349,9 +345,9 @@ function cadence () {
                 for (var i = 0; i < I; i++) {                               \n\
                     vargs[i + 1] = arguments[i]                             \n\
                 }                                                           \n\
-                execute(this, steps, vargs, arguments[i])                   \n\
+                new Cadence(null, this, steps, vargs, arguments[i]).invoke()\n\
             }                                                               \n\
-       '))(execute, steps, async)
+       '))(Cadence, steps, async)
     }
 
     f.toString = function () { return steps[0].toString() }

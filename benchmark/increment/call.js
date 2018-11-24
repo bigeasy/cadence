@@ -16,13 +16,13 @@ function fn_ () { m_(function () {}) }
 
 for (var i = 1; i <= 4; i++)  {
     suite.add({
-        name: ' cadence call ' + i,
-        fn: fn
+        name: '_cadence call ' + i,
+        fn: fn_
     })
 
     suite.add({
-        name: '_cadence call ' + i,
-        fn: fn_
+        name: ' cadence call ' + i,
+        fn: fn
     })
 }
 
