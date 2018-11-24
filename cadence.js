@@ -1,5 +1,23 @@
 var stack = [], push = [].push, JUMP = {}
 
+function Cadence (parent, self, steps, vargs, callback, loop, cadence) {
+    this.parent = parent
+    this.self = self
+    this.finalizers = []
+    this.steps = steps
+    this.callback = callback
+    this.loop = loop
+    this.cadence = cadence || this
+    this.cadences = []
+    this.results = []
+    this.errors = []
+    this.called = 0
+    this.index = 0
+    this.sync = true
+    this.waiting = false
+    this.vargs = vargs
+}
+
 // TODO Expand on this. You keep coming back here and saying, oh, no, I need to
 // give up on a step if there is an error. I'm not returning from this because
 // there is an error and all the callbacks are not returning. I need to return
@@ -46,24 +64,6 @@ function resolveCallback (cadence, result, error, vargs) {
             cadence.sync = true
         }
     }
-}
-
-function Cadence (parent, self, steps, vargs, callback, loop, cadence) {
-    this.parent = parent
-    this.self = self
-    this.finalizers = []
-    this.steps = steps
-    this.callback = callback
-    this.loop = loop
-    this.cadence = cadence || this
-    this.cadences = []
-    this.results = []
-    this.errors = []
-    this.called = 0
-    this.index = 0
-    this.sync = true
-    this.waiting = false
-    this.vargs = vargs
 }
 
 function createCallback (cadence) {
