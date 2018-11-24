@@ -1,13 +1,13 @@
 var stack = [], push = [].push, JUMP = {}
 
-function Cadence (parent, self, steps, vargs, callback) {
+function Cadence (parent, self, steps, vargs, callback, loop, cadence) {
     this.parent = parent
-    this.finalizers = []
     this.self = self
+    this.finalizers = []
     this.steps = steps
     this.callback = callback
-    this.loop = false
-    this.cadence = parent == null ? this : parent.cadence
+    this.loop = loop
+    this.cadence = cadence || this
     this.cadences = []
     this.results = []
     this.errors = []
@@ -51,37 +51,34 @@ function Cadence (parent, self, steps, vargs, callback) {
 // It does present challenges when you consider what it means to run finalizers
 // early.
 
-Cadence.prototype.resolveCallback = function (result, error, vargs) {
+function resolveCallback (cadence, result, error, vargs) {
     if (error == null) {
         result.vargs = vargs
     } else {
-        this.errors.push(error)
+        cadence.errors.push(error)
     }
-    if (++this.called === this.results.length) {
-        if (this.waiting) {
-            this.invoke()
+    if (++cadence.called === cadence.results.length) {
+        if (cadence.waiting) {
+            invoke(cadence)
         } else {
-            this.sync = true
+            cadence.sync = true
         }
     }
 }
 
-Cadence.prototype.createCallback = function () {
-    var self = this
+function createCallback (cadence) {
     var result = { vargs: [] }
 
-    self.results.push(result)
-    self.sync = false
+    cadence.results.push(result)
+    cadence.sync = false
 
-    return callback
-
-    function callback (error) {
+    return function (error) {
         var I = arguments.length
         var vargs = new Array
         for (var i = 1; i < I; i++) {
             vargs[i - 1] = arguments[i]
         }
-        self.resolveCallback(result, error, vargs)
+        resolveCallback(cadence, result, error, vargs)
     }
 }
 
@@ -93,9 +90,9 @@ function async () {
         for (var i = 0; i < I; i++) {
             vargs[i] = arguments[i]
         }
-        cadence.cadences.push(new Cadence(cadence, cadence.self, vargs, [], cadence.createCallback()))
+        invoke(new Cadence(cadence, cadence.self, vargs, [], createCallback(cadence), false, cadence.cadence))
     } else {
-        return cadence.createCallback()
+        return createCallback(cadence)
     }
 }
 
@@ -111,27 +108,27 @@ function call (fn, self, vargs) {
     return [ ret ]
 }
 
-Cadence.prototype.invoke = function () {
+function invoke (cadence) {
     var vargs, fn
     for (;;) {
-        if (this.errors.length) { // Critical path.
-            this.results.length = 0
+        if (cadence.errors.length) { // Critical path.
+            cadence.results.length = 0
             // Break on error cadence is frustrated further by catch blocks that
             // would restore forward motion. I suppose you'd only short-circuit
             // cadences subordinate to this cadence.
-            if (this.catcher) {
-                var catcher = this.catcher, errors = this.errors.splice(0)
+            if (cadence.catcher) {
+                var catcher = cadence.catcher, errors = cadence.errors.splice(0)
                 fn = function () {
-                    return catcher.call(this, errors[0], errors)
+                    return catcher.call(cadence.self, errors[0], errors)
                 }
             } else {
                 fn = null
-                this.loop = false
+                cadence.loop = false
             }
         } else {
-            if (this.results.length == 0) { // Critical path.
+            if (cadence.results.length == 0) { // Critical path.
                 // We had no async callbacks, so use the return value.
-                vargs = this.vargs
+                vargs = cadence.vargs
                 // Check for a loop controller in the return values.
                 if (vargs[0] && vargs[0].jump === JUMP) {
                     var jump = vargs.shift()
@@ -141,8 +138,8 @@ Cadence.prototype.invoke = function () {
                     // We don't skip finalizers. When we continue, if the
                     // current cadence is not the jumping cadence, we're going
                     // to run the exit procedures for each sub-cadence.
-                    var destination = jump.cadence || this.cadence
-                    var iterator = this
+                    var destination = jump.cadence || cadence.cadence
+                    var iterator = cadence
                     while (destination !== iterator) {
                         iterator.loop = false
                         iterator.index = iterator.steps.length
@@ -155,25 +152,25 @@ Cadence.prototype.invoke = function () {
             } else {
                 // Combine the results of all the callbacks into an single array
                 // of arguments that will be used to invoke the next step.
-                this.vargs = vargs = this.results.shift().vargs
+                cadence.vargs = vargs = cadence.results.shift().vargs
                 // Neither `vargs.push.apply(vargs, vargs_)` nor `vargs_.shift()` is faster.
-                while (this.results.length != 0) {
-                    var vargs_ = this.results.shift().vargs
+                while (cadence.results.length != 0) {
+                    var vargs_ = cadence.results.shift().vargs
                     for (var j = 0, J = vargs_.length; j < J; j++) {
                         vargs.push(vargs_[j])
                     }
                 }
             }
             // On to the next step.
-            fn = this.steps[this.index++]
+            fn = cadence.steps[cadence.index++]
         }
 
         if (fn == null) { // Critical path.
-            if (this.finalizers.length) {
+            if (cadence.finalizers.length) {
                 // We're going to continue to loop until all the finalizers have
                 // executed. The step index is going to go beyond length of the
                 // step array, but that's okay.
-                var finalizer = this.finalizers.pop(), errors = this.errors.splice(0)
+                var finalizer = cadence.finalizers.pop(), errors = cadence.errors.splice(0)
                 fn = function () {
                     async(function () {
                         return finalizer.vargs
@@ -185,62 +182,62 @@ Cadence.prototype.invoke = function () {
                         return vargs
                     })
                 }
-            } else if (this.loop) {
+            } else if (cadence.loop) {
                 // Go back to the first step.
-                fn = this.steps[0]
-                this.index = 1
-            } else if (this.errors.length) {
+                fn = cadence.steps[0]
+                cadence.index = 1
+            } else if (cadence.errors.length) {
                 // Return the first error we received.
-                (this.callback).apply(null, [ this.errors[0] ])
+                (cadence.callback).apply(null, [ cadence.errors[0] ])
                 break
             } else {
                 if (vargs.length !== 0) {
                     vargs.unshift(null)
                 }
-                (this.callback).apply(null, vargs)
+                (cadence.callback).apply(null, vargs)
                 break
             }
         }
 
-        this.called = 0
-        this.sync = true
-        this.waiting = false
-        this.catcher = null
+        cadence.called = 0
+        cadence.sync = true
+        cadence.waiting = false
+        cadence.catcher = null
 
         if (Array.isArray(fn)) { // Critical path.
             if (fn.length === 1) {
-                this.finalizers.push({ steps: fn, vargs: vargs })
+                cadence.finalizers.push({ steps: fn, vargs: vargs })
                 continue
             } else if (fn.length === 2) {
-                this.catcher = fn[1]
+                cadence.catcher = fn[1]
                 fn = fn[0]
             } else if (fn.length === 3) {
                 var filter = fn
-                this.catcher = function (error) {
+                cadence.catcher = function (error) {
                     if (filter[1].test(error.code || error.message)) {
-                        return filter[2].call(this, error)
+                        return filter[2].call(cadence, error)
                     } else {
                         throw error
                     }
                 }
                 fn = fn[0]
             } else {
-                this.vargs = [ vargs ]
+                cadence.vargs = [ vargs ]
                 continue
             }
         }
 
-        stack.push(this)
+        stack.push(cadence)
 
-        var ret = call(fn, this.self, vargs)
+        var ret = call(fn, cadence.self, vargs)
                // ^^^^
 
         stack.pop()
 
         if (ret.length === 2) {
-            this.errors.push(ret[1])
-            this.vargs = vargs
-            this.sync = true
+            cadence.errors.push(ret[1])
+            cadence.vargs = vargs
+            cadence.sync = true
         } else {
             // The only one that could be removed if we where to invoke cadences
             // directly and immediately when created. It would change loop
@@ -249,16 +246,16 @@ Cadence.prototype.invoke = function () {
             // where the user needs to make sure that each loop gets the same
             // arguments, ah, and that's surprising because often times we're
             // not thinking about the return at the end.
-            while (this.cadences.length != 0) {
-                this.cadences.shift().invoke()
+            while (cadence.cadences.length != 0) {
+                invoke(cadence.cadences.shift())
             }
             if (ret[0] !== void(0)) {
-                this.vargs = Array.isArray(ret[0]) ? ret[0] : [ ret[0] ]
+                cadence.vargs = Array.isArray(ret[0]) ? ret[0] : [ ret[0] ]
             }
         }
 
-        if (!this.sync) {
-            this.waiting = true
+        if (!cadence.sync) {
+            cadence.waiting = true
             break
         }
     }
@@ -270,6 +267,15 @@ function cadence () {
     for (var i = 0; i < I; i++) {
         steps.push(arguments[i])
     }
+    function execute () {
+        var I = arguments.length - 1
+        var vargs = new Array(I + 1)
+        vargs[0] = async
+        for (var i = 0; i < I; i++) {
+            vargs[i + 1] = arguments[i]
+        }
+        invoke(new Cadence(null, this, steps, vargs, arguments[i], false, null))
+    }
     var f
     // Preserving arity costs next to nothing; the call to `execute` in
     // these functions will be inlined. The airty function itself will never
@@ -277,59 +283,19 @@ function cadence () {
     // dear user, but it will be compiled.
     switch (steps[0].length) {
     case 0:
-        f = function () {
-            var I = arguments.length - 1
-            var vargs = new Array(I + 1)
-            vargs[0] = async
-            for (var i = 0; i < I; i++) {
-                vargs[i + 1] = arguments[i]
-            }
-            new Cadence(null, this, steps, vargs, arguments[i]).invoke()
-        }
+        f = function () { execute.apply(this, arguments) }
         break
     case 1:
-        f = function (one) {
-            var I = arguments.length - 1
-            var vargs = new Array(I + 1)
-            vargs[0] = async
-            for (var i = 0; i < I; i++) {
-                vargs[i + 1] = arguments[i]
-            }
-            new Cadence(null, this, steps, vargs, arguments[i]).invoke()
-        }
+        f = function (one) { execute.apply(this, arguments) }
         break
     case 2:
-        f = function (one, two) {
-            var I = arguments.length - 1
-            var vargs = new Array(I + 1)
-            vargs[0] = async
-            for (var i = 0; i < I; i++) {
-                vargs[i + 1] = arguments[i]
-            }
-            new Cadence(null, this, steps, vargs, arguments[i]).invoke()
-        }
+        f = function (one, two) { execute.apply(this, arguments) }
         break
     case 3:
-        f = function (one, two, three) {
-            var I = arguments.length - 1
-            var vargs = new Array(I + 1)
-            vargs[0] = async
-            for (var i = 0; i < I; i++) {
-                vargs[i + 1] = arguments[i]
-            }
-            new Cadence(null, this, steps, vargs, arguments[i]).invoke()
-        }
+        f = function (one, two, three) { execute.apply(this, arguments) }
         break
     case 4:
-        f = function (one, two, three, four) {
-            var I = arguments.length - 1
-            var vargs = new Array(I + 1)
-            vargs[0] = async
-            for (var i = 0; i < I; i++) {
-                vargs[i + 1] = arguments[i]
-            }
-            new Cadence(null, this, steps, vargs, arguments[i]).invoke()
-        }
+        f = function (one, two, three, four) { execute.apply(this, arguments) }
         break
     default:
         // Avert your eyes if you're squeamish.
@@ -337,17 +303,11 @@ function cadence () {
         for (var i = 0, I = steps[0].length; i < I; i++) {
             args[i] = '_' + i
         }
-        f = (new Function('Cadence', 'steps', 'async', '                    \n\
+        f = (new Function('execute', '                                      \n\
             return function (' + args.join(',') + ') {                      \n\
-                var I = arguments.length - 1                                \n\
-                var vargs = new Array(I + 1)                                \n\
-                vargs[0] = async                                            \n\
-                for (var i = 0; i < I; i++) {                               \n\
-                    vargs[i + 1] = arguments[i]                             \n\
-                }                                                           \n\
-                new Cadence(null, this, steps, vargs, arguments[i]).invoke()\n\
+                execute.apply(this, arguments)                              \n\
             }                                                               \n\
-       '))(Cadence, steps, async)
+       '))(execute)
     }
 
     f.toString = function () { return steps[0].toString() }
@@ -369,11 +329,7 @@ function variadic (f, self) {
 async.loop = variadic(function (steps) {
     var cadence = stack[stack.length - 1]
     var vargs = steps.shift()
-    var callback = cadence.createCallback()
-    var looper = new Cadence(cadence, cadence.self, steps, [], callback)
-    looper.loop = true
-    looper.vargs = vargs
-    looper.cadence = looper
+    var looper = new Cadence(cadence, cadence.self, steps, vargs, createCallback(cadence), true, null)
     cadence.cadences.push(looper)
     return {
         continue: { jump: JUMP, index: 0, break: false, cadence: looper },

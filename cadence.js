@@ -51,34 +51,30 @@ function Cadence (parent, self, steps, vargs, callback, loop, cadence) {
 // It does present challenges when you consider what it means to run finalizers
 // early.
 
-function resolveCallback (cadence, result, error, vargs) {
-    if (error == null) {
-        result.vargs = vargs
-    } else {
-        cadence.errors.push(error)
-    }
-    if (++cadence.called === cadence.results.length) {
-        if (cadence.waiting) {
-            invoke(cadence)
-        } else {
-            cadence.sync = true
-        }
-    }
-}
-
+//
 function createCallback (cadence) {
-    var result = { vargs: [] }
+    var index = cadence.results.length
 
-    cadence.results.push(result)
+    cadence.results.push([])
     cadence.sync = false
 
     return function (error) {
-        var I = arguments.length
-        var vargs = new Array
-        for (var i = 1; i < I; i++) {
-            vargs[i - 1] = arguments[i]
+        if (error == null) {
+            var I = arguments.length
+            var vargs = cadence.results[index]
+            for (var i = 1; i < I; i++) {
+                vargs[i - 1] = arguments[i]
+            }
+        } else {
+            cadence.errors.push(error)
         }
-        resolveCallback(cadence, result, error, vargs)
+        if (++cadence.called === cadence.results.length) {
+            if (cadence.waiting) {
+                invoke(cadence)
+            } else {
+                cadence.sync = true
+            }
+        }
     }
 }
 
@@ -152,10 +148,10 @@ function invoke (cadence) {
             } else {
                 // Combine the results of all the callbacks into an single array
                 // of arguments that will be used to invoke the next step.
-                cadence.vargs = vargs = cadence.results.shift().vargs
+                cadence.vargs = vargs = cadence.results.shift()
                 // Neither `vargs.push.apply(vargs, vargs_)` nor `vargs_.shift()` is faster.
                 while (cadence.results.length != 0) {
-                    var vargs_ = cadence.results.shift().vargs
+                    var vargs_ = cadence.results.shift()
                     for (var j = 0, J = vargs_.length; j < J; j++) {
                         vargs.push(vargs_[j])
                     }
