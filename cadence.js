@@ -260,14 +260,14 @@ async.continue = { jump: JUMP, index: 0, break: false, immediate: false }
 async.break = { jump: JUMP, index: Infinity, break: true, immediate: false }
 async.return = { jump: JUMP, index: Infinity, break: true, immediate: true }
 
-function variadic (f, self) {
+function variadic (f) {
     return function () {
         var I = arguments.length
         var vargs = new Array
         for (var i = 0; i < I; i++) {
             vargs.push(arguments[i])
         }
-        return f.call(self, vargs)
+        return f(vargs)
     }
 }
 
@@ -280,7 +280,7 @@ async.loop = variadic(function (steps) {
         continue: { jump: JUMP, index: 0, break: false, cadence: looper, immediate: false },
         break: { jump: JUMP, index: Infinity, break: true, cadence: looper, immediate: false }
     }
-}, async)
+})
 
 async.block = variadic(function (steps) {
     var loop
@@ -289,7 +289,7 @@ async.block = variadic(function (steps) {
         return [ loop.break ].concat(vargs)
     }))
     return loop = async.loop.apply(async, steps)
-}, async)
+})
 
 async.forEach = variadic(function (steps) {
     var loop, vargs = steps.shift(), array = vargs.shift(), index = -1
@@ -298,8 +298,8 @@ async.forEach = variadic(function (steps) {
         if (index === array.length) return [ loop.break ].concat(vargs)
         return [ array[index], index ].concat(vargs)
     }))
-    return loop = this.loop.apply(this, steps)
-}, async)
+    return loop = async.loop.apply(this, steps)
+})
 
 async.map = variadic(function (steps) {
     var loop, vargs = steps.shift(), array = vargs.shift(), index = -1, gather = []
@@ -311,8 +311,8 @@ async.map = variadic(function (steps) {
     steps.push(variadic(function (vargs) {
         gather.push.apply(gather, vargs)
     }))
-    return loop = this.loop.apply(this, steps)
-}, async)
+    return loop = async.loop.apply(this, steps)
+})
 
 var builders = []
 
