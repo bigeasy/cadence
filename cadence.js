@@ -217,7 +217,6 @@ function invoke (cadence) {
 
         if (ret.length === 2) {
             cadence.errors.push(ret[1])
-            cadence.vargs = vargs
             cadence.sync = true
         } else {
             // The only one that could be removed if we where to invoke cadences
