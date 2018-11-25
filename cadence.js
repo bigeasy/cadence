@@ -1,4 +1,4 @@
-var stack = [], push = [].push, JUMP = {}
+var stack = [], JUMP = {}
 
 function Cadence (parent, self, steps, vargs, callback, loop, cadence) {
     this.parent = parent
