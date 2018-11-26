@@ -54,12 +54,17 @@ function applied () {
     foo.apply(null, arguments)
 }
 
+function rest (...vargs) {
+    foo(vargs)
+}
+
 suite.add({ name: 'slice', fn: function () { sliced(1, 2, 3, 4, 5, 6, 7) } })
 suite.add({ name: 'arrayed', fn: function () { arrayed(1, 2, 3, 4, 5, 6, 7) } })
 suite.add({ name: 'pushed', fn: function () { pushed(1, 2, 3, 4, 5, 6, 7) } })
 suite.add({ name: 'inlineable', fn: function () { inlineable(1, 2, 3, 4, 5, 6, 7) } })
 suite.add({ name: 'proxied', fn: function () { proxied(1, 2, 3, 4, 5, 6, 7) } })
 suite.add({ name: 'applied', fn: function () { applied(1, 2, 3, 4, 5, 6, 7) } })
+suite.add({ name: 'rest', fn: function () { rest(1, 2, 3, 4, 5, 6, 7) } })
 
 suite.on('cycle', function(event) {
     console.log(String(event.target));
