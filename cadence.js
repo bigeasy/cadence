@@ -319,31 +319,13 @@ function cadence () {
         }
         invoke(new Cadence(null, this, steps, vargs, arguments[i], false, null))
     }
-    var f
     // Preserving arity costs next to nothing; the call to `execute` in these
     // functions will be inlined. The airty function itself will never be
     // inlined because it is in a different context than that of our dear user,
     // but it will be compiled.
-    switch (steps[0].length) {
-    case 0:
-        f = function () { execute.apply(this, arguments) }
-        break
-    case 1:
-        f = function (one) { execute.apply(this, arguments) }
-        break
-    case 2:
-        f = function (one, two) { execute.apply(this, arguments) }
-        break
-    case 3:
-        f = function (one, two, three) { execute.apply(this, arguments) }
-        break
-    case 4:
-        f = function (one, two, three, four) { execute.apply(this, arguments) }
-        break
-    default:
-        while (builders.length < steps[0].length - 4) {
+        while (builders.length < steps[0].length + 1) {
             var args = []
-            for (var i = 0, I = builders.length + 5; i < I; i++) {
+            for (var i = 0, I = builders.length; i < I; i++) {
                 args[i] = '_' + i
             }
             builders.push(new Function ('                                   \n\
@@ -354,8 +336,7 @@ function cadence () {
                 }                                                           \n\
             ')())
         }
-        f = builders[steps[0].length - 5](execute)
-    }
+        var f = builders[steps[0].length](execute)
 
     f.toString = function () { return steps[0].toString() }
 

@@ -78,15 +78,6 @@ function createCallback (cadence) {
     }
 }
 
-function call (fn, self, vargs) {
-    try {
-        var ret = fn.apply(self, vargs)
-    } catch (e) {
-        return [ ret, e ]
-    }
-    return [ ret ]
-}
-
 function invoke (cadence) {
     var vargs, fn
     for (;;) {
@@ -210,15 +201,11 @@ function invoke (cadence) {
 
         stack.push(cadence)
 
-        var ret = call(fn, cadence.self, vargs)
-               // ^^^^
-
-        stack.pop()
-
-        if (ret.length === 2) {
-            cadence.errors.push(ret[1])
-            cadence.sync = true
-        } else {
+        try {
+            var ret = fn.apply(cadence.self, vargs)
+            if (ret !== void(0)) {
+                cadence.vargs = Array.isArray(ret) ? ret : [ ret ]
+            }
             // The only one that could be removed if we where to invoke cadences
             // directly and immediately when created. It would change loop
             // labeling so that the loop label was always passed in as a final
@@ -229,10 +216,12 @@ function invoke (cadence) {
             while (cadence.cadences.length != 0) {
                 invoke(cadence.cadences.shift())
             }
-            if (ret[0] !== void(0)) {
-                cadence.vargs = Array.isArray(ret[0]) ? ret[0] : [ ret[0] ]
-            }
+        } catch (error) {
+            cadence.errors.push(error)
+            cadence.sync = true
         }
+
+        stack.pop()
 
         if (!cadence.sync) {
             cadence.waiting = true
