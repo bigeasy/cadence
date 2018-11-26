@@ -1,4 +1,4 @@
-var stack = [], push = [].push, JUMP = {}
+var stack = [], JUMP = {}
 
 function Cadence (parent, self, steps, vargs, callback, loop, cadence) {
     this.parent = parent
@@ -217,7 +217,6 @@ function invoke (cadence) {
 
         if (ret.length === 2) {
             cadence.errors.push(ret[1])
-            cadence.vargs = vargs
             cadence.sync = true
         } else {
             // The only one that could be removed if we where to invoke cadences
@@ -260,14 +259,14 @@ async.continue = { jump: JUMP, index: 0, break: false, immediate: false }
 async.break = { jump: JUMP, index: Infinity, break: true, immediate: false }
 async.return = { jump: JUMP, index: Infinity, break: true, immediate: true }
 
-function variadic (f, self) {
+function variadic (f) {
     return function () {
         var I = arguments.length
         var vargs = new Array
         for (var i = 0; i < I; i++) {
             vargs.push(arguments[i])
         }
-        return f.call(self, vargs)
+        return f(vargs)
     }
 }
 
@@ -280,7 +279,7 @@ async.loop = variadic(function (steps) {
         continue: { jump: JUMP, index: 0, break: false, cadence: looper, immediate: false },
         break: { jump: JUMP, index: Infinity, break: true, cadence: looper, immediate: false }
     }
-}, async)
+})
 
 async.block = variadic(function (steps) {
     var loop
@@ -289,7 +288,7 @@ async.block = variadic(function (steps) {
         return [ loop.break ].concat(vargs)
     }))
     return loop = async.loop.apply(async, steps)
-}, async)
+})
 
 async.forEach = variadic(function (steps) {
     var loop, vargs = steps.shift(), array = vargs.shift(), index = -1
@@ -298,8 +297,8 @@ async.forEach = variadic(function (steps) {
         if (index === array.length) return [ loop.break ].concat(vargs)
         return [ array[index], index ].concat(vargs)
     }))
-    return loop = this.loop.apply(this, steps)
-}, async)
+    return loop = async.loop.apply(this, steps)
+})
 
 async.map = variadic(function (steps) {
     var loop, vargs = steps.shift(), array = vargs.shift(), index = -1, gather = []
@@ -311,8 +310,10 @@ async.map = variadic(function (steps) {
     steps.push(variadic(function (vargs) {
         gather.push.apply(gather, vargs)
     }))
-    return loop = this.loop.apply(this, steps)
-}, async)
+    return loop = async.loop.apply(this, steps)
+})
+
+var builders = []
 
 function cadence () {
     var I = arguments.length
@@ -330,10 +331,10 @@ function cadence () {
         invoke(new Cadence(null, this, steps, vargs, arguments[i], false, null))
     }
     var f
-    // Preserving arity costs next to nothing; the call to `execute` in
-    // these functions will be inlined. The airty function itself will never
-    // be inlined because it is in a different context than that of our
-    // dear user, but it will be compiled.
+    // Preserving arity costs next to nothing; the call to `execute` in these
+    // functions will be inlined. The airty function itself will never be
+    // inlined because it is in a different context than that of our dear user,
+    // but it will be compiled.
     switch (steps[0].length) {
     case 0:
         f = function () { execute.apply(this, arguments) }
@@ -351,16 +352,20 @@ function cadence () {
         f = function (one, two, three, four) { execute.apply(this, arguments) }
         break
     default:
-        // Avert your eyes if you're squeamish.
-        var args = []
-        for (var i = 0, I = steps[0].length; i < I; i++) {
-            args[i] = '_' + i
+        while (builders.length < steps[0].length - 4) {
+            var args = []
+            for (var i = 0, I = builders.length + 5; i < I; i++) {
+                args[i] = '_' + i
+            }
+            builders.push(new Function ('                                   \n\
+                return function (execute) {                                 \n\
+                    return function (' + args.join(',') + ') {              \n\
+                        execute.apply(this, arguments)                      \n\
+                    }                                                       \n\
+                }                                                           \n\
+            ')())
         }
-        f = (new Function('execute', '                                      \n\
-            return function (' + args.join(',') + ') {                      \n\
-                execute.apply(this, arguments)                              \n\
-            }                                                               \n\
-       '))(execute)
+        f = builders[steps[0].length - 5](execute)
     }
 
     f.toString = function () { return steps[0].toString() }
