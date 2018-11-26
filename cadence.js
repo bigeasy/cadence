@@ -160,13 +160,13 @@ function invoke (cadence) {
                 cadence.index = 1
             } else if (cadence.errors.length) {
                 // Return the first error we received.
-                (cadence.callback).apply(null, [ cadence.errors[0] ])
+                cadence.callback.apply(null, [ cadence.errors[0] ])
                 break
             } else {
                 if (vargs.length !== 0) {
                     vargs.unshift(null)
                 }
-                (cadence.callback).apply(null, vargs)
+                cadence.callback.apply(null, vargs)
                 break
             }
         }
