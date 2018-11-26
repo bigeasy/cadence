@@ -322,20 +322,20 @@ function cadence () {
     // functions will be inlined. The airty function itself will never be
     // inlined because it is in a different context than that of our dear user,
     // but it will be compiled.
-        while (builders.length < steps[0].length + 1) {
-            var args = []
-            for (var i = 0, I = builders.length; i < I; i++) {
-                args[i] = '_' + i
-            }
-            builders.push(new Function ('                                   \n\
-                return function (execute) {                                 \n\
-                    return function (' + args.join(',') + ') {              \n\
-                        execute.apply(this, arguments)                      \n\
-                    }                                                       \n\
-                }                                                           \n\
-            ')())
+    while (builders.length < steps[0].length + 1) {
+        var args = []
+        for (var i = 0, I = builders.length; i < I; i++) {
+            args[i] = '_' + i
         }
-        var f = builders[steps[0].length](execute)
+        builders.push(new Function ('                                       \n\
+            return function (execute) {                                     \n\
+                return function (' + args.join(',') + ') {                  \n\
+                    execute.apply(this, arguments)                          \n\
+                }                                                           \n\
+            }                                                               \n\
+        ')())
+    }
+    var f = builders[steps[0].length](execute)
 
     f.toString = function () { return steps[0].toString() }
 
