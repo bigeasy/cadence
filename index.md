@@ -58,8 +58,10 @@ var deleteIf = cadence(function (async, file) {
 
         fs.unlink(file, async())        // try
 
-    }, /^ENOENT$/, function () {
-
+    }, function (error) {
+        if (error.code != 'ENOENT') {
+            throw error
+        }
         return [ block, false ]         // catch ENOENT
 
     }], function () {

@@ -65,8 +65,10 @@ exist.</p>
 
         fs.unlink(file, <span class="hljs-keyword">async</span>())        <span class="hljs-comment">// try</span>
 
-    }, /^ENOENT$/, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
-
+    }, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">error</span>) </span>{
+        <span class="hljs-keyword">if</span> (error.code != <span class="hljs-string">&apos;ENOENT&apos;</span>) {
+            <span class="hljs-keyword">throw</span> error
+        }
         <span class="hljs-keyword">return</span> [ block, <span class="hljs-literal">false</span> ]         <span class="hljs-comment">// catch ENOENT</span>
 
     }], <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
