@@ -1,4 +1,4 @@
-require('proof')(13, prove)
+require('proof')(23, prove)
 
 function prove (okay) {
     var cadence = require('..')
@@ -44,6 +44,41 @@ function prove (okay) {
         okay([ one, two, three, four ], [ 1, 2, 3, 4 ], 'five arguments')
     })
     okay(five.length, 5, 'five arity')
+    var six = cadence(function (async, one, two, three, four, five) {
+        return [ one, two, three, four, five ]
+    })
+    six(1, 2, 3, 4, 5, function (error, one, two, three, four, five) {
+        okay([ one, two, three, four, five ], [ 1, 2, 3, 4, 5 ], 'six arguments')
+    })
+    okay(six.length, 6, 'six arity')
+    var seven = cadence(function (async, one, two, three, four, five, six) {
+        return [ one, two, three, four, five, six ]
+    })
+    seven(1, 2, 3, 4, 5, 6, function (error, one, two, three, four, five, six) {
+        okay([ one, two, three, four, five, six ], [ 1, 2, 3, 4, 5, 6 ], 'seven arguments')
+    })
+    okay(seven.length, 7, 'seven arity')
+    var eight = cadence(function (async, one, two, three, four, five, six, seven) {
+        return [ one, two, three, four, five, six, seven ]
+    })
+    eight(1, 2, 3, 4, 5, 6, 7, function (error, one, two, three, four, five, six, seven) {
+        okay([ one, two, three, four, five, six, seven ], [ 1, 2, 3, 4, 5, 6, 7 ], 'eight arguments')
+    })
+    okay(eight.length, 8, 'eight arity')
+    var nine = cadence(function (async, one, two, three, four, five, six, seven, eight) {
+        return [ one, two, three, four, five, six, seven, eight ]
+    })
+    nine(1, 2, 3, 4, 5, 6, 7, 8, function (error, one, two, three, four, five, six, seven, eight) {
+        okay([ one, two, three, four, five, six, seven, eight ], [ 1, 2, 3, 4, 5, 6, 7, 8 ], 'nine arguments')
+    })
+    okay(nine.length, 9, 'nine arity')
+    var ten = cadence(function (async, one, two, three, four, five, six, seven, eight, nine) {
+        return [ one, two, three, four, five, six, seven, eight, nine ]
+    })
+    ten(1, 2, 3, 4, 5, 6, 7, 8, 9, function (error, one, two, three, four, five, six, seven, eight, nine) {
+        okay([ one, two, three, four, five, six, seven, eight, nine ], [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ], 'ten arguments')
+    })
+    okay(ten.length, 10, 'ten arity')
 
     okay(cadence(function () {}).toString(), 'function () {}', 'to string')
 }
