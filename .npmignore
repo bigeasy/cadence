@@ -1,6 +1,7 @@
 /.*
 /*.md
 /_cadence.js
+/.nyc_output
 /coverage
 /node_modules
 /t

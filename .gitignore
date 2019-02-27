@@ -4,3 +4,4 @@
 /.todo.txt
 /.proof.out
 /coverage
+/.nyc_output
