@@ -17,4 +17,4 @@ install:
   - npm install -g nyc
 
 script:
-  - nyc npm test
+  - npm test
