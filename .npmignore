@@ -4,7 +4,7 @@
 /.nyc_output
 /coverage
 /node_modules
-/t
+/test
 /benchmark
 /docs
 /notes
