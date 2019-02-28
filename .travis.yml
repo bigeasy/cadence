@@ -17,5 +17,4 @@ install:
   - npm install -g nyc
 
 script:
-  - printenv | sort
-  - npm test
+  - nyc npm test
