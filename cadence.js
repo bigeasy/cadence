@@ -204,7 +204,19 @@ function invoke (cadence) {
         try {
             var ret = fn.apply(cadence.self, vargs)
             if (ret !== void(0)) {
-                cadence.vargs = Array.isArray(ret) ? ret : [ ret ]
+                if (
+                    typeof ret.then == 'function' &&
+                    typeof ret.catch == 'function'
+                ) {
+                    var resolver = createCallback(cadence)
+                    ret.then(function (result) {
+                        resolver(null, result)
+                    }).catch(function (error) {
+                        resolver(error)
+                    })
+                } else {
+                    cadence.vargs = Array.isArray(ret) ? ret : [ ret ]
+                }
             }
             // The only one that could be removed if we where to invoke cadences
             // directly and immediately when created. It would change loop
