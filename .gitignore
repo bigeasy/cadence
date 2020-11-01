@@ -1,7 +1,5 @@
+/.nyc_output
 /.wiseguy
+/coverage
 /docs
 /node_modules
-/.todo.txt
-/.proof.out
-/coverage
-/.nyc_output
