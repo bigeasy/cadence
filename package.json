@@ -24,11 +24,11 @@
     },
     "devDependencies":
     {
-                            "proof":                        "7.0.x"
+                            "proof":                        "9.0.2"
     },
     "main":                 "cadence",
     "scripts":
     {
-                            "test": "proof test test/*.t.js"
+                            "test": "proof test/*.t.js"
     }
 }
