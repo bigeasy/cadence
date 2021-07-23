@@ -1,6 +1,6 @@
 {
     "name":                 "cadence",
-    "version":              "4.0.0-alpha.3",
+    "version":              "4.0.0-alpha.4",
     "description":
 
       "A Swiss Army asynchronous control flow function for highly-parallel control flows.",
