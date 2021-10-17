@@ -204,7 +204,7 @@ function invoke (cadence) {
         try {
             var ret = fn.apply(cadence.self, vargs)
             if (ret !== void(0)) {
-                if (typeof ret.then == 'function') {
+                if (ret !== null && typeof ret.then == 'function') {
                     var resolver = createCallback(cadence)
                     ret.then(function (result) {
                         resolver(null, result)
